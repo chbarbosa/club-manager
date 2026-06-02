@@ -56,6 +56,8 @@ A single-tenant SaaS solution for small city sports clubs to manage players, tra
 - UUIDs in path: `/api/v1/players/{uuid}`
 - HTTP verbs: GET, POST, PUT, PATCH, DELETE
 - Responses: always return UUID-based DTOs, never JPA entities directly
+- Controllers are responsible for mapping service results from entities to response DTOs
+- Services must not depend on response DTOs or mappers; they return domain entities
 - Error responses: structured JSON `{ "error": "...", "message": "...", "traceId": "..." }`
 - Pagination: Spring Data `Pageable` for list endpoints
 

@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import { ClubProvider } from './context/ClubContext.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import ClubSettingsPage from './pages/ClubSettingsPage.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 export default function App() {
   return (
@@ -14,6 +16,14 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route
+              path="/settings/club"
+              element={
+                <ProtectedRoute>
+                  <ClubSettingsPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </ClubProvider>

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useClub } from '../context/ClubContext.jsx'
 
 export default function Navbar() {
-  const club = useClub()
+  const { club } = useClub()
 
   return (
     <nav className="navbar navbar-dark px-3">
@@ -12,4 +12,3 @@ export default function Navbar() {
     </nav>
   )
 }
-

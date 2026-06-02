@@ -1,10 +1,11 @@
 backend/target/
 frontend/node_modules/
 frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
 data/
 *.mv.db
 *.trace.db
 .idea/
 .vscode/
 *.iml
-
