@@ -1,0 +1,18 @@
+:root {
+  --club-primary: #2d2d2d;
+  --club-secondary: #f0f0f0;
+}
+
+body {
+  background-color: var(--club-secondary);
+}
+
+.btn-primary {
+  background-color: var(--club-primary);
+  border-color: var(--club-primary);
+}
+
+.navbar {
+  background-color: var(--club-primary) !important;
+}
+

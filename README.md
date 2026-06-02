@@ -1,0 +1,45 @@
+# Club Manager
+
+Single-club sports management application. This repository currently contains
+the Prompt 01 scaffold: a Spring Boot backend and a React/Vite frontend.
+
+## Prerequisites
+
+- Java 21
+- Maven 3.9+
+- Node.js and npm
+
+## Run the backend
+
+```powershell
+cd D:\workspace\club-manager\backend
+mvn spring-boot:run
+```
+
+The API runs at `http://localhost:8080`. Health is available at
+`http://localhost:8080/actuator/health`. Local H2 data is stored under
+`data/` at the repository root and is ignored by Git.
+
+## Run the frontend
+
+```powershell
+cd D:\workspace\club-manager\frontend
+npm.cmd install
+npm.cmd run dev
+```
+
+The SPA runs at `http://localhost:5173`.
+
+## Test
+
+```powershell
+cd D:\workspace\club-manager\backend
+mvn test
+
+cd D:\workspace\club-manager\frontend
+npm.cmd run build
+npm.cmd run test:e2e:list
+```
+
+Authentication and feature endpoints intentionally arrive in later prompts.
+

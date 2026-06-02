@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: club-manager
+  datasource:
+    url: jdbc:h2:file:../data/club-manager;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:replace-this-development-secret-before-enabling-auth}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,loggers,info
+  zipkin:
+    tracing:
+      export:
+        enabled: ${ZIPKIN_EXPORT_ENABLED:false}
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [traceId=%X{traceId}] [spanId=%X{spanId}] %logger{36} - %msg%n"
