@@ -10,6 +10,7 @@ export default function DashboardPage() {
       <p className="text-muted">Your club management workspace is ready.</p>
       {isAuthenticated() ? (
         <div className="d-flex gap-2">
+          <Link className="btn btn-primary" to="/players">Players</Link>
           <Link className="btn btn-primary" to="/settings/club">Club settings</Link>
           <Link className="btn btn-outline-secondary" to="/admins">Admins</Link>
         </div>

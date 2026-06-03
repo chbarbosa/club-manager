@@ -1,7 +1,7 @@
 # Prompt 04 — Player Registration
 
 ## Goal
-Implement full player registration: create, list, view, update, and deactivate players. Players have two dates (registerDate auto-set, memberSince manual), countries, birthdate, gender, and an optional registration number.
+Implement full player registration: create, list, view, update, and deactivate players. Players have two dates (registerDate auto-set, memberSince manual), countries, birthdate, team category, and an optional registration number.
 
 ---
 
@@ -22,7 +22,7 @@ CREATE TABLE player (
     birth_country VARCHAR(100) NOT NULL,
     living_country VARCHAR(100) NOT NULL,
     birthdate DATE NOT NULL,
-    gender CHAR(1) NOT NULL CHECK (gender IN ('M', 'F')),
+    team_category VARCHAR(20) NOT NULL CHECK (team_category IN ('MASCULINE', 'FEMININE')),
     registration_number VARCHAR(50),
     register_date DATE NOT NULL,
     member_since DATE NOT NULL,
@@ -32,9 +32,9 @@ CREATE TABLE player (
 
 **Entity `Player`:**
 - Extends `AbstractEntity`
-- Fields: `name`, `birthCountry`, `livingCountry`, `birthdate` (LocalDate), `gender` (enum: M/F), `registrationNumber` (nullable), `registerDate` (LocalDate), `memberSince` (LocalDate), `active` (boolean, default true)
+- Fields: `name`, `birthCountry`, `livingCountry`, `birthdate` (LocalDate), `teamCategory` (enum: MASCULINE/FEMININE), `registrationNumber` (nullable), `registerDate` (LocalDate), `memberSince` (LocalDate), `active` (boolean, default true)
 
-**Enum `Gender`:** `M`, `F`
+**Enum `TeamCategory`:** `MASCULINE`, `FEMININE`
 
 **DTOs:**
 - `PlayerCreateRequest`:
@@ -42,7 +42,7 @@ CREATE TABLE player (
   - `birthCountry` (not blank)
   - `livingCountry` (not blank)
   - `birthdate` (not null, must be in the past)
-  - `gender` (not null, M or F)
+  - `teamCategory` (not null, MASCULINE or FEMININE)
   - `registrationNumber` (nullable)
   - `memberSince` (not null — manually informed, can be in the past)
   - Note: `registerDate` is **never in the request** — auto-set to today on creation
@@ -54,16 +54,16 @@ CREATE TABLE player (
   - `registerDate` is **never updatable**
 
 - `PlayerResponse`:
-  - `uuid`, `name`, `birthCountry`, `livingCountry`, `birthdate`, `gender`, `registrationNumber`, `registerDate`, `memberSince`, `active`
+  - `uuid`, `name`, `birthCountry`, `livingCountry`, `birthdate`, `teamCategory`, `registrationNumber`, `registerDate`, `memberSince`, `active`
   - Include computed field `age` (calculated from birthdate)
 
 - `PlayerSummaryResponse` (for list views):
-  - `uuid`, `name`, `birthdate`, `age`, `gender`, `memberSince`, `active`
+  - `uuid`, `name`, `birthdate`, `age`, `teamCategory`, `memberSince`, `active`
 
 **Repository `PlayerRepository`:**
 - `findByUuid(UUID uuid)` → `Optional<Player>`
 - `findAllByActiveTrue(Pageable pageable)` → `Page<Player>`
-- `findAllByGender(Gender gender, Pageable pageable)` → `Page<Player>`
+- `findAllByTeamCategory(TeamCategory teamCategory, Pageable pageable)` → `Page<Player>`
 - `findByNameContainingIgnoreCase(String name, Pageable pageable)` → `Page<Player>`
 - `existsByRegistrationNumber(String registrationNumber)` → `boolean`
 
@@ -130,7 +130,7 @@ MockMvc test `PlayerControllerTest`:
 
 **Page `src/pages/PlayersPage.jsx`:**
 - Protected route
-- Table with columns: Name, Age, Gender, Member Since, Status (Active/Inactive badge), Actions
+- Table with columns: Name, Age, Team Category, Member Since, Status (Active/Inactive badge), Actions
 - Search bar (filters by name, debounced)
 - Pagination controls
 - "Add Player" button → opens modal/drawer with `PlayerForm`
@@ -138,7 +138,7 @@ MockMvc test `PlayerControllerTest`:
 - Inactive players shown with muted style
 
 **Component `src/components/players/PlayerForm.jsx`:**
-- Fields: Name, Birth Country, Living Country, Birthdate (date picker), Gender (M/F select), Registration Number (optional), Member Since (date picker)
+- Fields: Name, Birth Country, Living Country, Birthdate (date picker), Team Category (Masculine/Feminine select), Registration Number (optional), Member Since (date picker)
 - Member Since: label says *"Date the player started at this club (can be in the past)"*
 - Register Date: **not shown in form** — auto-set by backend
 - Submit calls create or update depending on context
