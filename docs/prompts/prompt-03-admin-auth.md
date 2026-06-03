@@ -59,7 +59,8 @@ VALUES (
 - `login(LoginRequest)` → validates credentials, generates JWT, returns `LoginResponse`
 - `getAllAdmins()` → returns list of `AdminResponse`
 - `getAdminByUuid(UUID uuid)` → returns `AdminResponse`
-- `deleteAdmin(UUID uuid)` → only if more than 1 admin exists (cannot delete last admin)
+- `deactivateAdmin(UUID uuid)` → only if more than 1 active admin exists (cannot deactivate last active admin)
+- `reactivateAdmin(UUID uuid)` → re-enables a previously deactivated admin
 
 **JWT implementation (`config/`):**
 - `JwtService`: `generateToken(username)`, `validateToken(token)`, `extractUsername(token)`
@@ -79,7 +80,8 @@ VALUES (
 **Controller `AdminController` — `/api/v1/admins`:**
 - `GET /api/v1/admins` → `getAllAdmins()` — requires ADMIN
 - `GET /api/v1/admins/{uuid}` → `getAdminByUuid()` — requires ADMIN
-- `DELETE /api/v1/admins/{uuid}` → `deleteAdmin()` — requires ADMIN
+- `PATCH /api/v1/admins/{uuid}/deactivate` → `deactivateAdmin()` — requires ADMIN
+- `PATCH /api/v1/admins/{uuid}/reactivate` → `reactivateAdmin()` — requires ADMIN
 
 **Tests:**
 
@@ -89,8 +91,9 @@ Unit test `AdminServiceTest`:
 - `register_WithDuplicateEmail_ThrowsException`
 - `login_WithValidCredentials_ReturnsTokenResponse`
 - `login_WithInvalidPassword_ThrowsException`
-- `deleteAdmin_WhenOnlyOneAdmin_ThrowsException`
-- `deleteAdmin_WhenMultipleAdmins_DeletesSuccessfully`
+- `deactivateAdmin_WhenOnlyOneActiveAdmin_ThrowsException`
+- `deactivateAdmin_WhenMultipleActiveAdmins_SetsInactive`
+- `reactivateAdmin_WhenInactive_SetsActive`
 
 MockMvc test `AuthControllerTest`:
 - `POST /api/v1/auth/login` returns 200 with token for valid credentials
@@ -103,8 +106,9 @@ MockMvc test `AuthControllerTest`:
 MockMvc test `AdminControllerTest`:
 - `GET /api/v1/admins` returns 200 with list
 - `GET /api/v1/admins` returns 403 without token
-- `DELETE /api/v1/admins/{uuid}` returns 204 when multiple admins exist
-- `DELETE /api/v1/admins/{uuid}` returns 400 when last admin
+- `PATCH /api/v1/admins/{uuid}/deactivate` returns 200 when multiple active admins exist
+- `PATCH /api/v1/admins/{uuid}/deactivate` returns 400 when last active admin
+- `PATCH /api/v1/admins/{uuid}/reactivate` returns 200 for inactive admin
 
 ---
 
@@ -116,7 +120,8 @@ MockMvc test `AdminControllerTest`:
 
 **`src/api/admins.js`:**
 - `getAllAdmins()` → `GET /api/v1/admins`
-- `deleteAdmin(uuid)` → `DELETE /api/v1/admins/{uuid}`
+- `deactivateAdmin(uuid)` → `PATCH /api/v1/admins/{uuid}/deactivate`
+- `reactivateAdmin(uuid)` → `PATCH /api/v1/admins/{uuid}/reactivate`
 
 **Update `AuthContext.jsx`:**
 - `login(username, password)`: call API, store token in memory state, store `adminUuid` and `name`

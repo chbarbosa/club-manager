@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import ClubSettingsPage from './pages/ClubSettingsPage.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import AdminsPage from './pages/AdminsPage.jsx'
 
 export default function App() {
   return (
@@ -21,6 +22,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <ClubSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admins"
+              element={
+                <ProtectedRoute>
+                  <AdminsPage />
                 </ProtectedRoute>
               }
             />

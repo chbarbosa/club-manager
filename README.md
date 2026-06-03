@@ -41,5 +41,15 @@ npm.cmd run build
 npm.cmd run test:e2e:list
 ```
 
-Authentication and feature endpoints intentionally arrive in later prompts.
+Authentication is available for club admins. Player, trainer, team, and evaluation
+features arrive in later prompts.
 
+Admin accounts are deactivated instead of hard-deleted so future history and audit
+relationships can remain intact.
+
+## Development Login
+
+After Prompt 03, the local seed admin is:
+
+- Username: `admin`
+- Password: `admin123`

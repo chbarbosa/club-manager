@@ -19,7 +19,7 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:replace-this-development-secret-before-enabling-auth}
+    secret: ${JWT_SECRET:Y2x1Yi1tYW5hZ2VyLWRldmVsb3BtZW50LXNlY3JldC1tdXN0LWNoYW5nZQ==}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 management:

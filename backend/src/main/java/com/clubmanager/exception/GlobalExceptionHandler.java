@@ -6,6 +6,7 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,6 +41,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthorizationDeniedException.class)
     ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException exception) {
         return response(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Access denied");
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException exception) {
+        return response(HttpStatus.UNAUTHORIZED, "BAD_CREDENTIALS", "Invalid username or password");
     }
 
     @ExceptionHandler(Exception.class)
