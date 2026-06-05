@@ -11,6 +11,7 @@ export default function DashboardPage() {
       {isAuthenticated() ? (
         <div className="d-flex gap-2">
           <Link className="btn btn-primary" to="/players">Players</Link>
+          <Link className="btn btn-primary" to="/trainers">Trainers</Link>
           <Link className="btn btn-primary" to="/settings/club">Club settings</Link>
           <Link className="btn btn-outline-secondary" to="/admins">Admins</Link>
         </div>

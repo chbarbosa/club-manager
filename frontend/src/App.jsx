@@ -9,6 +9,8 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import AdminsPage from './pages/AdminsPage.jsx'
 import PlayersPage from './pages/PlayersPage.jsx'
 import PlayerDetailPage from './pages/PlayerDetailPage.jsx'
+import TrainersPage from './pages/TrainersPage.jsx'
+import TrainerDetailPage from './pages/TrainerDetailPage.jsx'
 
 export default function App() {
   return (
@@ -48,6 +50,22 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <PlayerDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trainers"
+              element={
+                <ProtectedRoute>
+                  <TrainersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trainers/:uuid"
+              element={
+                <ProtectedRoute>
+                  <TrainerDetailPage />
                 </ProtectedRoute>
               }
             />

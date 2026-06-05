@@ -13,7 +13,7 @@ Read `CLAUDE.md` before starting. Follow all conventions defined there.
 
 ### Backend
 
-**Flyway migration `V5__trainer.sql`:**
+**Flyway migration `V6__trainer.sql`:**
 ```sql
 CREATE TABLE trainer (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -66,11 +66,11 @@ CREATE TABLE trainer (
   - Auto-set `registerDate = LocalDate.now()`
   - Validate `memberSince` is not in the future
   - Validate `birthdate` is in the past if provided
-  - Return `TrainerResponse`
-- `getTrainerByUuid(UUID uuid)` → `TrainerResponse`
-- `getAllTrainers(Pageable pageable)` → `Page<TrainerSummaryResponse>`
-- `searchTrainers(String name, Pageable pageable)` → `Page<TrainerSummaryResponse>`
-- `updateTrainer(UUID uuid, TrainerUpdateRequest)` → `TrainerResponse`
+  - Return `Trainer`
+- `getTrainerByUuid(UUID uuid)` → `Trainer`
+- `getAllTrainers(Pageable pageable)` → `Page<Trainer>`
+- `searchTrainers(String name, Pageable pageable)` → `Page<Trainer>`
+- `updateTrainer(UUID uuid, TrainerUpdateRequest)` → `Trainer`
 - `deactivateTrainer(UUID uuid)` → sets `active = false`
 - `reactivateTrainer(UUID uuid)` → sets `active = true`
 
