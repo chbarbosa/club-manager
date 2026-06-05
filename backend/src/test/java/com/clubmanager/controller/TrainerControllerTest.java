@@ -1,5 +1,6 @@
 package com.clubmanager.controller;
 
+import static com.clubmanager.controller.ControllerTestAuth.loginToken;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -29,7 +30,7 @@ class TrainerControllerTest {
     @Test
     void createTrainer_WithValidToken_ReturnsCreatedTrainer() throws Exception {
         mockMvc.perform(post("/api/v1/trainers")
-                        .header("Authorization", "Bearer " + loginToken())
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTrainerJson()))
                 .andExpect(status().isCreated())
@@ -42,7 +43,7 @@ class TrainerControllerTest {
     @Test
     void createTrainer_WithBlankName_ReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/trainers")
-                        .header("Authorization", "Bearer " + loginToken())
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTrainerJson().replace("Carlos Mendes", "")))
                 .andExpect(status().isBadRequest())
@@ -52,7 +53,7 @@ class TrainerControllerTest {
     @Test
     void createTrainer_WithFutureMemberSince_ReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/trainers")
-                        .header("Authorization", "Bearer " + loginToken())
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTrainerJson().replace("2018-06-01", LocalDate.now().plusDays(1).toString())))
                 .andExpect(status().isBadRequest())
@@ -62,7 +63,7 @@ class TrainerControllerTest {
     @Test
     void createTrainer_WithFutureBirthdate_ReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/trainers")
-                        .header("Authorization", "Bearer " + loginToken())
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTrainerJson().replace("1988-04-20", LocalDate.now().plusDays(1).toString())))
                 .andExpect(status().isBadRequest())
@@ -82,7 +83,7 @@ class TrainerControllerTest {
         String uuid = createTrainer();
 
         mockMvc.perform(get("/api/v1/trainers")
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].uuid").isString())
                 .andExpect(jsonPath("$.content[*].uuid", hasItem(uuid)))
@@ -94,7 +95,7 @@ class TrainerControllerTest {
         String uuid = createTrainer();
 
         mockMvc.perform(get("/api/v1/trainers/{uuid}", uuid)
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uuid").value(uuid))
                 .andExpect(jsonPath("$.email").value("carlos@club.com"))
@@ -105,7 +106,7 @@ class TrainerControllerTest {
     @Test
     void getTrainerByUuid_WithUnknownUuid_ReturnsNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/trainers/{uuid}", "00000000-0000-0000-0000-000000000000")
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isNotFound());
     }
 
@@ -114,7 +115,7 @@ class TrainerControllerTest {
         String uuid = createTrainer();
 
         mockMvc.perform(put("/api/v1/trainers/{uuid}", uuid)
-                        .header("Authorization", "Bearer " + loginToken())
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -134,7 +135,7 @@ class TrainerControllerTest {
         String uuid = createTrainer();
 
         mockMvc.perform(patch("/api/v1/trainers/{uuid}/deactivate", uuid)
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
     }
@@ -144,18 +145,18 @@ class TrainerControllerTest {
         String uuid = createTrainer();
 
         mockMvc.perform(patch("/api/v1/trainers/{uuid}/deactivate", uuid)
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk());
 
         mockMvc.perform(patch("/api/v1/trainers/{uuid}/reactivate", uuid)
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true));
     }
 
     private String createTrainer() throws Exception {
         String response = mockMvc.perform(post("/api/v1/trainers")
-                        .header("Authorization", "Bearer " + loginToken())
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTrainerJson()))
                 .andExpect(status().isCreated())
@@ -179,16 +180,4 @@ class TrainerControllerTest {
                 """;
     }
 
-    private String loginToken() throws Exception {
-        String response = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"username": "admin", "password": "admin123"}
-                                """))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return response.replaceFirst(".*\\\"token\\\":\\\"([^\\\"]+)\\\".*", "$1");
-    }
 }

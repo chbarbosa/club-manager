@@ -9,7 +9,6 @@ import com.clubmanager.mapper.PlayerMapper;
 import com.clubmanager.service.PlayerService;
 import jakarta.validation.Valid;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;

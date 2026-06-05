@@ -1,5 +1,6 @@
 package com.clubmanager.controller;
 
+import static com.clubmanager.controller.ControllerTestAuth.loginToken;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,7 +30,7 @@ class AdminControllerTest {
     @Test
     void getAllAdmins_WithValidToken_ReturnsList() throws Exception {
         mockMvc.perform(get("/api/v1/admins")
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].uuid").isString())
                 .andExpect(jsonPath("$[0].username").value("admin"))
@@ -48,14 +49,14 @@ class AdminControllerTest {
         String uuid = adminRepository.findByUsername("admin").orElseThrow().getUuid().toString();
 
         mockMvc.perform(get("/api/v1/admins/{uuid}", uuid)
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("admin"));
     }
 
     @Test
     void deactivateAdmin_WhenMultipleAdmins_ReturnsInactiveAdmin() throws Exception {
-        String token = loginToken();
+        String token = loginToken(mockMvc);
         registerAdmin(token, "jane", "jane@club.com");
         String uuid = adminRepository.findByUsername("jane").orElseThrow().getUuid().toString();
 
@@ -70,14 +71,14 @@ class AdminControllerTest {
         String uuid = adminRepository.findByUsername("admin").orElseThrow().getUuid().toString();
 
         mockMvc.perform(patch("/api/v1/admins/{uuid}/deactivate", uuid)
-                        .header("Authorization", "Bearer " + loginToken()))
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
     }
 
     @Test
     void reactivateAdmin_WhenInactive_ReturnsActiveAdmin() throws Exception {
-        String token = loginToken();
+        String token = loginToken(mockMvc);
         registerAdmin(token, "jane", "jane@club.com");
         String uuid = adminRepository.findByUsername("jane").orElseThrow().getUuid().toString();
 
@@ -106,16 +107,4 @@ class AdminControllerTest {
                 .andExpect(status().isCreated());
     }
 
-    private String loginToken() throws Exception {
-        String response = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"username": "admin", "password": "admin123"}
-                                """))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return response.replaceFirst(".*\\\"token\\\":\\\"([^\\\"]+)\\\".*", "$1");
-    }
 }

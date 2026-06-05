@@ -1,5 +1,6 @@
 package com.clubmanager.controller;
 
+import static com.clubmanager.controller.ControllerTestAuth.loginToken;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -48,7 +49,7 @@ class AuthControllerTest {
 
     @Test
     void login_WithInactiveAdmin_ReturnsUnauthorized() throws Exception {
-        String token = loginToken();
+        String token = loginToken(mockMvc);
         mockMvc.perform(post("/api/v1/auth/register")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -96,7 +97,7 @@ class AuthControllerTest {
 
     @Test
     void register_WithValidToken_ReturnsCreatedAdmin() throws Exception {
-        String token = loginToken();
+        String token = loginToken(mockMvc);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .header("Authorization", "Bearer " + token)
@@ -133,7 +134,7 @@ class AuthControllerTest {
 
     @Test
     void register_WithDuplicateUsername_ReturnsBadRequest() throws Exception {
-        String token = loginToken();
+        String token = loginToken(mockMvc);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .header("Authorization", "Bearer " + token)
@@ -150,16 +151,4 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
     }
 
-    private String loginToken() throws Exception {
-        String response = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"username": "admin", "password": "admin123"}
-                                """))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return response.replaceFirst(".*\\\"token\\\":\\\"([^\\\"]+)\\\".*", "$1");
-    }
 }
