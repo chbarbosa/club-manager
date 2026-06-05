@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { getAllPlayers } from '../api/players.js'
 import { getAllTrainers } from '../api/trainers.js'
-import { deactivateTeam, getTeam, reactivateTeam, updateTeam } from '../api/teams.js'
+import {
+  assignPlayerToTeam,
+  deactivateTeam,
+  getTeam,
+  getTeamRoster,
+  reactivateTeam,
+  removePlayerFromTeam,
+  updateTeam,
+} from '../api/teams.js'
 import TeamForm from '../components/teams/TeamForm.jsx'
 
 export default function TeamDetailPage() {
@@ -9,6 +18,9 @@ export default function TeamDetailPage() {
   const location = useLocation()
   const [team, setTeam] = useState(null)
   const [trainers, setTrainers] = useState([])
+  const [players, setPlayers] = useState([])
+  const [roster, setRoster] = useState([])
+  const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
   const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -16,6 +28,8 @@ export default function TeamDetailPage() {
   useEffect(() => {
     loadTeam()
     loadTrainers()
+    loadPlayers()
+    loadRoster()
   }, [uuid])
 
   async function loadTeam() {
@@ -33,6 +47,23 @@ export default function TeamDetailPage() {
       setTrainers(response.content ?? [])
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load trainers for teams.')
+    }
+  }
+
+  async function loadPlayers() {
+    try {
+      const response = await getAllPlayers({ page: 0, size: 200 })
+      setPlayers(response.content ?? [])
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load players for roster.')
+    }
+  }
+
+  async function loadRoster() {
+    try {
+      setRoster(await getTeamRoster(uuid))
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load team roster.')
     }
   }
 
@@ -61,6 +92,38 @@ export default function TeamDetailPage() {
       setMessage(team.active ? 'Team deactivated.' : 'Team reactivated.')
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? `Unable to ${action} team.`)
+    }
+  }
+
+  async function assignPlayer(event) {
+    event.preventDefault()
+    if (!selectedPlayerUuid) {
+      return
+    }
+    setError('')
+    setMessage('')
+    try {
+      await assignPlayerToTeam(uuid, selectedPlayerUuid)
+      setSelectedPlayerUuid('')
+      await loadRoster()
+      setMessage('Player assigned to team.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to assign player to team.')
+    }
+  }
+
+  async function removePlayer(assignment) {
+    if (!window.confirm(`Remove ${assignment.playerName} from this team?`)) {
+      return
+    }
+    setError('')
+    setMessage('')
+    try {
+      await removePlayerFromTeam(uuid, assignment.uuid)
+      await loadRoster()
+      setMessage('Player removed from team.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to remove player from team.')
     }
   }
 
@@ -101,14 +164,74 @@ export default function TeamDetailPage() {
               </div>
             </div>
           ) : (
-            <dl className="row">
-              <dt className="col-sm-3">Age group</dt>
-              <dd className="col-sm-9">{team.ageGroup}</dd>
-              <dt className="col-sm-3">Team category</dt>
-              <dd className="col-sm-9">{formatTeamCategory(team.teamCategory)}</dd>
-              <dt className="col-sm-3">Trainer</dt>
-              <dd className="col-sm-9">{team.trainerName}</dd>
-            </dl>
+            <>
+              <dl className="row">
+                <dt className="col-sm-3">Age group</dt>
+                <dd className="col-sm-9">{team.ageGroup}</dd>
+                <dt className="col-sm-3">Team category</dt>
+                <dd className="col-sm-9">{formatTeamCategory(team.teamCategory)}</dd>
+                <dt className="col-sm-3">Trainer</dt>
+                <dd className="col-sm-9">{team.trainerName}</dd>
+              </dl>
+
+              <section className="mt-5">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <h2 className="h3">Roster</h2>
+                    <p className="text-muted mb-0">Assign active players with the same team category.</p>
+                  </div>
+                </div>
+
+                <form className="row g-2 align-items-end mb-4" onSubmit={assignPlayer}>
+                  <div className="col-md-8">
+                    <label className="form-label" htmlFor="roster-player">Player</label>
+                    <select
+                      className="form-select"
+                      id="roster-player"
+                      onChange={(event) => setSelectedPlayerUuid(event.target.value)}
+                      value={selectedPlayerUuid}
+                    >
+                      <option value="">Select a player</option>
+                      {availablePlayers(team, players, roster).map((player) => (
+                        <option key={player.uuid} value={player.uuid}>{player.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <button className="btn btn-primary" disabled={!selectedPlayerUuid} type="submit">
+                      Assign player
+                    </button>
+                  </div>
+                </form>
+
+                <table className="table table-striped align-middle">
+                  <thead>
+                    <tr>
+                      <th>Player</th>
+                      <th>Team category</th>
+                      <th>Assigned date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roster.map((assignment) => (
+                      <tr key={assignment.uuid}>
+                        <td>{assignment.playerName}</td>
+                        <td>{formatTeamCategory(assignment.playerTeamCategory)}</td>
+                        <td>{formatDate(assignment.assignedDate)}</td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment)} type="button">
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {roster.length === 0 && <p className="text-muted">No players assigned to this team.</p>}
+              </section>
+            </>
           )}
         </>
       )}
@@ -124,3 +247,15 @@ function teamLabel(team) {
   return `${team.ageGroup} ${formatTeamCategory(team.teamCategory)}`
 }
 
+function availablePlayers(team, players, roster) {
+  const assignedPlayerUuids = new Set(roster.map((assignment) => assignment.playerUuid))
+  return players.filter((player) => (
+    player.active
+    && player.teamCategory === team.teamCategory
+    && !assignedPlayerUuids.has(player.uuid)
+  ))
+}
+
+function formatDate(value) {
+  return value ? new Date(`${value}T00:00:00`).toLocaleDateString() : '-'
+}

@@ -41,8 +41,9 @@ npm.cmd run build
 npm.cmd run test:e2e:list
 ```
 
-Authentication is available for club admins. Player, trainer, and team
-registration are available. Evaluation features arrive in later prompts.
+Authentication is available for club admins. Player, trainer, team
+registration, and current team roster assignment are available. Evaluation
+features arrive in later prompts.
 
 Admin accounts are deactivated instead of hard-deleted so future history and audit
 relationships can remain intact.
