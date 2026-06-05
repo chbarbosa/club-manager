@@ -42,8 +42,8 @@ npm.cmd run test:e2e:list
 ```
 
 Authentication is available for club admins. Player, trainer, team
-registration, and current team roster assignment are available. Evaluation
-features arrive in later prompts.
+registration, current team roster assignment, evaluation groups, evaluation
+events, attendance, and event skill-level recording are available.
 
 Admin accounts are deactivated instead of hard-deleted so future history and audit
 relationships can remain intact.

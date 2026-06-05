@@ -16,6 +16,7 @@ export default function Navbar() {
           <Link className="nav-link" to="/players">Players</Link>
           <Link className="nav-link" to="/trainers">Trainers</Link>
           <Link className="nav-link" to="/teams">Teams</Link>
+          <Link className="nav-link" to="/evaluations">Evaluations</Link>
           <Link className="nav-link" to="/settings/club">Club settings</Link>
           <Link className="nav-link" to="/admins">Admins</Link>
           <span className="navbar-text text-white">{name}</span>

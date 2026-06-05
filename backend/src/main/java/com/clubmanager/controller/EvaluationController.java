@@ -1,0 +1,76 @@
+package com.clubmanager.controller;
+
+import com.clubmanager.domain.EvaluationStatus;
+import com.clubmanager.domain.TeamCategory;
+import com.clubmanager.dto.EvaluationCreateRequest;
+import com.clubmanager.dto.EvaluationResponse;
+import com.clubmanager.dto.EvaluationSummaryResponse;
+import com.clubmanager.dto.EvaluationUpdateRequest;
+import com.clubmanager.dto.PageResponse;
+import com.clubmanager.mapper.EvaluationMapper;
+import com.clubmanager.service.EvaluationService;
+import jakarta.validation.Valid;
+import java.util.UUID;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/evaluations")
+@PreAuthorize("hasRole('ADMIN')")
+public class EvaluationController {
+
+    private final EvaluationService evaluationService;
+    private final EvaluationMapper evaluationMapper;
+
+    public EvaluationController(EvaluationService evaluationService, EvaluationMapper evaluationMapper) {
+        this.evaluationService = evaluationService;
+        this.evaluationMapper = evaluationMapper;
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public EvaluationResponse createEvaluation(@Valid @RequestBody EvaluationCreateRequest request) {
+        return evaluationMapper.toResponse(evaluationService.createEvaluation(request));
+    }
+
+    @GetMapping
+    public PageResponse<EvaluationSummaryResponse> getAllEvaluations(
+            @RequestParam(required = false) String ageGroup,
+            @RequestParam(required = false) TeamCategory teamCategory,
+            @RequestParam(required = false) EvaluationStatus status,
+            Pageable pageable) {
+        return PageResponse.from(evaluationService.searchEvaluations(ageGroup, teamCategory, status, pageable)
+                .map(evaluationMapper::toSummaryResponse));
+    }
+
+    @GetMapping("/{uuid}")
+    public EvaluationResponse getEvaluationByUuid(@PathVariable UUID uuid) {
+        return evaluationMapper.toResponse(evaluationService.getEvaluationByUuid(uuid));
+    }
+
+    @PutMapping("/{uuid}")
+    public EvaluationResponse updateEvaluation(@PathVariable UUID uuid, @Valid @RequestBody EvaluationUpdateRequest request) {
+        return evaluationMapper.toResponse(evaluationService.updateEvaluation(uuid, request));
+    }
+
+    @PatchMapping("/{uuid}/start")
+    public EvaluationResponse startEvaluation(@PathVariable UUID uuid) {
+        return evaluationMapper.toResponse(evaluationService.startEvaluation(uuid));
+    }
+
+    @PatchMapping("/{uuid}/finalize")
+    public EvaluationResponse finalizeEvaluation(@PathVariable UUID uuid) {
+        return evaluationMapper.toResponse(evaluationService.finalizeEvaluation(uuid));
+    }
+}

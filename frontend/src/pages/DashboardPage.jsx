@@ -13,6 +13,7 @@ export default function DashboardPage() {
           <Link className="btn btn-primary" to="/players">Players</Link>
           <Link className="btn btn-primary" to="/trainers">Trainers</Link>
           <Link className="btn btn-primary" to="/teams">Teams</Link>
+          <Link className="btn btn-primary" to="/evaluations">Evaluations</Link>
           <Link className="btn btn-primary" to="/settings/club">Club settings</Link>
           <Link className="btn btn-outline-secondary" to="/admins">Admins</Link>
         </div>

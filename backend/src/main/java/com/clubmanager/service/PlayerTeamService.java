@@ -82,6 +82,9 @@ public class PlayerTeamService {
         if (playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)) {
             throw new IllegalArgumentException("Player is already assigned to this team");
         }
+        playerTeamRepository.findByPlayerAndActiveTrue(player).ifPresent(existing -> {
+            throw new IllegalArgumentException("Player is already assigned to an active team");
+        });
     }
 
     private Team getTeam(UUID uuid) {

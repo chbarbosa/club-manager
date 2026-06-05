@@ -1,0 +1,253 @@
+package com.clubmanager.controller;
+
+import static com.clubmanager.controller.ControllerTestAuth.loginToken;
+import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.jayway.jsonpath.JsonPath;
+import java.time.LocalDate;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class EvaluationControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void createEvaluation_WithValidToken_ReturnsCreatedEvaluation() throws Exception {
+        mockMvc.perform(post("/api/v1/evaluations")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validEvaluationJson()))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.uuid").isString())
+                .andExpect(jsonPath("$.title").value("Spring Tryouts"))
+                .andExpect(jsonPath("$.status").value("OPEN"))
+                .andExpect(jsonPath("$.ageGroup").value("Under 13"))
+                .andExpect(jsonPath("$.teamCategory").value("MASCULINE"))
+                .andExpect(jsonPath("$.createdDate").value(LocalDate.now().toString()))
+                .andExpect(jsonPath("$.id").doesNotExist());
+    }
+
+    @Test
+    void createEvaluation_WithBlankTitle_ReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/evaluations")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validEvaluationJson().replace("Spring Tryouts", "")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void createEvaluation_WithoutAuthentication_ReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/api/v1/evaluations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validEvaluationJson()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAllEvaluations_WithValidToken_ReturnsPaginatedList() throws Exception {
+        String evaluationUuid = createEvaluation();
+
+        mockMvc.perform(get("/api/v1/evaluations")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].uuid").isString())
+                .andExpect(jsonPath("$.content[*].uuid", hasItem(evaluationUuid)))
+                .andExpect(jsonPath("$.content[0].ageGroup").isString())
+                .andExpect(jsonPath("$.content[0].id").doesNotExist());
+    }
+
+    @Test
+    void getEvaluationByUuid_WithValidToken_ReturnsFullEvaluation() throws Exception {
+        String evaluationUuid = createEvaluation();
+
+        mockMvc.perform(get("/api/v1/evaluations/{uuid}", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.uuid").value(evaluationUuid))
+                .andExpect(jsonPath("$.ageGroup").value("Under 13"))
+                .andExpect(jsonPath("$.teamCategory").value("MASCULINE"))
+                .andExpect(jsonPath("$.id").doesNotExist());
+    }
+
+    @Test
+    void updateEvaluation_WithValidRequest_ReturnsUpdatedEvaluation() throws Exception {
+        String evaluationUuid = createEvaluation();
+
+        mockMvc.perform(put("/api/v1/evaluations/{uuid}", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Summer Tryouts",
+                                  "ageGroup": "Under 15",
+                                  "teamCategory": "FEMININE"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Summer Tryouts"))
+                .andExpect(jsonPath("$.ageGroup").value("Under 15"))
+                .andExpect(jsonPath("$.teamCategory").value("FEMININE"));
+    }
+
+    @Test
+    void eventCannotCompleteUntilAllAssignedPlayersHaveAttendanceAndSkillLevel() throws Exception {
+        String evaluationUuid = createEvaluation();
+        String playerUuid = createPlayer("EV-001");
+        assignPlayer(evaluationUuid, playerUuid);
+        String eventUuid = createEvent(evaluationUuid);
+
+        mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/complete", eventUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("All assigned players must have participation and skill level before closing the event"));
+
+        mockMvc.perform(put("/api/v1/evaluation-events/{eventUuid}/attendance/{playerUuid}", eventUuid, playerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "PRESENT",
+                                  "skillLevel": "SKILLED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.playerUuid").value(playerUuid))
+                .andExpect(jsonPath("$.status").value("PRESENT"))
+                .andExpect(jsonPath("$.skillLevel").value("SKILLED"));
+
+        mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/complete", eventUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+    }
+
+    @Test
+    void removeEvaluationPlayer_WithValidAssignment_ReturnsInactiveAssignment() throws Exception {
+        String evaluationUuid = createEvaluation();
+        String playerUuid = createPlayer("EV-002");
+        String assignmentUuid = assignPlayer(evaluationUuid, playerUuid);
+
+        mockMvc.perform(delete("/api/v1/evaluations/{evaluationUuid}/players/{assignmentUuid}", evaluationUuid, assignmentUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+    }
+
+    @Test
+    void startEvaluation_WhenOpen_ReturnsInProgressEvaluation() throws Exception {
+        String evaluationUuid = createEvaluation();
+
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/start", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
+    }
+
+    @Test
+    void finalizeEvaluation_WhenOpen_ReturnsFinalizedEvaluation() throws Exception {
+        String evaluationUuid = createEvaluation();
+
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/finalize", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FINALIZED"));
+    }
+
+    private String createEvaluation() throws Exception {
+        String response = mockMvc.perform(post("/api/v1/evaluations")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validEvaluationJson()))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String assignPlayer(String evaluationUuid, String playerUuid) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/evaluations/{evaluationUuid}/players", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "playerUuid": "%s"
+                                }
+                                """.formatted(playerUuid)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String createEvent(String evaluationUuid) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/evaluations/{evaluationUuid}/events", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "place": "Main Field",
+                                  "eventDate": "%s",
+                                  "startTime": "18:00",
+                                  "durationMinutes": 90
+                                }
+                                """.formatted(LocalDate.now().plusDays(7))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String createPlayer(String registrationNumber) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/players")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Evaluation Player %s",
+                                  "birthCountry": "Brazil",
+                                  "livingCountry": "Brazil",
+                                  "birthdate": "2012-05-20",
+                                  "teamCategory": "MASCULINE",
+                                  "registrationNumber": "%s",
+                                  "memberSince": "%s"
+                                }
+                                """.formatted(registrationNumber, registrationNumber, LocalDate.now().minusYears(1))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String validEvaluationJson() {
+        return """
+                {
+                  "title": "Spring Tryouts",
+                  "ageGroup": "Under 13",
+                  "teamCategory": "MASCULINE"
+                }
+                """;
+    }
+}

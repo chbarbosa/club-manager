@@ -116,4 +116,3 @@ class PlayerTeamServiceTest {
                 .build();
     }
 }
-
