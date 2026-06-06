@@ -26,36 +26,38 @@ export default function LoginPage() {
 
   return (
     <main className="container py-5">
-      <h1>Login</h1>
-      <form className="card mt-4" onSubmit={submit}>
-        <div className="card-body">
-          <div className="mb-3">
-            <label className="form-label" htmlFor="username">Username</label>
-            <input
-              autoComplete="username"
-              className="form-control"
-              id="username"
-              onChange={(event) => setUsername(event.target.value)}
-              required
-              value={username}
-            />
+      <div className="login-panel">
+        <h1>Login</h1>
+        <form className="card mt-4" onSubmit={submit}>
+          <div className="card-body">
+            <div className="mb-3">
+              <label className="form-label" htmlFor="username">Username</label>
+              <input
+                autoComplete="username"
+                className="form-control"
+                id="username"
+                onChange={(event) => setUsername(event.target.value)}
+                required
+                value={username}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label" htmlFor="password">Password</label>
+              <input
+                autoComplete="current-password"
+                className="form-control"
+                id="password"
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                type="password"
+                value={password}
+              />
+            </div>
+            {error && <p className="text-danger">{error}</p>}
+            <button className="btn btn-primary" type="submit">Login</button>
           </div>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="password">Password</label>
-            <input
-              autoComplete="current-password"
-              className="form-control"
-              id="password"
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              type="password"
-              value={password}
-            />
-          </div>
-          {error && <p className="text-danger">{error}</p>}
-          <button className="btn btn-primary" type="submit">Login</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </main>
   )
 }
