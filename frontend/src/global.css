@@ -46,3 +46,8 @@ body {
   letter-spacing: 0.04em;
   width: 56px;
 }
+
+.dashboard-card-svg {
+  height: 30px;
+  width: 30px;
+}

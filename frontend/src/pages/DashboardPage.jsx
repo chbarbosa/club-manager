@@ -5,42 +5,42 @@ const FEATURES = [
   {
     title: 'Players',
     description: 'Register athletes, keep personal data current, and follow each player status.',
-    icon: 'PL',
+    icon: 'players',
     path: '/players',
     action: 'Manage players',
   },
   {
     title: 'Trainers',
     description: 'Maintain trainer records and prepare the staff information used by teams.',
-    icon: 'TR',
+    icon: 'trainers',
     path: '/trainers',
     action: 'Manage trainers',
   },
   {
     title: 'Teams',
     description: 'Organize teams by age group and category, then manage each active roster.',
-    icon: 'TM',
+    icon: 'teams',
     path: '/teams',
     action: 'Manage teams',
   },
   {
     title: 'Evaluations',
     description: 'Create evaluation groups, schedule events, and record participation and skill levels.',
-    icon: 'EV',
+    icon: 'evaluations',
     path: '/evaluations',
     action: 'Manage evaluations',
   },
   {
     title: 'Club settings',
     description: 'Adjust club identity, colours, and setup values used across the workspace.',
-    icon: 'CS',
+    icon: 'settings',
     path: '/settings/club',
     action: 'Open settings',
   },
   {
     title: 'Admins',
     description: 'Create and manage administrator access for this club instance.',
-    icon: 'AD',
+    icon: 'admins',
     path: '/admins',
     action: 'Manage admins',
     secondary: true,
@@ -60,7 +60,9 @@ export default function DashboardPage() {
             <div className="col-md-6 col-xl-4" key={feature.title}>
               <section className="card dashboard-card h-100">
                 <div className="card-body d-flex flex-column text-center">
-                  <div className="dashboard-card-icon mx-auto mb-3" aria-hidden="true">{feature.icon}</div>
+                  <div className="dashboard-card-icon mx-auto mb-3" aria-hidden="true">
+                    <DashboardIcon name={feature.icon} />
+                  </div>
                   <h2 className="h5">{feature.title}</h2>
                   <p className="text-muted flex-grow-1">{feature.description}</p>
                   <Link className={`btn ${feature.secondary ? 'btn-outline-secondary' : 'btn-primary'}`} to={feature.path}>
@@ -75,5 +77,60 @@ export default function DashboardPage() {
         <Link className="btn btn-primary" to="/login">Admin login</Link>
       )}
     </main>
+  )
+}
+
+function DashboardIcon({ name }) {
+  const icons = {
+    players: (
+      <>
+        <path d="M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+        <path d="M3 21a7 7 0 0 1 14 0" />
+        <path d="M17 10a3 3 0 1 0 0-6" />
+        <path d="M18 14a5 5 0 0 1 4 5" />
+      </>
+    ),
+    trainers: (
+      <>
+        <path d="M4 5h16v10H4z" />
+        <path d="M8 19h8" />
+        <path d="M12 15v4" />
+        <path d="M8 9h5" />
+        <path d="M8 12h8" />
+      </>
+    ),
+    teams: (
+      <>
+        <path d="M12 3 4 7l8 4 8-4-8-4Z" />
+        <path d="M4 12l8 4 8-4" />
+        <path d="M4 17l8 4 8-4" />
+      </>
+    ),
+    evaluations: (
+      <>
+        <path d="M9 11l2 2 4-5" />
+        <path d="M5 4h14v16H5z" />
+        <path d="M8 17h8" />
+      </>
+    ),
+    settings: (
+      <>
+        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+        <path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2-1.2L14.2 3h-4.4l-.3 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2 1.2l.3 2.6h4.4l.3-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2Z" />
+      </>
+    ),
+    admins: (
+      <>
+        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+        <path d="M5 21a7 7 0 0 1 14 0" />
+        <path d="M17 4l2 2 3-3" />
+      </>
+    ),
+  }
+
+  return (
+    <svg className="dashboard-card-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8">
+      {icons[name]}
+    </svg>
   )
 }
