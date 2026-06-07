@@ -80,9 +80,11 @@ class TrainerControllerTest {
 
     @Test
     void getAllTrainers_WithValidToken_ReturnsPaginatedList() throws Exception {
-        String uuid = createTrainer();
+        String trainerName = "Carlos Mendes List";
+        String uuid = createTrainer(trainerName);
 
         mockMvc.perform(get("/api/v1/trainers")
+                        .param("name", trainerName)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].uuid").isString())
@@ -155,10 +157,14 @@ class TrainerControllerTest {
     }
 
     private String createTrainer() throws Exception {
+        return createTrainer("Carlos Mendes");
+    }
+
+    private String createTrainer(String name) throws Exception {
         String response = mockMvc.perform(post("/api/v1/trainers")
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validTrainerJson()))
+                        .content(validTrainerJson(name)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
@@ -167,9 +173,13 @@ class TrainerControllerTest {
     }
 
     private String validTrainerJson() {
+        return validTrainerJson("Carlos Mendes");
+    }
+
+    private String validTrainerJson(String name) {
         return """
                 {
-                  "name": "Carlos Mendes",
+                  "name": "%s",
                   "birthCountry": "Brazil",
                   "livingCountry": "Brazil",
                   "birthdate": "1988-04-20",
@@ -177,7 +187,7 @@ class TrainerControllerTest {
                   "phone": "555-0100",
                   "memberSince": "2018-06-01"
                 }
-                """;
+                """.formatted(name);
     }
 
 }

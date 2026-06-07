@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clubmanager.repository.PlayerRepository;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -27,9 +26,6 @@ class PlayerControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private PlayerRepository playerRepository;
 
     @Test
     void createPlayer_WithValidToken_ReturnsCreatedPlayer() throws Exception {
@@ -84,9 +80,11 @@ class PlayerControllerTest {
 
     @Test
     void getAllPlayers_WithValidToken_ReturnsPaginatedList() throws Exception {
-        String uuid = createPlayer("REG-105");
+        String playerName = "Joao Silva REG-105";
+        String uuid = createPlayer(playerName, "REG-105");
 
         mockMvc.perform(get("/api/v1/players")
+                        .param("name", playerName)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].uuid").isString())
@@ -170,10 +168,14 @@ class PlayerControllerTest {
     }
 
     private String createPlayer(String registrationNumber) throws Exception {
+        return createPlayer("Joao Silva", registrationNumber);
+    }
+
+    private String createPlayer(String name, String registrationNumber) throws Exception {
         String response = mockMvc.perform(post("/api/v1/players")
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validPlayerJson(registrationNumber)))
+                        .content(validPlayerJson(name, registrationNumber)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
@@ -182,9 +184,13 @@ class PlayerControllerTest {
     }
 
     private String validPlayerJson(String registrationNumber) {
+        return validPlayerJson("Joao Silva", registrationNumber);
+    }
+
+    private String validPlayerJson(String name, String registrationNumber) {
         return """
                 {
-                  "name": "Joao Silva",
+                  "name": "%s",
                   "birthCountry": "Brazil",
                   "livingCountry": "Brazil",
                   "birthdate": "2005-03-15",
@@ -192,7 +198,7 @@ class PlayerControllerTest {
                   "registrationNumber": "%s",
                   "memberSince": "2020-01-01"
                 }
-                """.formatted(registrationNumber);
+                """.formatted(name, registrationNumber);
     }
 
 }

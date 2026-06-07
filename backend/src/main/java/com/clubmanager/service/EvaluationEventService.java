@@ -10,6 +10,7 @@ import com.clubmanager.domain.EvaluationPlayer;
 import com.clubmanager.domain.EvaluationStatus;
 import com.clubmanager.domain.Player;
 import com.clubmanager.domain.PlayerSkillHistory;
+import com.clubmanager.domain.Admin;
 import com.clubmanager.dto.EvaluationEventAttendanceUpdateRequest;
 import com.clubmanager.dto.EvaluationEventCancelRequest;
 import com.clubmanager.dto.EvaluationEventCreateRequest;
@@ -186,7 +187,8 @@ public class EvaluationEventService {
 
     private void applySkillUpdates(EvaluationEvent event, List<EvaluationEventAttendance> completedAttendance) {
         LocalDateTime changedAt = LocalDateTime.now();
-        var currentAdmin = getCurrentAdmin().orElse(null);
+        Admin currentAdmin = getCurrentAdmin()
+                .orElseThrow(() -> new IllegalStateException("Authenticated admin is required to complete an evaluation event"));
         for (EvaluationEventAttendance attendance : completedAttendance) {
             Player player = attendance.getPlayer();
             player.setCurrentSkillLevel(attendance.getSkillLevel());
@@ -202,7 +204,7 @@ public class EvaluationEventService {
         }
     }
 
-    private Optional<com.clubmanager.domain.Admin> getCurrentAdmin() {
+    private Optional<Admin> getCurrentAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getName() == null) {
             return Optional.empty();

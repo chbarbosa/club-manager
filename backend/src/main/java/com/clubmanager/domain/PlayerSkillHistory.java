@@ -34,8 +34,8 @@ public class PlayerSkillHistory extends AbstractEntity {
     @Column(nullable = false)
     private LocalDateTime changedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "changed_by_admin_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "changed_by_admin_id", nullable = false)
     private Admin changedByAdmin;
 
     @ManyToOne(fetch = FetchType.LAZY)
