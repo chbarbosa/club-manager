@@ -167,6 +167,8 @@ export default function EvaluationDetailPage() {
     }
   }
 
+  const evaluationLocked = evaluation?.status === 'FINALIZED'
+
   return (
     <main className="container py-5">
       <Link to="/evaluations">&larr; Back to evaluations</Link>
@@ -214,20 +216,24 @@ export default function EvaluationDetailPage() {
           <section className="card mb-4">
             <div className="card-body">
               <h2 className="h4">Players</h2>
-              <form className="row g-2 align-items-end mb-3" onSubmit={assignPlayer}>
-                <div className="col-md-8">
-                  <label className="form-label" htmlFor="evaluation-player">Assign player</label>
-                  <select className="form-select" id="evaluation-player" onChange={(event) => setSelectedPlayerUuid(event.target.value)} value={selectedPlayerUuid}>
-                    <option value="">Select a matching player</option>
-                    {availablePlayers.map((player) => (
-                      <option key={player.uuid} value={player.uuid}>{player.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <button className="btn btn-primary" disabled={!selectedPlayerUuid} type="submit">Assign player</button>
-                </div>
-              </form>
+              {evaluationLocked ? (
+                <p className="text-muted">This evaluation is finalized. Player assignments are locked.</p>
+              ) : (
+                <form className="row g-2 align-items-end mb-3" onSubmit={assignPlayer}>
+                  <div className="col-md-8">
+                    <label className="form-label" htmlFor="evaluation-player">Assign player</label>
+                    <select className="form-select" id="evaluation-player" onChange={(event) => setSelectedPlayerUuid(event.target.value)} value={selectedPlayerUuid}>
+                      <option value="">Select a matching player</option>
+                      {availablePlayers.map((player) => (
+                        <option key={player.uuid} value={player.uuid}>{player.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <button className="btn btn-primary" disabled={!selectedPlayerUuid} type="submit">Assign player</button>
+                  </div>
+                </form>
+              )}
               <table className="table table-sm">
                 <thead>
                   <tr><th>Name</th><th>Assigned</th><th>Actions</th></tr>
@@ -237,7 +243,13 @@ export default function EvaluationDetailPage() {
                     <tr key={assignment.uuid}>
                       <td>{assignment.playerName}</td>
                       <td>{formatDate(assignment.assignedDate)}</td>
-                      <td><button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment.uuid)} type="button">Remove</button></td>
+                      <td>
+                        {evaluationLocked ? (
+                          <span className="text-muted">Locked</span>
+                        ) : (
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment.uuid)} type="button">Remove</button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -249,36 +261,41 @@ export default function EvaluationDetailPage() {
           <section className="card">
             <div className="card-body">
               <h2 className="h4">Events</h2>
-              <form className="row g-2 align-items-end mb-4" onSubmit={submitEvent}>
-                <div className="col-md-3">
-                  <label className="form-label" htmlFor="event-place">Place</label>
-                  <input className="form-control" id="event-place" onChange={(event) => setEventForm({ ...eventForm, place: event.target.value })} required value={eventForm.place} />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label" htmlFor="event-date">Date</label>
-                  <input className="form-control" id="event-date" onChange={(event) => setEventForm({ ...eventForm, eventDate: event.target.value })} required type="date" value={eventForm.eventDate} />
-                </div>
-                <div className="col-md-2">
-                  <label className="form-label" htmlFor="event-time">Start time</label>
-                  <input className="form-control" id="event-time" onChange={(event) => setEventForm({ ...eventForm, startTime: event.target.value })} required type="time" value={eventForm.startTime} />
-                </div>
-                <div className="col-md-2">
-                  <label className="form-label" htmlFor="event-duration">Duration</label>
-                  <select className="form-select" id="event-duration" onChange={(event) => setEventForm({ ...eventForm, durationMinutes: event.target.value })} value={eventForm.durationMinutes}>
-                    <option value="60">1h</option>
-                    <option value="90">1.5h</option>
-                    <option value="120">2h</option>
-                  </select>
-                </div>
-                <div className="col-md-2">
-                  <button className="btn btn-primary" type="submit">Add event</button>
-                </div>
-              </form>
+              {evaluationLocked ? (
+                <p className="text-muted">This evaluation is finalized. Events are locked.</p>
+              ) : (
+                <form className="row g-2 align-items-end mb-4" onSubmit={submitEvent}>
+                  <div className="col-md-3">
+                    <label className="form-label" htmlFor="event-place">Place</label>
+                    <input className="form-control" id="event-place" onChange={(event) => setEventForm({ ...eventForm, place: event.target.value })} required value={eventForm.place} />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label" htmlFor="event-date">Date</label>
+                    <input className="form-control" id="event-date" onChange={(event) => setEventForm({ ...eventForm, eventDate: event.target.value })} required type="date" value={eventForm.eventDate} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label" htmlFor="event-time">Start time</label>
+                    <input className="form-control" id="event-time" onChange={(event) => setEventForm({ ...eventForm, startTime: event.target.value })} required type="time" value={eventForm.startTime} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label" htmlFor="event-duration">Duration</label>
+                    <select className="form-select" id="event-duration" onChange={(event) => setEventForm({ ...eventForm, durationMinutes: event.target.value })} value={eventForm.durationMinutes}>
+                      <option value="60">1h</option>
+                      <option value="90">1.5h</option>
+                      <option value="120">2h</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2">
+                    <button className="btn btn-primary" type="submit">Add event</button>
+                  </div>
+                </form>
+              )}
 
               {events.map((event) => (
                 <EvaluationEventCard
                   attendance={attendanceByEvent[event.uuid] ?? []}
                   event={event}
+                  evaluationLocked={evaluationLocked}
                   key={event.uuid}
                   onCancel={() => cancelEvent(event.uuid)}
                   onComplete={() => completeEvent(event.uuid)}
@@ -295,7 +312,7 @@ export default function EvaluationDetailPage() {
   )
 }
 
-function EvaluationEventCard({ attendance, event, onCancel, onComplete, onSaveAttendance, players }) {
+function EvaluationEventCard({ attendance, evaluationLocked, event, onCancel, onComplete, onSaveAttendance, players }) {
   const attendanceByPlayer = new Map(attendance.map((entry) => [entry.playerUuid, entry]))
 
   return (
@@ -308,7 +325,7 @@ function EvaluationEventCard({ attendance, event, onCancel, onComplete, onSaveAt
             {event.status}
           </span>
         </div>
-        {event.status === 'SCHEDULED' && (
+        {!evaluationLocked && event.status === 'SCHEDULED' && (
           <div className="d-flex gap-2">
             <button className="btn btn-sm btn-outline-success" onClick={onComplete} type="button">Complete event</button>
             <button className="btn btn-sm btn-outline-secondary" onClick={onCancel} type="button">Cancel</button>
@@ -326,7 +343,7 @@ function EvaluationEventCard({ attendance, event, onCancel, onComplete, onSaveAt
               <AttendanceRow
                 assignment={assignment}
                 current={current}
-                disabled={event.status !== 'SCHEDULED'}
+                disabled={evaluationLocked || event.status !== 'SCHEDULED'}
                 eventUuid={event.uuid}
                 key={assignment.playerUuid}
                 onSave={onSaveAttendance}

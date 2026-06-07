@@ -94,6 +94,7 @@ public class EvaluationEventService {
     public EvaluationEventAttendance updateAttendance(
             UUID eventUuid, UUID playerUuid, EvaluationEventAttendanceUpdateRequest request) {
         EvaluationEvent event = getEvent(eventUuid);
+        ensureEvaluationEditable(event.getEvaluation());
         ensureEventScheduled(event);
         Player player = getPlayer(playerUuid);
         ensurePlayerAssignedToEvaluation(event.getEvaluation(), player);
@@ -112,6 +113,7 @@ public class EvaluationEventService {
     @Transactional
     public EvaluationEvent completeEvent(UUID eventUuid) {
         EvaluationEvent event = getEvent(eventUuid);
+        ensureEvaluationEditable(event.getEvaluation());
         ensureEventScheduled(event);
         List<EvaluationPlayer> players = evaluationPlayerRepository
                 .findByEvaluationAndActiveTrueOrderByPlayerNameAsc(event.getEvaluation());
@@ -138,6 +140,7 @@ public class EvaluationEventService {
     @Transactional
     public EvaluationEvent cancelEvent(UUID eventUuid, EvaluationEventCancelRequest request) {
         EvaluationEvent event = getEvent(eventUuid);
+        ensureEvaluationEditable(event.getEvaluation());
         ensureEventScheduled(event);
         event.setStatus(EvaluationEventStatus.CANCELED);
         event.setCancelReason(request == null || !StringUtils.hasText(request.cancelReason())

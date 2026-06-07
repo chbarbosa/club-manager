@@ -154,6 +154,47 @@ class EvaluationControllerTest {
     }
 
     @Test
+    void finalizedEvaluationCannotChangeEvents() throws Exception {
+        String evaluationUuid = createEvaluation();
+        String eventUuid = createEvent(evaluationUuid);
+
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/finalize", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FINALIZED"));
+
+        mockMvc.perform(post("/api/v1/evaluations/{evaluationUuid}/events", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "place": "Second Field",
+                                  "eventDate": "%s",
+                                  "startTime": "19:00",
+                                  "durationMinutes": 60
+                                }
+                                """.formatted(LocalDate.now().plusDays(8))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Finalized evaluations cannot be changed"));
+
+        mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/cancel", eventUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cancelReason": "Closed evaluation"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Finalized evaluations cannot be changed"));
+
+        mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/complete", eventUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Finalized evaluations cannot be changed"));
+    }
+
+    @Test
     void removeEvaluationPlayer_WithValidAssignment_ReturnsInactiveAssignment() throws Exception {
         String evaluationUuid = createEvaluation();
         String playerUuid = createPlayer("EV-002");

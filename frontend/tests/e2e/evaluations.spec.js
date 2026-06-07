@@ -59,6 +59,13 @@ test('admin can create an evaluation group and complete an event after attendanc
   await expect(page.getByText('Event completed.')).toBeVisible()
   await expect(eventCard.getByText('COMPLETED')).toBeVisible()
 
+  await page.getByRole('button', { name: 'Finalize' }).click()
+  await expect(page.getByText('Evaluation finalized.')).toBeVisible()
+  await expect(page.getByText('This evaluation is finalized. Player assignments are locked.')).toBeVisible()
+  await expect(page.getByText('This evaluation is finalized. Events are locked.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add event' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Remove' })).toHaveCount(0)
+
   await page.getByRole('navigation').getByRole('link', { name: 'Players' }).click()
   await page.getByLabel('Search players').fill(playerName)
   await page.locator('tr').filter({ hasText: playerName }).getByRole('link', { name: 'View' }).click()
