@@ -7,7 +7,7 @@ test('admin updates club identity and primary colour', async ({ page }) => {
   await page.getByRole('button', { name: 'Login' }).click()
 
   await expect(page).toHaveURL('/dashboard')
-  await page.getByRole('main').getByRole('link', { name: 'Club settings' }).click()
+  await page.getByRole('main').getByRole('link', { name: 'Open settings' }).click()
   await page.getByLabel('Club name').fill('My Club')
   await page.getByLabel('Primary colour').fill('#123456')
   await page.getByRole('button', { name: 'Save club settings' }).click()

@@ -58,4 +58,12 @@ test('admin can create an evaluation group and complete an event after attendanc
   await eventCard.getByRole('button', { name: 'Complete event' }).click()
   await expect(page.getByText('Event completed.')).toBeVisible()
   await expect(eventCard.getByText('COMPLETED')).toBeVisible()
+
+  await page.getByRole('navigation').getByRole('link', { name: 'Players' }).click()
+  await page.getByLabel('Search players').fill(playerName)
+  await page.locator('tr').filter({ hasText: playerName }).getByRole('link', { name: 'View' }).click()
+  await expect(page.getByRole('heading', { name: playerName })).toBeVisible()
+  await expect(page.getByRole('definition').filter({ hasText: 'Skilled' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Skill history' })).toBeVisible()
+  await expect(page.locator('tr').filter({ hasText: 'Evaluation event completed: Main Field' }).filter({ hasText: 'Skilled' })).toBeVisible()
 })

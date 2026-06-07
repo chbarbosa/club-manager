@@ -9,18 +9,25 @@ import com.clubmanager.domain.EvaluationEventStatus;
 import com.clubmanager.domain.EvaluationPlayer;
 import com.clubmanager.domain.EvaluationStatus;
 import com.clubmanager.domain.Player;
+import com.clubmanager.domain.PlayerSkillHistory;
 import com.clubmanager.dto.EvaluationEventAttendanceUpdateRequest;
 import com.clubmanager.dto.EvaluationEventCancelRequest;
 import com.clubmanager.dto.EvaluationEventCreateRequest;
+import com.clubmanager.repository.AdminRepository;
 import com.clubmanager.repository.EvaluationEventAttendanceRepository;
 import com.clubmanager.repository.EvaluationEventRepository;
 import com.clubmanager.repository.EvaluationPlayerRepository;
 import com.clubmanager.repository.EvaluationRepository;
 import com.clubmanager.repository.PlayerRepository;
+import com.clubmanager.repository.PlayerSkillHistoryRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -35,18 +42,24 @@ public class EvaluationEventService {
     private final EvaluationPlayerRepository evaluationPlayerRepository;
     private final EvaluationEventAttendanceRepository attendanceRepository;
     private final PlayerRepository playerRepository;
+    private final PlayerSkillHistoryRepository playerSkillHistoryRepository;
+    private final AdminRepository adminRepository;
 
     public EvaluationEventService(
             EvaluationRepository evaluationRepository,
             EvaluationEventRepository evaluationEventRepository,
             EvaluationPlayerRepository evaluationPlayerRepository,
             EvaluationEventAttendanceRepository attendanceRepository,
-            PlayerRepository playerRepository) {
+            PlayerRepository playerRepository,
+            PlayerSkillHistoryRepository playerSkillHistoryRepository,
+            AdminRepository adminRepository) {
         this.evaluationRepository = evaluationRepository;
         this.evaluationEventRepository = evaluationEventRepository;
         this.evaluationPlayerRepository = evaluationPlayerRepository;
         this.attendanceRepository = attendanceRepository;
         this.playerRepository = playerRepository;
+        this.playerSkillHistoryRepository = playerSkillHistoryRepository;
+        this.adminRepository = adminRepository;
     }
 
     @Transactional(readOnly = true)
@@ -104,16 +117,19 @@ public class EvaluationEventService {
         if (players.isEmpty()) {
             throw new IllegalArgumentException("At least one player must be assigned before completing an event");
         }
+        List<EvaluationEventAttendance> completedAttendance = new java.util.ArrayList<>();
         for (EvaluationPlayer evaluationPlayer : players) {
-            boolean hasCompletedAttendance = attendanceRepository
-                    .findByEvaluationEventAndPlayer(event, evaluationPlayer.getPlayer())
-                    .map(attendance -> attendance.getStatus() != null && attendance.getSkillLevel() != null)
-                    .orElse(false);
-            if (!hasCompletedAttendance) {
+            Optional<EvaluationEventAttendance> attendance = attendanceRepository
+                    .findByEvaluationEventAndPlayer(event, evaluationPlayer.getPlayer());
+            if (attendance.isEmpty()
+                    || attendance.get().getStatus() == null
+                    || attendance.get().getSkillLevel() == null) {
                 throw new IllegalArgumentException(
                         "All assigned players must have participation and skill level before closing the event");
             }
+            completedAttendance.add(attendance.get());
         }
+        applySkillUpdates(event, completedAttendance);
         event.setStatus(EvaluationEventStatus.COMPLETED);
         return evaluationEventRepository.save(event);
     }
@@ -166,5 +182,31 @@ public class EvaluationEventService {
         if (!evaluationPlayerRepository.existsByEvaluationAndPlayerAndActiveTrue(evaluation, player)) {
             throw new IllegalArgumentException("Player must be assigned to the evaluation before attendance can be recorded");
         }
+    }
+
+    private void applySkillUpdates(EvaluationEvent event, List<EvaluationEventAttendance> completedAttendance) {
+        LocalDateTime changedAt = LocalDateTime.now();
+        var currentAdmin = getCurrentAdmin().orElse(null);
+        for (EvaluationEventAttendance attendance : completedAttendance) {
+            Player player = attendance.getPlayer();
+            player.setCurrentSkillLevel(attendance.getSkillLevel());
+            playerRepository.save(player);
+            playerSkillHistoryRepository.save(PlayerSkillHistory.builder()
+                    .player(player)
+                    .skillLevel(attendance.getSkillLevel())
+                    .changedAt(changedAt)
+                    .changedByAdmin(currentAdmin)
+                    .evaluationEvent(event)
+                    .description("Evaluation event completed: " + event.getPlace())
+                    .build());
+        }
+    }
+
+    private Optional<com.clubmanager.domain.Admin> getCurrentAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            return Optional.empty();
+        }
+        return adminRepository.findByUsername(authentication.getName());
     }
 }

@@ -12,6 +12,10 @@ export function getPlayer(uuid) {
   return api.get(`/players/${uuid}`).then((response) => response.data)
 }
 
+export function getPlayerSkillHistory(uuid) {
+  return api.get(`/players/${uuid}/skill-history`).then((response) => response.data)
+}
+
 export function updatePlayer(uuid, data) {
   return api.put(`/players/${uuid}`, data).then((response) => response.data)
 }

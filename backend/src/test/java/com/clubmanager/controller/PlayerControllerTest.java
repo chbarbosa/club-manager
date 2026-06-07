@@ -108,6 +108,17 @@ class PlayerControllerTest {
     }
 
     @Test
+    void getPlayerSkillHistory_WithNoHistory_ReturnsEmptyList() throws Exception {
+        String uuid = createPlayer("REG-111");
+
+        mockMvc.perform(get("/api/v1/players/{uuid}/skill-history", uuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void getPlayerByUuid_WithUnknownUuid_ReturnsNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/players/{uuid}", "00000000-0000-0000-0000-000000000000")
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))

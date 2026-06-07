@@ -3,10 +3,12 @@ package com.clubmanager.service;
 import static com.clubmanager.service.ServiceDataHelper.applyTextUpdate;
 
 import com.clubmanager.domain.Player;
+import com.clubmanager.domain.PlayerSkillHistory;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.dto.PlayerCreateRequest;
 import com.clubmanager.dto.PlayerUpdateRequest;
 import com.clubmanager.repository.PlayerRepository;
+import com.clubmanager.repository.PlayerSkillHistoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -21,9 +23,11 @@ import org.springframework.util.StringUtils;
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
+    private final PlayerSkillHistoryRepository playerSkillHistoryRepository;
 
-    public PlayerService(PlayerRepository playerRepository) {
+    public PlayerService(PlayerRepository playerRepository, PlayerSkillHistoryRepository playerSkillHistoryRepository) {
         this.playerRepository = playerRepository;
+        this.playerSkillHistoryRepository = playerSkillHistoryRepository;
     }
 
     @Transactional
@@ -62,6 +66,11 @@ public class PlayerService {
             return getAllPlayers(pageable);
         }
         return playerRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<PlayerSkillHistory> getSkillHistory(UUID uuid) {
+        return playerSkillHistoryRepository.findByPlayerOrderByChangedAtDesc(getPlayerByUuid(uuid));
     }
 
     @Transactional

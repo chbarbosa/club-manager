@@ -1,6 +1,7 @@
 package com.clubmanager.dto;
 
 import com.clubmanager.domain.TeamCategory;
+import com.clubmanager.domain.SkillLevel;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ public record PlayerResponse(
         LocalDate birthdate,
         int age,
         TeamCategory teamCategory,
+        SkillLevel currentSkillLevel,
         String registrationNumber,
         LocalDate registerDate,
         LocalDate memberSince,

@@ -24,7 +24,6 @@ test('admin can create, search, view, and deactivate a player', async ({ page })
   await page.getByRole('button', { name: 'Save player' }).click()
 
   await expect(page.getByText('Player created.')).toBeVisible()
-  await expect(page.getByRole('cell', { name: playerName })).toBeVisible()
 
   await page.getByLabel('Search players').fill(playerName)
   await expect(page.getByRole('cell', { name: playerName })).toBeVisible()

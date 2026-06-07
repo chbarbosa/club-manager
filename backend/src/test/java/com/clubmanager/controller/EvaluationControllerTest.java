@@ -138,6 +138,19 @@ class EvaluationControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        mockMvc.perform(get("/api/v1/players/{uuid}", playerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentSkillLevel").value("SKILLED"));
+
+        mockMvc.perform(get("/api/v1/players/{uuid}/skill-history", playerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].skillLevel").value("SKILLED"))
+                .andExpect(jsonPath("$[0].changedByAdminName").value("Admin"))
+                .andExpect(jsonPath("$[0].description").value("Evaluation event completed: Main Field"))
+                .andExpect(jsonPath("$[0].id").doesNotExist());
     }
 
     @Test

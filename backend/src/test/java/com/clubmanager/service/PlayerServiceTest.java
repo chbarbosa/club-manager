@@ -7,10 +7,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.clubmanager.domain.Player;
+import com.clubmanager.domain.PlayerSkillHistory;
+import com.clubmanager.domain.SkillLevel;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.dto.PlayerCreateRequest;
 import com.clubmanager.dto.PlayerUpdateRequest;
 import com.clubmanager.repository.PlayerRepository;
+import com.clubmanager.repository.PlayerSkillHistoryRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -29,11 +32,14 @@ class PlayerServiceTest {
     @Mock
     private PlayerRepository playerRepository;
 
+    @Mock
+    private PlayerSkillHistoryRepository playerSkillHistoryRepository;
+
     private PlayerService playerService;
 
     @BeforeEach
     void setUp() {
-        playerService = new PlayerService(playerRepository);
+        playerService = new PlayerService(playerRepository, playerSkillHistoryRepository);
     }
 
     @Test
@@ -180,6 +186,23 @@ class PlayerServiceTest {
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().getFirst().getName()).isEqualTo("Joao Silva");
+    }
+
+    @Test
+    void getSkillHistory_WithKnownPlayer_ReturnsHistory() {
+        Player player = player();
+        PlayerSkillHistory history = PlayerSkillHistory.builder()
+                .player(player)
+                .skillLevel(SkillLevel.SKILLED)
+                .changedAt(java.time.LocalDateTime.now())
+                .build();
+        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
+        when(playerSkillHistoryRepository.findByPlayerOrderByChangedAtDesc(player)).thenReturn(List.of(history));
+
+        List<PlayerSkillHistory> result = playerService.getSkillHistory(player.getUuid());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getSkillLevel()).isEqualTo(SkillLevel.SKILLED);
     }
 
     private PlayerCreateRequest createRequest(String registrationNumber) {

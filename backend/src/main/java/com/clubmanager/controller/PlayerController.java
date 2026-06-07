@@ -3,9 +3,11 @@ package com.clubmanager.controller;
 import com.clubmanager.dto.PlayerCreateRequest;
 import com.clubmanager.dto.PageResponse;
 import com.clubmanager.dto.PlayerResponse;
+import com.clubmanager.dto.PlayerSkillHistoryResponse;
 import com.clubmanager.dto.PlayerSummaryResponse;
 import com.clubmanager.dto.PlayerUpdateRequest;
 import com.clubmanager.mapper.PlayerMapper;
+import com.clubmanager.mapper.PlayerSkillHistoryMapper;
 import com.clubmanager.service.PlayerService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -30,10 +32,15 @@ public class PlayerController {
 
     private final PlayerService playerService;
     private final PlayerMapper playerMapper;
+    private final PlayerSkillHistoryMapper playerSkillHistoryMapper;
 
-    public PlayerController(PlayerService playerService, PlayerMapper playerMapper) {
+    public PlayerController(
+            PlayerService playerService,
+            PlayerMapper playerMapper,
+            PlayerSkillHistoryMapper playerSkillHistoryMapper) {
         this.playerService = playerService;
         this.playerMapper = playerMapper;
+        this.playerSkillHistoryMapper = playerSkillHistoryMapper;
     }
 
     @PostMapping
@@ -51,6 +58,13 @@ public class PlayerController {
     @GetMapping("/{uuid}")
     public PlayerResponse getPlayerByUuid(@PathVariable UUID uuid) {
         return playerMapper.toResponse(playerService.getPlayerByUuid(uuid));
+    }
+
+    @GetMapping("/{uuid}/skill-history")
+    public java.util.List<PlayerSkillHistoryResponse> getPlayerSkillHistory(@PathVariable UUID uuid) {
+        return playerService.getSkillHistory(uuid).stream()
+                .map(playerSkillHistoryMapper::toResponse)
+                .toList();
     }
 
     @PutMapping("/{uuid}")

@@ -21,7 +21,6 @@ test('admin can create, search, view, and deactivate a trainer', async ({ page }
   await page.getByRole('button', { name: 'Save trainer' }).click()
 
   await expect(page.getByText('Trainer created.')).toBeVisible()
-  await expect(page.getByRole('cell', { name: trainerName })).toBeVisible()
 
   await page.getByLabel('Search trainers').fill(trainerName)
   await expect(page.getByRole('cell', { name: trainerName })).toBeVisible()

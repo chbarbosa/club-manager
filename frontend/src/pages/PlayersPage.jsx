@@ -115,6 +115,7 @@ export default function PlayersPage() {
             <th>Name</th>
             <th>Age</th>
             <th>Team category</th>
+            <th>Skill level</th>
             <th>Member Since</th>
             <th>Status</th>
             <th>Actions</th>
@@ -126,6 +127,7 @@ export default function PlayersPage() {
               <td>{player.name}</td>
               <td>{player.age}</td>
               <td>{formatTeamCategory(player.teamCategory)}</td>
+              <td>{formatSkillLevel(player.currentSkillLevel)}</td>
               <td>{formatDate(player.memberSince)}</td>
               <td>
                 <span className={`badge ${player.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
@@ -177,6 +179,19 @@ function formatTeamCategory(value) {
     return 'Feminine'
   }
   return value ?? '-'
+}
+
+function formatSkillLevel(value) {
+  if (value === 'DEBUTANT') {
+    return 'Debutant'
+  }
+  if (value === 'ADVANCED') {
+    return 'Advanced'
+  }
+  if (value === 'SKILLED') {
+    return 'Skilled'
+  }
+  return '-'
 }
 
 function useDebouncedValue(value, delay) {

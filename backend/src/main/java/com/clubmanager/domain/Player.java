@@ -36,6 +36,10 @@ public class Player extends AbstractEntity {
     @Column(nullable = false, length = 20)
     private TeamCategory teamCategory;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private SkillLevel currentSkillLevel;
+
     @Column(length = 50)
     private String registrationNumber;
 
