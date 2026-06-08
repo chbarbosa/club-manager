@@ -2,6 +2,7 @@ package com.clubmanager.repository;
 
 import com.clubmanager.domain.Evaluation;
 import com.clubmanager.domain.EvaluationEvent;
+import com.clubmanager.domain.EvaluationEventStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,4 +16,12 @@ public interface EvaluationEventRepository extends JpaRepository<EvaluationEvent
 
     @EntityGraph(attributePaths = "evaluation")
     List<EvaluationEvent> findByEvaluationOrderByEventDateAscStartTimeAsc(Evaluation evaluation);
+
+    @EntityGraph(attributePaths = "evaluation")
+    List<EvaluationEvent> findByEvaluationAndStatusOrderByEventDateDescStartTimeDesc(
+            Evaluation evaluation, EvaluationEventStatus status);
+
+    boolean existsByEvaluation(Evaluation evaluation);
+
+    boolean existsByEvaluationAndStatus(Evaluation evaluation, EvaluationEventStatus status);
 }

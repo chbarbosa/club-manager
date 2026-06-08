@@ -11,13 +11,23 @@ export default function TeamForm({ initialTeam, onCancel, onSubmit, trainers }) 
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    setForm(initialTeam ? {
-      ageGroup: initialTeam.ageGroup ?? '',
-      teamCategory: initialTeam.teamCategory ?? 'MASCULINE',
-      trainerUuid: initialTeam.trainerUuid ?? '',
-    } : {
-      ...EMPTY_FORM,
-      trainerUuid: trainers[0]?.uuid ?? '',
+    if (initialTeam) {
+      setForm({
+        ageGroup: initialTeam.ageGroup ?? '',
+        teamCategory: initialTeam.teamCategory ?? 'MASCULINE',
+        trainerUuid: initialTeam.trainerUuid ?? '',
+      })
+      return
+    }
+
+    setForm((currentForm) => {
+      if (currentForm.trainerUuid || !trainers[0]?.uuid) {
+        return currentForm
+      }
+      return {
+        ...currentForm,
+        trainerUuid: trainers[0].uuid,
+      }
     })
   }, [initialTeam, trainers])
 
@@ -96,4 +106,3 @@ export default function TeamForm({ initialTeam, onCancel, onSubmit, trainers }) 
     </form>
   )
 }
-

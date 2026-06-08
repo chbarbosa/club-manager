@@ -12,6 +12,14 @@ export function getEvaluation(uuid) {
   return api.get(`/evaluations/${uuid}`).then((response) => response.data)
 }
 
+export function getEvaluationResults(uuid) {
+  return api.get(`/evaluations/${uuid}/results`).then((response) => response.data)
+}
+
+export function updateEvaluationResult(evaluationUuid, playerUuid, data) {
+  return api.put(`/evaluations/${evaluationUuid}/results/${playerUuid}`, data).then((response) => response.data)
+}
+
 export function updateEvaluation(uuid, data) {
   return api.put(`/evaluations/${uuid}`, data).then((response) => response.data)
 }

@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 test('admin can create an evaluation group and complete an event after attendance is recorded', async ({ page }) => {
+  page.on('dialog', (dialog) => dialog.accept())
+
   const suffix = Date.now().toString()
   const playerName = `Evaluation Player ${suffix}`
   const registrationNumber = `EVAL-${suffix}`
@@ -48,21 +50,32 @@ test('admin can create an evaluation group and complete an event after attendanc
   await page.getByLabel('Duration').selectOption('90')
   await page.getByRole('button', { name: 'Add event' }).click()
   await expect(page.getByText('Event created.')).toBeVisible()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByText('Evaluation started.')).toBeVisible()
 
   const eventCard = page.locator('.border.rounded').filter({ hasText: 'Main Field' })
   await eventCard.getByRole('row').filter({ hasText: playerName }).getByRole('combobox').nth(0).selectOption('PRESENT')
-  await eventCard.getByRole('row').filter({ hasText: playerName }).getByRole('combobox').nth(1).selectOption('SKILLED')
-  await eventCard.getByRole('row').filter({ hasText: playerName }).getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Attendance saved.')).toBeVisible()
 
   await eventCard.getByRole('button', { name: 'Complete event' }).click()
   await expect(page.getByText('Event completed.')).toBeVisible()
   await expect(eventCard.getByText('COMPLETED')).toBeVisible()
+  await expect(page.getByText('All events are closed. Evaluate all participants before finalizing this evaluation.')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Finalize' }).click()
+  await expect(page.getByText('All assigned players must be evaluated before finalizing')).toBeVisible()
+
+  const evaluationSection = page.getByRole('heading', { name: 'Evaluate participants' }).locator('..')
+  await evaluationSection.getByRole('row').filter({ hasText: playerName }).getByRole('combobox').selectOption('SKILLED')
+  await expect(page.getByText('Participant evaluated.')).toBeVisible()
 
   await page.getByRole('button', { name: 'Finalize' }).click()
   await expect(page.getByText('Evaluation finalized.')).toBeVisible()
   await expect(page.getByText('This evaluation is finalized. Player assignments are locked.')).toBeVisible()
   await expect(page.getByText('This evaluation is finalized. Events are locked.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
+  const resultsSection = page.getByRole('heading', { name: 'Results' }).locator('..')
+  await expect(resultsSection.getByRole('row', { name: `${playerName} Skilled Present -` })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Add event' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Remove' })).toHaveCount(0)
 
@@ -72,5 +85,5 @@ test('admin can create an evaluation group and complete an event after attendanc
   await expect(page.getByRole('heading', { name: playerName })).toBeVisible()
   await expect(page.getByRole('definition').filter({ hasText: 'Skilled' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Skill history' })).toBeVisible()
-  await expect(page.locator('tr').filter({ hasText: 'Evaluation event completed: Main Field' }).filter({ hasText: 'Skilled' })).toBeVisible()
+  await expect(page.locator('tr').filter({ hasText: `Evaluation finalized: ${evaluationTitle}` }).filter({ hasText: 'Skilled' })).toBeVisible()
 })

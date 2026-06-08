@@ -109,35 +109,62 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void eventCannotCompleteUntilAllAssignedPlayersHaveAttendanceAndSkillLevel() throws Exception {
+    void eventCannotCompleteUntilParticipationRecordedThenParticipantEvaluationIsRequiredBeforeFinalize() throws Exception {
         String evaluationUuid = createEvaluation();
         String playerUuid = createPlayer("EV-001");
         assignPlayer(evaluationUuid, playerUuid);
         String eventUuid = createEvent(evaluationUuid);
+        startEvaluation(evaluationUuid);
 
         mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/complete", eventUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("All assigned players must have participation and skill level before closing the event"));
+                .andExpect(jsonPath("$.message").value("All assigned players must have participation before closing the event"));
 
         mockMvc.perform(put("/api/v1/evaluation-events/{eventUuid}/attendance/{playerUuid}", eventUuid, playerUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "status": "PRESENT",
-                                  "skillLevel": "SKILLED"
+                                  "status": "PRESENT"
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.playerUuid").value(playerUuid))
                 .andExpect(jsonPath("$.status").value("PRESENT"))
-                .andExpect(jsonPath("$.skillLevel").value("SKILLED"));
+                .andExpect(jsonPath("$.skillLevel").doesNotExist());
 
         mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/complete", eventUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        mockMvc.perform(get("/api/v1/players/{uuid}", playerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentSkillLevel").doesNotExist());
+
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/finalize", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("All assigned players must be evaluated before finalizing"));
+
+        mockMvc.perform(put("/api/v1/evaluations/{evaluationUuid}/results/{playerUuid}", evaluationUuid, playerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "levelResult": "SKILLED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.uuid").isString())
+                .andExpect(jsonPath("$.evaluationUuid").value(evaluationUuid))
+                .andExpect(jsonPath("$.playerUuid").value(playerUuid))
+                .andExpect(jsonPath("$.playerName").value("Evaluation Player EV-001"))
+                .andExpect(jsonPath("$.levelResult").value("SKILLED"))
+                .andExpect(jsonPath("$.attendanceStatus").value("PRESENT"))
+                .andExpect(jsonPath("$.id").doesNotExist());
 
         mockMvc.perform(get("/api/v1/players/{uuid}", playerUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -149,7 +176,23 @@ class EvaluationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].skillLevel").value("SKILLED"))
                 .andExpect(jsonPath("$[0].changedByAdminName").value("Admin"))
-                .andExpect(jsonPath("$[0].description").value("Evaluation event completed: Main Field"))
+                .andExpect(jsonPath("$[0].description").value("Evaluation finalized: Spring Tryouts"))
+                .andExpect(jsonPath("$[0].id").doesNotExist());
+
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/finalize", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FINALIZED"));
+
+        mockMvc.perform(get("/api/v1/evaluations/{uuid}/results", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].uuid").isString())
+                .andExpect(jsonPath("$[0].evaluationUuid").value(evaluationUuid))
+                .andExpect(jsonPath("$[0].playerUuid").value(playerUuid))
+                .andExpect(jsonPath("$[0].playerName").value("Evaluation Player EV-001"))
+                .andExpect(jsonPath("$[0].levelResult").value("SKILLED"))
+                .andExpect(jsonPath("$[0].attendanceStatus").value("PRESENT"))
                 .andExpect(jsonPath("$[0].id").doesNotExist());
     }
 
@@ -157,6 +200,17 @@ class EvaluationControllerTest {
     void finalizedEvaluationCannotChangeEvents() throws Exception {
         String evaluationUuid = createEvaluation();
         String eventUuid = createEvent(evaluationUuid);
+
+        mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/cancel", eventUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cancelReason": "Closed before finalization"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELED"));
 
         mockMvc.perform(patch("/api/v1/evaluations/{uuid}/finalize", evaluationUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -209,6 +263,7 @@ class EvaluationControllerTest {
     @Test
     void startEvaluation_WhenOpen_ReturnsInProgressEvaluation() throws Exception {
         String evaluationUuid = createEvaluation();
+        createEvent(evaluationUuid);
 
         mockMvc.perform(patch("/api/v1/evaluations/{uuid}/start", evaluationUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -217,13 +272,46 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void finalizeEvaluation_WhenOpen_ReturnsFinalizedEvaluation() throws Exception {
+    void startEvaluation_WithoutEvents_ReturnsBadRequest() throws Exception {
         String evaluationUuid = createEvaluation();
+
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/start", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("At least one event is required before starting an evaluation"));
+    }
+
+    @Test
+    void finalizeEvaluation_WhenAllEventsClosed_ReturnsFinalizedEvaluation() throws Exception {
+        String evaluationUuid = createEvaluation();
+        String eventUuid = createEvent(evaluationUuid);
+
+        mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/cancel", eventUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cancelReason": "No players assigned"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELED"));
 
         mockMvc.perform(patch("/api/v1/evaluations/{uuid}/finalize", evaluationUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FINALIZED"));
+    }
+
+    @Test
+    void finalizeEvaluation_WithScheduledEvent_ReturnsBadRequest() throws Exception {
+        String evaluationUuid = createEvaluation();
+        createEvent(evaluationUuid);
+
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/finalize", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("All evaluation events must be completed or canceled before finalizing"));
     }
 
     private String createEvaluation() throws Exception {
@@ -271,6 +359,13 @@ class EvaluationControllerTest {
                 .getResponse()
                 .getContentAsString();
         return JsonPath.read(response, "$.uuid");
+    }
+
+    private void startEvaluation(String evaluationUuid) throws Exception {
+        mockMvc.perform(patch("/api/v1/evaluations/{uuid}/start", evaluationUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
     }
 
     private String createPlayer(String registrationNumber) throws Exception {

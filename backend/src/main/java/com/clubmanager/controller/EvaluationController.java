@@ -4,12 +4,16 @@ import com.clubmanager.domain.EvaluationStatus;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.dto.EvaluationCreateRequest;
 import com.clubmanager.dto.EvaluationResponse;
+import com.clubmanager.dto.EvaluationResultResponse;
+import com.clubmanager.dto.EvaluationResultUpdateRequest;
 import com.clubmanager.dto.EvaluationSummaryResponse;
 import com.clubmanager.dto.EvaluationUpdateRequest;
 import com.clubmanager.dto.PageResponse;
 import com.clubmanager.mapper.EvaluationMapper;
+import com.clubmanager.mapper.EvaluationResultMapper;
 import com.clubmanager.service.EvaluationService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -32,10 +36,15 @@ public class EvaluationController {
 
     private final EvaluationService evaluationService;
     private final EvaluationMapper evaluationMapper;
+    private final EvaluationResultMapper evaluationResultMapper;
 
-    public EvaluationController(EvaluationService evaluationService, EvaluationMapper evaluationMapper) {
+    public EvaluationController(
+            EvaluationService evaluationService,
+            EvaluationMapper evaluationMapper,
+            EvaluationResultMapper evaluationResultMapper) {
         this.evaluationService = evaluationService;
         this.evaluationMapper = evaluationMapper;
+        this.evaluationResultMapper = evaluationResultMapper;
     }
 
     @PostMapping
@@ -72,5 +81,20 @@ public class EvaluationController {
     @PatchMapping("/{uuid}/finalize")
     public EvaluationResponse finalizeEvaluation(@PathVariable UUID uuid) {
         return evaluationMapper.toResponse(evaluationService.finalizeEvaluation(uuid));
+    }
+
+    @GetMapping("/{uuid}/results")
+    public List<EvaluationResultResponse> getResults(@PathVariable UUID uuid) {
+        return evaluationService.getResults(uuid).stream()
+                .map(evaluationResultMapper::toResponse)
+                .toList();
+    }
+
+    @PutMapping("/{uuid}/results/{playerUuid}")
+    public EvaluationResultResponse updateResult(
+            @PathVariable UUID uuid,
+            @PathVariable UUID playerUuid,
+            @Valid @RequestBody EvaluationResultUpdateRequest request) {
+        return evaluationResultMapper.toResponse(evaluationService.updateResult(uuid, playerUuid, request));
     }
 }

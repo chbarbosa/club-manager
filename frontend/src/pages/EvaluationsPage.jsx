@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createEvaluation, finalizeEvaluation, getAllEvaluations, startEvaluation } from '../api/evaluations.js'
+import { createEvaluation, getAllEvaluations } from '../api/evaluations.js'
 import EvaluationForm from '../components/evaluations/EvaluationForm.jsx'
 
 const PAGE_SIZE = 20
@@ -48,23 +48,6 @@ export default function EvaluationsPage() {
       await loadEvaluations()
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to save evaluation.')
-    }
-  }
-
-  async function changeEvaluationStatus(evaluation, action) {
-    setError('')
-    setMessage('')
-    try {
-      if (action === 'start') {
-        await startEvaluation(evaluation.uuid)
-        setMessage('Evaluation started.')
-      } else {
-        await finalizeEvaluation(evaluation.uuid)
-        setMessage('Evaluation finalized.')
-      }
-      await loadEvaluations()
-    } catch (requestError) {
-      setError(requestError.response?.data?.message ?? requestError.message ?? `Unable to ${action} evaluation.`)
     }
   }
 
@@ -155,16 +138,6 @@ export default function EvaluationsPage() {
                 <div className="d-flex gap-2">
                   <Link className="btn btn-sm btn-outline-primary" to={`/evaluations/${evaluation.uuid}`}>View</Link>
                   <Link className="btn btn-sm btn-outline-secondary" to={`/evaluations/${evaluation.uuid}?edit=1`}>Edit</Link>
-                  {evaluation.status === 'OPEN' && (
-                    <button className="btn btn-sm btn-outline-success" onClick={() => changeEvaluationStatus(evaluation, 'start')} type="button">
-                      Start
-                    </button>
-                  )}
-                  {evaluation.status !== 'FINALIZED' && (
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => changeEvaluationStatus(evaluation, 'finalize')} type="button">
-                      Finalize
-                    </button>
-                  )}
                 </div>
               </td>
             </tr>

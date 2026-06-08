@@ -10,10 +10,12 @@ import {
   getEvaluation,
   getEvaluationEvents,
   getEvaluationPlayers,
+  getEvaluationResults,
   removeEvaluationPlayer,
   startEvaluation,
   updateEvaluation,
   updateEventAttendance,
+  updateEvaluationResult,
 } from '../api/evaluations.js'
 import { getAllPlayers } from '../api/players.js'
 import EvaluationForm from '../components/evaluations/EvaluationForm.jsx'
@@ -30,6 +32,7 @@ export default function EvaluationDetailPage() {
   const location = useLocation()
   const [evaluation, setEvaluation] = useState(null)
   const [evaluationPlayers, setEvaluationPlayers] = useState([])
+  const [evaluationResults, setEvaluationResults] = useState([])
   const [allPlayers, setAllPlayers] = useState([])
   const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
   const [events, setEvents] = useState([])
@@ -67,6 +70,7 @@ export default function EvaluationDetailPage() {
       setEvaluationPlayers(playersResponse)
       setAllPlayers(allPlayersResponse.content ?? [])
       setEvents(eventResponse)
+      setEvaluationResults(await getEvaluationResults(uuid))
       setSelectedPlayerUuid('')
       await loadAttendance(eventResponse)
     } catch (requestError) {
@@ -99,6 +103,7 @@ export default function EvaluationDetailPage() {
       const updated = action === 'start' ? await startEvaluation(uuid) : await finalizeEvaluation(uuid)
       setEvaluation(updated)
       setMessage(action === 'start' ? 'Evaluation started.' : 'Evaluation finalized.')
+      await loadAll()
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? `Unable to ${action} evaluation.`)
     }
@@ -142,9 +147,25 @@ export default function EvaluationDetailPage() {
     })
   }
 
+  async function saveParticipantEvaluation(playerUuid, levelResult) {
+    await runAction('Participant evaluated.', async () => {
+      const saved = await updateEvaluationResult(uuid, playerUuid, { levelResult })
+      setEvaluationResults([
+        ...evaluationResults.filter((result) => result.playerUuid !== playerUuid),
+        saved,
+      ].sort((left, right) => left.playerName.localeCompare(right.playerName)))
+    })
+  }
+
   async function completeEvent(eventUuid) {
     await runAction('Event completed.', async () => {
       await completeEvaluationEvent(eventUuid)
+      const remainingScheduledEvents = events.filter((event) => (
+        event.status === 'SCHEDULED' && event.uuid !== eventUuid
+      ))
+      if (remainingScheduledEvents.length === 0) {
+        window.alert('All events are closed. You cannot add another event; evaluate all participants before finalizing.')
+      }
       await loadAll()
     })
   }
@@ -168,6 +189,13 @@ export default function EvaluationDetailPage() {
   }
 
   const evaluationLocked = evaluation?.status === 'FINALIZED'
+  const hasEvents = events.length > 0
+  const hasScheduledEvents = events.some((event) => event.status === 'SCHEDULED')
+  const eventPhaseClosed = hasEvents && !hasScheduledEvents
+  const evaluationInProgress = evaluation?.status === 'IN_PROGRESS'
+  const canStartEvaluation = evaluation?.status === 'OPEN' && hasEvents
+  const canFinalizeEvaluation = evaluation?.status !== 'FINALIZED' && hasEvents && !hasScheduledEvents
+  const canEvaluateParticipants = evaluation?.status !== 'FINALIZED' && hasEvents && !hasScheduledEvents
 
   return (
     <main className="container py-5">
@@ -189,13 +217,20 @@ export default function EvaluationDetailPage() {
                 <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
               )}
               {evaluation.status === 'OPEN' && (
-                <button className="btn btn-outline-success" onClick={() => changeStatus('start')} type="button">Start</button>
+                <button className="btn btn-outline-success" disabled={!canStartEvaluation} onClick={() => changeStatus('start')} type="button">Start</button>
               )}
               {evaluation.status !== 'FINALIZED' && (
-                <button className="btn btn-outline-danger" onClick={() => changeStatus('finalize')} type="button">Finalize</button>
+                <button className="btn btn-outline-danger" disabled={!canFinalizeEvaluation} onClick={() => changeStatus('finalize')} type="button">Finalize</button>
               )}
             </div>
           </div>
+
+          {!hasEvents && evaluation.status !== 'FINALIZED' && (
+            <p className="alert alert-info">Schedule at least one event before starting or finalizing this evaluation.</p>
+          )}
+          {hasScheduledEvents && evaluation.status !== 'FINALIZED' && (
+            <p className="alert alert-info">Complete or cancel all scheduled events before evaluating participants and finalizing this evaluation.</p>
+          )}
 
           {editing ? (
             <div className="card mb-4">
@@ -263,6 +298,8 @@ export default function EvaluationDetailPage() {
               <h2 className="h4">Events</h2>
               {evaluationLocked ? (
                 <p className="text-muted">This evaluation is finalized. Events are locked.</p>
+              ) : eventPhaseClosed ? (
+                <p className="alert alert-info mb-4">All events are closed. Evaluate all participants before finalizing this evaluation.</p>
               ) : (
                 <form className="row g-2 align-items-end mb-4" onSubmit={submitEvent}>
                   <div className="col-md-3">
@@ -295,6 +332,7 @@ export default function EvaluationDetailPage() {
                 <EvaluationEventCard
                   attendance={attendanceByEvent[event.uuid] ?? []}
                   event={event}
+                  evaluationInProgress={evaluationInProgress}
                   evaluationLocked={evaluationLocked}
                   key={event.uuid}
                   onCancel={() => cancelEvent(event.uuid)}
@@ -306,13 +344,82 @@ export default function EvaluationDetailPage() {
               {events.length === 0 && <p className="text-muted">No events scheduled yet.</p>}
             </div>
           </section>
+
+          <section className="card mt-4">
+            <div className="card-body">
+              <h2 className="h4">Evaluate participants</h2>
+              {!canEvaluateParticipants && evaluation.status !== 'FINALIZED' && (
+                <p className="text-muted mb-0">Close all events before evaluating participants.</p>
+              )}
+              {(canEvaluateParticipants || evaluation.status === 'FINALIZED') && evaluationPlayers.length > 0 && (
+                <table className="table table-sm align-middle">
+                  <thead>
+                    <tr>
+                      <th>Player</th>
+                      <th>Participated</th>
+                      <th>Skill level</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {evaluationPlayers.map((assignment) => {
+                      const result = evaluationResults.find((entry) => entry.playerUuid === assignment.playerUuid)
+                      return (
+                        <ParticipantEvaluationRow
+                          assignment={assignment}
+                          disabled={evaluation.status === 'FINALIZED'}
+                          key={assignment.playerUuid}
+                          onSave={saveParticipantEvaluation}
+                          result={result}
+                        />
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
+              {(canEvaluateParticipants || evaluation.status === 'FINALIZED') && evaluationPlayers.length === 0 && (
+                <p className="text-muted mb-0">No participants assigned to this evaluation.</p>
+              )}
+            </div>
+          </section>
+
+          {evaluation.status === 'FINALIZED' && (
+            <section className="card mt-4">
+              <div className="card-body">
+                <h2 className="h4">Results</h2>
+                {evaluationResults.length > 0 ? (
+                  <table className="table table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th>Player</th>
+                        <th>Final level</th>
+                        <th>Participation</th>
+                        <th>Source event</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {evaluationResults.map((result) => (
+                        <tr key={result.uuid}>
+                          <td>{result.playerName}</td>
+                          <td>{formatSkillLevel(result.levelResult)}</td>
+                          <td>{formatAttendanceStatus(result.attendanceStatus)}</td>
+                          <td>{result.sourceEventPlace ? `${result.sourceEventPlace} (${formatDate(result.sourceEventDate)})` : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-muted mb-0">No results were generated for this evaluation.</p>
+                )}
+              </div>
+            </section>
+          )}
         </>
       )}
     </main>
   )
 }
 
-function EvaluationEventCard({ attendance, evaluationLocked, event, onCancel, onComplete, onSaveAttendance, players }) {
+function EvaluationEventCard({ attendance, evaluationInProgress, evaluationLocked, event, onCancel, onComplete, onSaveAttendance, players }) {
   const attendanceByPlayer = new Map(attendance.map((entry) => [entry.playerUuid, entry]))
 
   return (
@@ -327,14 +434,16 @@ function EvaluationEventCard({ attendance, evaluationLocked, event, onCancel, on
         </div>
         {!evaluationLocked && event.status === 'SCHEDULED' && (
           <div className="d-flex gap-2">
-            <button className="btn btn-sm btn-outline-success" onClick={onComplete} type="button">Complete event</button>
+            {evaluationInProgress && (
+              <button className="btn btn-sm btn-outline-success" onClick={onComplete} type="button">Complete event</button>
+            )}
             <button className="btn btn-sm btn-outline-secondary" onClick={onCancel} type="button">Cancel</button>
           </div>
         )}
       </div>
       <table className="table table-sm mt-3">
         <thead>
-          <tr><th>Player</th><th>Participated</th><th>Skill level</th><th>Actions</th></tr>
+          <tr><th>Player</th><th>Participated</th></tr>
         </thead>
         <tbody>
           {players.map((assignment) => {
@@ -343,7 +452,7 @@ function EvaluationEventCard({ attendance, evaluationLocked, event, onCancel, on
               <AttendanceRow
                 assignment={assignment}
                 current={current}
-                disabled={evaluationLocked || event.status !== 'SCHEDULED'}
+                disabled={evaluationLocked || !evaluationInProgress || event.status !== 'SCHEDULED'}
                 eventUuid={event.uuid}
                 key={assignment.playerUuid}
                 onSave={onSaveAttendance}
@@ -357,34 +466,60 @@ function EvaluationEventCard({ attendance, evaluationLocked, event, onCancel, on
 }
 
 function AttendanceRow({ assignment, current, disabled, eventUuid, onSave }) {
-  const [status, setStatus] = useState(current?.status ?? 'PRESENT')
-  const [skillLevel, setSkillLevel] = useState(current?.skillLevel ?? 'DEBUTANT')
+  const [status, setStatus] = useState(current?.status ?? '')
 
   useEffect(() => {
-    setStatus(current?.status ?? 'PRESENT')
-    setSkillLevel(current?.skillLevel ?? 'DEBUTANT')
+    setStatus(current?.status ?? '')
   }, [current])
+
+  async function changeStatus(event) {
+    const nextStatus = event.target.value
+    setStatus(nextStatus)
+    if (nextStatus) {
+      await onSave(eventUuid, assignment.playerUuid, { status: nextStatus })
+    }
+  }
 
   return (
     <tr>
       <td>{assignment.playerName}</td>
       <td>
-        <select className="form-select form-select-sm" disabled={disabled} onChange={(event) => setStatus(event.target.value)} value={status}>
+        <select className="form-select form-select-sm" disabled={disabled} onChange={changeStatus} value={status}>
+          <option value="">Select participation</option>
           <option value="PRESENT">Present</option>
           <option value="ABSENT">Absent</option>
         </select>
       </td>
+    </tr>
+  )
+}
+
+function ParticipantEvaluationRow({ assignment, disabled, onSave, result }) {
+  const [levelResult, setLevelResult] = useState(result?.levelResult ?? '')
+
+  useEffect(() => {
+    setLevelResult(result?.levelResult ?? '')
+  }, [result])
+
+  async function changeLevel(event) {
+    const nextLevel = event.target.value
+    setLevelResult(nextLevel)
+    if (nextLevel) {
+      await onSave(assignment.playerUuid, nextLevel)
+    }
+  }
+
+  return (
+    <tr>
+      <td>{assignment.playerName}</td>
+      <td>{formatAttendanceStatus(result?.attendanceStatus)}</td>
       <td>
-        <select className="form-select form-select-sm" disabled={disabled} onChange={(event) => setSkillLevel(event.target.value)} value={skillLevel}>
+        <select className="form-select form-select-sm" disabled={disabled} onChange={changeLevel} value={levelResult}>
+          <option value="">Select skill level</option>
           <option value="DEBUTANT">Debutant</option>
           <option value="ADVANCED">Advanced</option>
           <option value="SKILLED">Skilled</option>
         </select>
-      </td>
-      <td>
-        <button className="btn btn-sm btn-outline-primary" disabled={disabled} onClick={() => onSave(eventUuid, assignment.playerUuid, { status, skillLevel })} type="button">
-          Save
-        </button>
       </td>
     </tr>
   )
@@ -420,4 +555,27 @@ function formatDuration(value) {
     return '1.5h'
   }
   return '2h'
+}
+
+function formatSkillLevel(value) {
+  if (value === 'DEBUTANT') {
+    return 'Debutant'
+  }
+  if (value === 'ADVANCED') {
+    return 'Advanced'
+  }
+  if (value === 'SKILLED') {
+    return 'Skilled'
+  }
+  return '-'
+}
+
+function formatAttendanceStatus(value) {
+  if (value === 'PRESENT') {
+    return 'Present'
+  }
+  if (value === 'ABSENT') {
+    return 'Absent'
+  }
+  return '-'
 }
