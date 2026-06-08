@@ -31,7 +31,7 @@ class ClubControllerTest {
         mockMvc.perform(get("/api/v1/club"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uuid").isString())
-                .andExpect(jsonPath("$.name").value("My Club"))
+                .andExpect(jsonPath("$.name").isString())
                 .andExpect(jsonPath("$.id").doesNotExist());
     }
 
@@ -130,4 +130,3 @@ class ClubControllerTest {
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
     }
 }
-

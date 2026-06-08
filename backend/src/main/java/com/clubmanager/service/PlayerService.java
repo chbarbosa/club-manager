@@ -3,6 +3,7 @@ package com.clubmanager.service;
 import static com.clubmanager.service.ServiceDataHelper.applyTextUpdate;
 
 import com.clubmanager.domain.Player;
+import com.clubmanager.domain.PlayerPosition;
 import com.clubmanager.domain.PlayerSkillHistory;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.dto.PlayerCreateRequest;
@@ -11,6 +12,8 @@ import com.clubmanager.repository.PlayerRepository;
 import com.clubmanager.repository.PlayerSkillHistoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.data.domain.Page;
@@ -34,6 +37,7 @@ public class PlayerService {
     public Player createPlayer(PlayerCreateRequest request) {
         validateBirthdate(request.birthdate());
         validateMemberSince(request.memberSince());
+        validatePositions(request.positions());
         validateRegistrationNumberUniqueness(request.registrationNumber(), null);
 
         Player player = Player.builder()
@@ -42,6 +46,7 @@ public class PlayerService {
                 .livingCountry(request.livingCountry())
                 .birthdate(request.birthdate())
                 .teamCategory(request.teamCategory())
+                .positions(new LinkedHashSet<>(request.positions()))
                 .registrationNumber(cleanRegistrationNumber(request.registrationNumber()))
                 .registerDate(LocalDate.now())
                 .memberSince(request.memberSince())
@@ -82,6 +87,7 @@ public class PlayerService {
         applyTextUpdate(request.livingCountry(), "livingCountry", player::setLivingCountry);
         applyBirthdateUpdate(request.birthdate(), player::setBirthdate);
         applyTeamCategoryUpdate(request.teamCategory(), player::setTeamCategory);
+        applyPositionsUpdate(request.positions(), player::setPositions);
         applyRegistrationNumberUpdate(request.registrationNumber(), player);
         applyMemberSinceUpdate(request.memberSince(), player::setMemberSince);
 
@@ -111,6 +117,12 @@ public class PlayerService {
     private void validateMemberSince(LocalDate memberSince) {
         if (memberSince == null || memberSince.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Member since must not be in the future");
+        }
+    }
+
+    private void validatePositions(Set<PlayerPosition> positions) {
+        if (positions == null || positions.isEmpty()) {
+            throw new IllegalArgumentException("At least one player position is required");
         }
     }
 
@@ -149,6 +161,14 @@ public class PlayerService {
         if (teamCategory != null) {
             setter.accept(teamCategory);
         }
+    }
+
+    private void applyPositionsUpdate(Set<PlayerPosition> positions, Consumer<Set<PlayerPosition>> setter) {
+        if (positions == null) {
+            return;
+        }
+        validatePositions(positions);
+        setter.accept(new LinkedHashSet<>(positions));
     }
 
     private void applyRegistrationNumberUpdate(String registrationNumber, Player player) {

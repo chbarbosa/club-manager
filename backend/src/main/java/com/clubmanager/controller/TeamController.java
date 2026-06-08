@@ -45,10 +45,12 @@ public class TeamController {
 
     @GetMapping
     public PageResponse<TeamSummaryResponse> getAllTeams(
+            @RequestParam(required = false) String identification,
             @RequestParam(required = false) String ageGroup,
             @RequestParam(required = false) TeamCategory teamCategory,
             Pageable pageable) {
-        return PageResponse.from(teamService.searchTeams(ageGroup, teamCategory, pageable)
+        String effectiveIdentification = identification != null ? identification : ageGroup;
+        return PageResponse.from(teamService.searchTeams(effectiveIdentification, teamCategory, pageable)
                 .map(teamMapper::toSummaryResponse));
     }
 
@@ -72,4 +74,3 @@ public class TeamController {
         return teamMapper.toResponse(teamService.reactivateTeam(uuid));
     }
 }
-

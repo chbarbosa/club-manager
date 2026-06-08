@@ -1,21 +1,42 @@
 import { useEffect, useState } from 'react'
 
 const EMPTY_FORM = {
-  ageGroup: '',
+  identification: '',
+  ageCategory: 'U13',
   teamCategory: 'MASCULINE',
   trainerUuid: '',
+  subTrainerUuid: '',
+  assistantAdminUuid: '',
 }
 
-export default function TeamForm({ initialTeam, onCancel, onSubmit, trainers }) {
+const AGE_CATEGORIES = [
+  ['U7', '7'],
+  ['U8', '8'],
+  ['U9', '9'],
+  ['U10', '10'],
+  ['U11', '11'],
+  ['U12', '12'],
+  ['U13', '13'],
+  ['U14', '14'],
+  ['U15', '15'],
+  ['U16', '16'],
+  ['U17_18', '17-18'],
+  ['U19_PLUS', '19+'],
+]
+
+export default function TeamForm({ admins = [], initialTeam, onCancel, onSubmit, trainers }) {
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (initialTeam) {
       setForm({
-        ageGroup: initialTeam.ageGroup ?? '',
+        identification: initialTeam.identification ?? initialTeam.ageGroup ?? '',
+        ageCategory: initialTeam.ageCategory ?? 'U13',
         teamCategory: initialTeam.teamCategory ?? 'MASCULINE',
         trainerUuid: initialTeam.trainerUuid ?? '',
+        subTrainerUuid: initialTeam.subTrainerUuid ?? '',
+        assistantAdminUuid: initialTeam.assistantAdminUuid ?? '',
       })
       return
     }
@@ -40,9 +61,12 @@ export default function TeamForm({ initialTeam, onCancel, onSubmit, trainers }) 
     setSubmitting(true)
     try {
       await onSubmit({
-        ageGroup: form.ageGroup.trim(),
+        identification: form.identification.trim(),
+        ageCategory: form.ageCategory,
         teamCategory: form.teamCategory,
         trainerUuid: form.trainerUuid,
+        subTrainerUuid: form.subTrainerUuid || null,
+        assistantAdminUuid: form.assistantAdminUuid || null,
       })
     } finally {
       setSubmitting(false)
@@ -53,16 +77,31 @@ export default function TeamForm({ initialTeam, onCancel, onSubmit, trainers }) 
     <form onSubmit={submit}>
       <div className="row">
         <div className="col-md-4 mb-3">
-          <label className="form-label" htmlFor="team-age-group">Age group</label>
+          <label className="form-label" htmlFor="team-identification">Identification</label>
           <input
             className="form-control"
-            id="team-age-group"
-            name="ageGroup"
+            id="team-identification"
+            name="identification"
             onChange={updateField}
-            placeholder="Under 13"
+            placeholder="Under 13 A"
             required
-            value={form.ageGroup}
+            value={form.identification}
           />
+        </div>
+        <div className="col-md-4 mb-3">
+          <label className="form-label" htmlFor="team-age-category">Age category</label>
+          <select
+            className="form-select"
+            id="team-age-category"
+            name="ageCategory"
+            onChange={updateField}
+            required
+            value={form.ageCategory}
+          >
+            {AGE_CATEGORIES.map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
         </div>
         <div className="col-md-4 mb-3">
           <label className="form-label" htmlFor="team-category">Team category</label>
@@ -92,6 +131,40 @@ export default function TeamForm({ initialTeam, onCancel, onSubmit, trainers }) 
             {trainers.map((trainer) => (
               <option key={trainer.uuid} value={trainer.uuid}>
                 {trainer.name}{trainer.active ? '' : ' (inactive)'}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-4 mb-3">
+          <label className="form-label" htmlFor="team-sub-trainer">Sub trainer / assistant</label>
+          <select
+            className="form-select"
+            id="team-sub-trainer"
+            name="subTrainerUuid"
+            onChange={updateField}
+            value={form.subTrainerUuid}
+          >
+            <option value="">No sub trainer</option>
+            {trainers.map((trainer) => (
+              <option key={trainer.uuid} value={trainer.uuid}>
+                {trainer.name}{trainer.active ? '' : ' (inactive)'}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-4 mb-3">
+          <label className="form-label" htmlFor="team-assistant-admin">Administrative assistant</label>
+          <select
+            className="form-select"
+            id="team-assistant-admin"
+            name="assistantAdminUuid"
+            onChange={updateField}
+            value={form.assistantAdminUuid}
+          >
+            <option value="">No administrative assistant</option>
+            {admins.map((admin) => (
+              <option key={admin.uuid} value={admin.uuid}>
+                {admin.name}{admin.active ? '' : ' (inactive)'}
               </option>
             ))}
           </select>

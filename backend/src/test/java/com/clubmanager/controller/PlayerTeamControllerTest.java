@@ -42,6 +42,7 @@ class PlayerTeamControllerTest {
                 .andExpect(jsonPath("$.uuid").isString())
                 .andExpect(jsonPath("$.playerUuid").value(playerUuid))
                 .andExpect(jsonPath("$.playerName").value("Joao Silva"))
+                .andExpect(jsonPath("$.playerPositions[0]").value("MIDFIELD"))
                 .andExpect(jsonPath("$.teamUuid").value(teamUuid))
                 .andExpect(jsonPath("$.assignedDate").value(LocalDate.now().toString()))
                 .andExpect(jsonPath("$.active").value(true))
@@ -135,6 +136,7 @@ class PlayerTeamControllerTest {
                                   "livingCountry": "Brazil",
                                   "birthdate": "2012-03-15",
                                   "teamCategory": "%s",
+                                  "positions": ["MIDFIELD"],
                                   "registrationNumber": "%s",
                                   "memberSince": "2020-01-01"
                                 }
@@ -152,7 +154,8 @@ class PlayerTeamControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "ageGroup": "Under 13",
+                                  "identification": "Under 13 A",
+                                  "ageCategory": "U13",
                                   "teamCategory": "%s",
                                   "trainerUuid": "%s"
                                 }
@@ -186,4 +189,3 @@ class PlayerTeamControllerTest {
         return JsonPath.read(response, "$.uuid");
     }
 }
-

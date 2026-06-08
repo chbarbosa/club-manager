@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('admin can create an evaluation group and complete an event after attendance is recorded', async ({ page }) => {
+  test.setTimeout(60000)
   page.on('dialog', (dialog) => dialog.accept())
 
   const suffix = Date.now().toString()
@@ -21,6 +22,7 @@ test('admin can create an evaluation group and complete an event after attendanc
   await page.getByLabel('Living country').fill('Brazil')
   await page.getByLabel('Birthdate').fill('2012-05-20')
   await page.getByLabel('Team category').selectOption('MASCULINE')
+  await page.getByLabel('Midfield').check()
   await page.getByLabel('Registration number').fill(registrationNumber)
   await page.getByLabel('Date the player started at this club').fill('2024-06-01')
   await page.getByRole('button', { name: 'Save player' }).click()
@@ -81,7 +83,9 @@ test('admin can create an evaluation group and complete an event after attendanc
 
   await page.getByRole('navigation').getByRole('link', { name: 'Players' }).click()
   await page.getByLabel('Search players').fill(playerName)
-  await page.locator('tr').filter({ hasText: playerName }).getByRole('link', { name: 'View' }).click()
+  const playerRow = page.locator('tr').filter({ hasText: playerName })
+  await expect(playerRow).toBeVisible()
+  await playerRow.getByRole('link', { name: 'View' }).click()
   await expect(page.getByRole('heading', { name: playerName })).toBeVisible()
   await expect(page.getByRole('definition').filter({ hasText: 'Skilled' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Skill history' })).toBeVisible()

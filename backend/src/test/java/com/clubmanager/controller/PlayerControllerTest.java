@@ -36,6 +36,7 @@ class PlayerControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.uuid").isString())
                 .andExpect(jsonPath("$.name").value("Joao Silva"))
+                .andExpect(jsonPath("$.positions[0]").value("MIDFIELD"))
                 .andExpect(jsonPath("$.registerDate").value(LocalDate.now().toString()))
                 .andExpect(jsonPath("$.id").doesNotExist());
     }
@@ -195,6 +196,7 @@ class PlayerControllerTest {
                   "livingCountry": "Brazil",
                   "birthdate": "2005-03-15",
                   "teamCategory": "MASCULINE",
+                  "positions": ["MIDFIELD"],
                   "registrationNumber": "%s",
                   "memberSince": "2020-01-01"
                 }

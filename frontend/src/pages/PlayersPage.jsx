@@ -116,6 +116,7 @@ export default function PlayersPage() {
             <th>Age</th>
             <th>Team category</th>
             <th>Skill level</th>
+            <th>Positions</th>
             <th>Member Since</th>
             <th>Status</th>
             <th>Actions</th>
@@ -128,6 +129,7 @@ export default function PlayersPage() {
               <td>{player.age}</td>
               <td>{formatTeamCategory(player.teamCategory)}</td>
               <td>{formatSkillLevel(player.currentSkillLevel)}</td>
+              <td>{formatPositions(player.positions)}</td>
               <td>{formatDate(player.memberSince)}</td>
               <td>
                 <span className={`badge ${player.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
@@ -192,6 +194,19 @@ function formatSkillLevel(value) {
     return 'Skilled'
   }
   return '-'
+}
+
+function formatPositions(values = []) {
+  if (!values.length) {
+    return '-'
+  }
+  return values.map((value) => {
+    if (value === 'GOALKEEPER') return 'Goalkeeper'
+    if (value === 'DEFENSE') return 'Defense'
+    if (value === 'MIDFIELD') return 'Midfield'
+    if (value === 'ATTACK') return 'Attack'
+    return value
+  }).join(', ')
 }
 
 function useDebouncedValue(value, delay) {

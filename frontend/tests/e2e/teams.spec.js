@@ -4,7 +4,7 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   const suffix = Date.now().toString()
   const trainerName = `Team Trainer ${suffix}`
   const playerName = `Team Player ${suffix}`
-  const ageGroup = `Under 13 ${suffix}`
+  const identification = `Under 13 ${suffix}`
 
   page.on('dialog', async (dialog) => dialog.accept())
 
@@ -27,6 +27,7 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await page.getByLabel('Living country').fill('Brazil')
   await page.getByLabel('Birthdate').fill('2012-03-15')
   await page.getByLabel('Team category').selectOption('MASCULINE')
+  await page.getByLabel('Midfield').check()
   await page.getByLabel('Registration number').fill(`TEAM-${suffix}`)
   await page.getByLabel('Date the player started at this club').fill('2020-01-01')
   await page.getByRole('button', { name: 'Save player' }).click()
@@ -35,23 +36,27 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await page.getByRole('navigation').getByRole('link', { name: 'Teams' }).click()
   await page.getByRole('button', { name: 'Add Team' }).click()
 
-  await page.getByLabel('Age group').fill(ageGroup)
+  await page.getByLabel('Identification').fill(identification)
+  await page.getByLabel('Age category').selectOption('U13')
   await page.getByLabel('Team category', { exact: true }).selectOption('MASCULINE')
-  await page.getByLabel('Trainer').selectOption({ label: trainerName })
+  await page.getByLabel('Trainer', { exact: true }).selectOption({ label: trainerName })
   await page.getByRole('button', { name: 'Save team' }).click()
 
   await expect(page.getByText('Team created.')).toBeVisible()
-  await page.getByLabel('Search teams').fill(ageGroup)
-  await expect(page.getByRole('cell', { name: ageGroup })).toBeVisible()
+  await page.getByLabel('Search teams').fill(identification)
+  await expect(page.getByRole('cell', { name: identification })).toBeVisible()
 
-  await page.locator('tr').filter({ hasText: ageGroup }).getByRole('link', { name: 'View' }).click()
-  await expect(page.getByRole('heading', { name: `${ageGroup} Masculine` })).toBeVisible()
+  await page.locator('tr').filter({ hasText: identification }).getByRole('link', { name: 'View' }).click()
+  await expect(page.getByRole('heading', { name: `${identification} Masculine` })).toBeVisible()
   await expect(page.getByText(trainerName)).toBeVisible()
+  await expect(page.getByText('0 active players')).toBeVisible()
 
   await page.getByLabel('Player').selectOption({ label: playerName })
   await page.getByRole('button', { name: 'Assign player' }).click()
   await expect(page.getByText('Player assigned to team.')).toBeVisible()
   await expect(page.getByRole('cell', { name: playerName })).toBeVisible()
+  await expect(page.getByText('1 active player')).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Midfield' })).toBeVisible()
 
   await page.locator('tr').filter({ hasText: playerName }).getByRole('button', { name: 'Remove' }).click()
   await expect(page.getByText('Player removed from team.')).toBeVisible()

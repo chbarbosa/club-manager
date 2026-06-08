@@ -7,8 +7,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.clubmanager.domain.Player;
+import com.clubmanager.domain.PlayerPosition;
 import com.clubmanager.domain.PlayerTeam;
 import com.clubmanager.domain.Team;
+import com.clubmanager.domain.TeamAgeCategory;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.PlayerTeamAssignRequest;
@@ -16,6 +18,7 @@ import com.clubmanager.repository.PlayerRepository;
 import com.clubmanager.repository.PlayerTeamRepository;
 import com.clubmanager.repository.TeamRepository;
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,6 +98,7 @@ class PlayerTeamServiceTest {
     private Team team(TeamCategory teamCategory) {
         return Team.builder()
                 .ageGroup("Under 13")
+                .ageCategory(TeamAgeCategory.U13)
                 .teamCategory(teamCategory)
                 .trainer(Trainer.builder()
                         .name("Carlos Mendes")
@@ -111,6 +115,7 @@ class PlayerTeamServiceTest {
                 .livingCountry("Brazil")
                 .birthdate(LocalDate.now().minusYears(12))
                 .teamCategory(teamCategory)
+                .positions(Set.of(PlayerPosition.MIDFIELD))
                 .registerDate(LocalDate.now())
                 .memberSince(LocalDate.now())
                 .build();

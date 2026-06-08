@@ -379,6 +379,7 @@ class EvaluationControllerTest {
                                   "livingCountry": "Brazil",
                                   "birthdate": "2012-05-20",
                                   "teamCategory": "MASCULINE",
+                                  "positions": ["MIDFIELD"],
                                   "registrationNumber": "%s",
                                   "memberSince": "%s"
                                 }

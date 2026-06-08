@@ -7,10 +7,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.clubmanager.domain.Team;
+import com.clubmanager.domain.TeamAgeCategory;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.TeamCreateRequest;
 import com.clubmanager.dto.TeamUpdateRequest;
+import com.clubmanager.repository.AdminRepository;
 import com.clubmanager.repository.TeamRepository;
 import com.clubmanager.repository.TrainerRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,11 +37,14 @@ class TeamServiceTest {
     @Mock
     private TrainerRepository trainerRepository;
 
+    @Mock
+    private AdminRepository adminRepository;
+
     private TeamService teamService;
 
     @BeforeEach
     void setUp() {
-        teamService = new TeamService(teamRepository, trainerRepository);
+        teamService = new TeamService(teamRepository, trainerRepository, adminRepository);
     }
 
     @Test
@@ -48,9 +53,11 @@ class TeamServiceTest {
         when(trainerRepository.findByUuid(trainer.getUuid())).thenReturn(Optional.of(trainer));
         when(teamRepository.save(any(Team.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Team team = teamService.createTeam(new TeamCreateRequest("Under 13", TeamCategory.MASCULINE, trainer.getUuid()));
+        Team team = teamService.createTeam(new TeamCreateRequest(
+                "Under 13 A", TeamAgeCategory.U13, TeamCategory.MASCULINE, trainer.getUuid(), null, null));
 
-        assertThat(team.getAgeGroup()).isEqualTo("Under 13");
+        assertThat(team.getAgeGroup()).isEqualTo("Under 13 A");
+        assertThat(team.getAgeCategory()).isEqualTo(TeamAgeCategory.U13);
         assertThat(team.getTeamCategory()).isEqualTo(TeamCategory.MASCULINE);
         assertThat(team.getTrainer()).isEqualTo(trainer);
         assertThat(team.isActive()).isTrue();
@@ -59,11 +66,11 @@ class TeamServiceTest {
     @Test
     void createTeam_WithBlankAgeGroup_ThrowsValidationException() {
         Trainer trainer = trainer();
-        TeamCreateRequest request = new TeamCreateRequest(" ", TeamCategory.MASCULINE, trainer.getUuid());
+        TeamCreateRequest request = new TeamCreateRequest(" ", TeamAgeCategory.U13, TeamCategory.MASCULINE, trainer.getUuid(), null, null);
 
         assertThatThrownBy(() -> teamService.createTeam(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("ageGroup");
+                .hasMessageContaining("identification");
     }
 
     @Test
@@ -71,7 +78,8 @@ class TeamServiceTest {
         Trainer trainer = trainer();
         when(trainerRepository.findByUuid(trainer.getUuid())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> teamService.createTeam(new TeamCreateRequest("Under 13", TeamCategory.MASCULINE, trainer.getUuid())))
+        assertThatThrownBy(() -> teamService.createTeam(new TeamCreateRequest(
+                "Under 13 A", TeamAgeCategory.U13, TeamCategory.MASCULINE, trainer.getUuid(), null, null)))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Trainer not found");
     }
@@ -86,9 +94,10 @@ class TeamServiceTest {
 
         Team updated = teamService.updateTeam(
                 team.getUuid(),
-                new TeamUpdateRequest("Under 15", TeamCategory.FEMININE, newTrainer.getUuid()));
+                new TeamUpdateRequest("Under 15 A", TeamAgeCategory.U15, TeamCategory.FEMININE, newTrainer.getUuid(), null, null));
 
-        assertThat(updated.getAgeGroup()).isEqualTo("Under 15");
+        assertThat(updated.getAgeGroup()).isEqualTo("Under 15 A");
+        assertThat(updated.getAgeCategory()).isEqualTo(TeamAgeCategory.U15);
         assertThat(updated.getTeamCategory()).isEqualTo(TeamCategory.FEMININE);
         assertThat(updated.getTrainer()).isEqualTo(newTrainer);
     }
@@ -99,7 +108,7 @@ class TeamServiceTest {
         when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
         when(teamRepository.save(team)).thenReturn(team);
 
-        Team updated = teamService.updateTeam(team.getUuid(), new TeamUpdateRequest(null, null, null));
+        Team updated = teamService.updateTeam(team.getUuid(), new TeamUpdateRequest(null, null, null, null, null, null));
 
         assertThat(updated.getAgeGroup()).isEqualTo("Under 13");
         assertThat(updated.getTeamCategory()).isEqualTo(TeamCategory.MASCULINE);
@@ -145,6 +154,7 @@ class TeamServiceTest {
     private Team team() {
         return Team.builder()
                 .ageGroup("Under 13")
+                .ageCategory(TeamAgeCategory.U13)
                 .teamCategory(TeamCategory.MASCULINE)
                 .trainer(trainer())
                 .build();
@@ -159,4 +169,3 @@ class TeamServiceTest {
                 .build();
     }
 }
-

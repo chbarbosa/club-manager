@@ -37,7 +37,8 @@ class TeamControllerTest {
                         .content(validTeamJson(trainerUuid)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.uuid").isString())
-                .andExpect(jsonPath("$.ageGroup").value("Under 13"))
+                .andExpect(jsonPath("$.identification").value("Under 13 A"))
+                .andExpect(jsonPath("$.ageCategory").value("U13"))
                 .andExpect(jsonPath("$.teamCategory").value("MASCULINE"))
                 .andExpect(jsonPath("$.trainerUuid").value(trainerUuid))
                 .andExpect(jsonPath("$.trainerName").value("Carlos Mendes"))
@@ -51,7 +52,7 @@ class TeamControllerTest {
         mockMvc.perform(post("/api/v1/teams")
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validTeamJson(trainerUuid).replace("Under 13", "")))
+                        .content(validTeamJson(trainerUuid).replace("Under 13 A", "")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
     }
@@ -117,13 +118,15 @@ class TeamControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "ageGroup": "Under 15",
+                                  "identification": "Under 15 A",
+                                  "ageCategory": "U15",
                                   "teamCategory": "FEMININE",
                                   "trainerUuid": "%s"
                                 }
                                 """.formatted(trainerUuid)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.ageGroup").value("Under 15"))
+                .andExpect(jsonPath("$.identification").value("Under 15 A"))
+                .andExpect(jsonPath("$.ageCategory").value("U15"))
                 .andExpect(jsonPath("$.teamCategory").value("FEMININE"));
     }
 
@@ -190,11 +193,11 @@ class TeamControllerTest {
     private String validTeamJson(String trainerUuid) {
         return """
                 {
-                  "ageGroup": "Under 13",
+                  "identification": "Under 13 A",
+                  "ageCategory": "U13",
                   "teamCategory": "MASCULINE",
                   "trainerUuid": "%s"
                 }
                 """.formatted(trainerUuid);
     }
 }
-

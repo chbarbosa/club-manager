@@ -27,14 +27,25 @@ public class Team extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    private TeamAgeCategory ageCategory;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private TeamCategory teamCategory;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "trainer_id", nullable = false)
     private Trainer trainer;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_trainer_id")
+    private Trainer subTrainer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assistant_admin_id")
+    private Admin assistantAdmin;
+
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 }
-

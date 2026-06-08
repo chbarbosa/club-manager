@@ -11,19 +11,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TeamRepository extends JpaRepository<Team, Long> {
 
-    @EntityGraph(attributePaths = "trainer")
+    @EntityGraph(attributePaths = {"trainer", "subTrainer", "assistantAdmin"})
     Optional<Team> findByUuid(UUID uuid);
 
     @Override
-    @EntityGraph(attributePaths = "trainer")
+    @EntityGraph(attributePaths = {"trainer", "subTrainer", "assistantAdmin"})
     Page<Team> findAll(Pageable pageable);
 
-    @EntityGraph(attributePaths = "trainer")
+    @EntityGraph(attributePaths = {"trainer", "subTrainer", "assistantAdmin"})
     Page<Team> findByAgeGroupContainingIgnoreCase(String ageGroup, Pageable pageable);
 
-    @EntityGraph(attributePaths = "trainer")
+    @EntityGraph(attributePaths = {"trainer", "subTrainer", "assistantAdmin"})
     Page<Team> findByTeamCategory(TeamCategory teamCategory, Pageable pageable);
 
-    @EntityGraph(attributePaths = "trainer")
+    @EntityGraph(attributePaths = {"trainer", "subTrainer", "assistantAdmin"})
     Page<Team> findByAgeGroupContainingIgnoreCaseAndTeamCategory(String ageGroup, TeamCategory teamCategory, Pageable pageable);
 }

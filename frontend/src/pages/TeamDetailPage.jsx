@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { getAllAdmins } from '../api/admins.js'
 import { getAllPlayers } from '../api/players.js'
 import { getAllTrainers } from '../api/trainers.js'
 import {
@@ -18,6 +19,7 @@ export default function TeamDetailPage() {
   const location = useLocation()
   const [team, setTeam] = useState(null)
   const [trainers, setTrainers] = useState([])
+  const [admins, setAdmins] = useState([])
   const [players, setPlayers] = useState([])
   const [roster, setRoster] = useState([])
   const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
@@ -28,6 +30,7 @@ export default function TeamDetailPage() {
   useEffect(() => {
     loadTeam()
     loadTrainers()
+    loadAdmins()
     loadPlayers()
     loadRoster()
   }, [uuid])
@@ -47,6 +50,14 @@ export default function TeamDetailPage() {
       setTrainers(response.content ?? [])
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load trainers for teams.')
+    }
+  }
+
+  async function loadAdmins() {
+    try {
+      setAdmins(await getAllAdmins())
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load admins for teams.')
     }
   }
 
@@ -160,24 +171,31 @@ export default function TeamDetailPage() {
             <div className="card">
               <div className="card-body">
                 <h2 className="h4">Edit team</h2>
-                <TeamForm initialTeam={team} onCancel={() => setEditing(false)} onSubmit={submitTeam} trainers={trainers} />
+                <TeamForm admins={admins} initialTeam={team} onCancel={() => setEditing(false)} onSubmit={submitTeam} trainers={trainers} />
               </div>
             </div>
           ) : (
             <>
               <dl className="row">
-                <dt className="col-sm-3">Age group</dt>
-                <dd className="col-sm-9">{team.ageGroup}</dd>
+                <dt className="col-sm-3">Identification</dt>
+                <dd className="col-sm-9">{team.identification ?? team.ageGroup}</dd>
+                <dt className="col-sm-3">Age category</dt>
+                <dd className="col-sm-9">{formatAgeCategory(team.ageCategory)}</dd>
                 <dt className="col-sm-3">Team category</dt>
                 <dd className="col-sm-9">{formatTeamCategory(team.teamCategory)}</dd>
                 <dt className="col-sm-3">Trainer</dt>
                 <dd className="col-sm-9">{team.trainerName}</dd>
+                <dt className="col-sm-3">Sub trainer / assistant</dt>
+                <dd className="col-sm-9">{team.subTrainerName ?? '-'}</dd>
+                <dt className="col-sm-3">Administrative assistant</dt>
+                <dd className="col-sm-9">{team.assistantAdminName ?? '-'}</dd>
               </dl>
 
               <section className="mt-5">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <div>
                     <h2 className="h3">Roster</h2>
+                    <p className="mb-1"><strong>{roster.length}</strong> active player{roster.length === 1 ? '' : 's'}</p>
                     <p className="text-muted mb-0">Assign active players with the same team category.</p>
                   </div>
                 </div>
@@ -209,6 +227,7 @@ export default function TeamDetailPage() {
                     <tr>
                       <th>Player</th>
                       <th>Team category</th>
+                      <th>Positions</th>
                       <th>Assigned date</th>
                       <th>Actions</th>
                     </tr>
@@ -218,6 +237,7 @@ export default function TeamDetailPage() {
                       <tr key={assignment.uuid}>
                         <td>{assignment.playerName}</td>
                         <td>{formatTeamCategory(assignment.playerTeamCategory)}</td>
+                        <td>{formatPositions(assignment.playerPositions)}</td>
                         <td>{formatDate(assignment.assignedDate)}</td>
                         <td>
                           <button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment)} type="button">
@@ -244,7 +264,17 @@ function formatTeamCategory(value) {
 }
 
 function teamLabel(team) {
-  return `${team.ageGroup} ${formatTeamCategory(team.teamCategory)}`
+  return `${team.identification ?? team.ageGroup} ${formatTeamCategory(team.teamCategory)}`
+}
+
+function formatAgeCategory(value) {
+  if (value === 'U17_18') {
+    return '17-18'
+  }
+  if (value === 'U19_PLUS') {
+    return '19+'
+  }
+  return value?.replace('U', '') ?? '-'
 }
 
 function availablePlayers(team, players, roster) {
@@ -258,4 +288,17 @@ function availablePlayers(team, players, roster) {
 
 function formatDate(value) {
   return value ? new Date(`${value}T00:00:00`).toLocaleDateString() : '-'
+}
+
+function formatPositions(values = []) {
+  if (!values.length) {
+    return '-'
+  }
+  return values.map((value) => {
+    if (value === 'GOALKEEPER') return 'Goalkeeper'
+    if (value === 'DEFENSE') return 'Defense'
+    if (value === 'MIDFIELD') return 'Midfield'
+    if (value === 'ATTACK') return 'Attack'
+    return value
+  }).join(', ')
 }

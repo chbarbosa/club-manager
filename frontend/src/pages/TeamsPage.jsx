@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getAllAdmins } from '../api/admins.js'
 import { getAllTrainers } from '../api/trainers.js'
 import { createTeam, deactivateTeam, getAllTeams, reactivateTeam } from '../api/teams.js'
 import TeamForm from '../components/teams/TeamForm.jsx'
@@ -9,6 +10,7 @@ const PAGE_SIZE = 20
 export default function TeamsPage() {
   const [teams, setTeams] = useState([])
   const [trainers, setTrainers] = useState([])
+  const [admins, setAdmins] = useState([])
   const [pageInfo, setPageInfo] = useState({ number: 0, totalPages: 0 })
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
@@ -25,6 +27,7 @@ export default function TeamsPage() {
 
   useEffect(() => {
     loadTrainers()
+    loadAdmins()
   }, [])
 
   async function loadTeams() {
@@ -33,7 +36,7 @@ export default function TeamsPage() {
       const response = await getAllTeams({
         page,
         size: PAGE_SIZE,
-        ageGroup: activeSearch || undefined,
+        identification: activeSearch || undefined,
         teamCategory: teamCategory || undefined,
       })
       setTeams(response.content ?? [])
@@ -49,6 +52,14 @@ export default function TeamsPage() {
       setTrainers(response.content ?? [])
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load trainers for teams.')
+    }
+  }
+
+  async function loadAdmins() {
+    try {
+      setAdmins(await getAllAdmins())
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load admins for teams.')
     }
   }
 
@@ -120,7 +131,7 @@ export default function TeamsPage() {
           <div className="card-body">
             <h2 className="h4">Add Team</h2>
             {trainers.length === 0 && <p className="alert alert-warning">Create a trainer before adding a team.</p>}
-            <TeamForm onCancel={() => setShowForm(false)} onSubmit={submitTeam} trainers={trainers} />
+            <TeamForm admins={admins} onCancel={() => setShowForm(false)} onSubmit={submitTeam} trainers={trainers} />
           </div>
         </div>
       )}
@@ -132,7 +143,7 @@ export default function TeamsPage() {
             className="form-control"
             id="team-search"
             onChange={changeSearch}
-            placeholder="Search by age group"
+            placeholder="Search by identification"
             value={search}
           />
         </div>
@@ -149,9 +160,12 @@ export default function TeamsPage() {
       <table className="table table-striped align-middle">
         <thead>
           <tr>
-            <th>Age Group</th>
+            <th>Identification</th>
+            <th>Age</th>
             <th>Category</th>
             <th>Trainer</th>
+            <th>Sub trainer</th>
+            <th>Admin assistant</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -159,9 +173,12 @@ export default function TeamsPage() {
         <tbody>
           {teams.map((team) => (
             <tr className={team.active ? '' : 'text-muted'} key={team.uuid}>
-              <td>{team.ageGroup}</td>
+              <td>{team.identification ?? team.ageGroup}</td>
+              <td>{formatAgeCategory(team.ageCategory)}</td>
               <td>{formatTeamCategory(team.teamCategory)}</td>
               <td>{team.trainerName}</td>
+              <td>{team.subTrainerName ?? '-'}</td>
+              <td>{team.assistantAdminName ?? '-'}</td>
               <td>
                 <span className={`badge ${team.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
                   {team.active ? 'Active' : 'Inactive'}
@@ -205,7 +222,17 @@ function formatTeamCategory(value) {
 }
 
 function teamLabel(team) {
-  return `${team.ageGroup} ${formatTeamCategory(team.teamCategory)}`
+  return `${team.identification ?? team.ageGroup} ${formatTeamCategory(team.teamCategory)}`
+}
+
+function formatAgeCategory(value) {
+  if (value === 'U17_18') {
+    return '17-18'
+  }
+  if (value === 'U19_PLUS') {
+    return '19+'
+  }
+  return value?.replace('U', '') ?? '-'
 }
 
 function useDebouncedValue(value, delay) {

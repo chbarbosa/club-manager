@@ -110,6 +110,8 @@ export default function PlayerDetailPage() {
                 <dd className="col-sm-9">{formatTeamCategory(player.teamCategory)}</dd>
                 <dt className="col-sm-3">Current skill level</dt>
                 <dd className="col-sm-9">{formatSkillLevel(player.currentSkillLevel)}</dd>
+                <dt className="col-sm-3">Positions</dt>
+                <dd className="col-sm-9">{formatPositions(player.positions)}</dd>
                 <dt className="col-sm-3">Registration number</dt>
                 <dd className="col-sm-9">{player.registrationNumber || '-'}</dd>
                 <dt className="col-sm-3">Register date</dt>
@@ -176,6 +178,19 @@ function formatSkillLevel(value) {
     return 'Skilled'
   }
   return 'Not evaluated'
+}
+
+function formatPositions(values = []) {
+  if (!values.length) {
+    return '-'
+  }
+  return values.map((value) => {
+    if (value === 'GOALKEEPER') return 'Goalkeeper'
+    if (value === 'DEFENSE') return 'Defense'
+    if (value === 'MIDFIELD') return 'Midfield'
+    if (value === 'ATTACK') return 'Attack'
+    return value
+  }).join(', ')
 }
 
 function formatDateTime(value) {

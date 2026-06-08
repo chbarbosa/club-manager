@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.clubmanager.domain.Player;
+import com.clubmanager.domain.PlayerPosition;
 import com.clubmanager.domain.PlayerSkillHistory;
 import com.clubmanager.domain.SkillLevel;
 import com.clubmanager.domain.TeamCategory;
@@ -15,6 +16,7 @@ import com.clubmanager.dto.PlayerUpdateRequest;
 import com.clubmanager.repository.PlayerRepository;
 import com.clubmanager.repository.PlayerSkillHistoryRepository;
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +65,7 @@ class PlayerServiceTest {
                 "Brazil",
                 LocalDate.now().minusYears(15),
                 TeamCategory.MASCULINE,
+                Set.of(PlayerPosition.MIDFIELD),
                 null,
                 LocalDate.now().plusDays(1));
 
@@ -79,6 +82,7 @@ class PlayerServiceTest {
                 "Brazil",
                 LocalDate.now().plusDays(1),
                 TeamCategory.MASCULINE,
+                Set.of(PlayerPosition.MIDFIELD),
                 null,
                 LocalDate.now());
 
@@ -106,6 +110,7 @@ class PlayerServiceTest {
                 "Canada",
                 LocalDate.now().minusYears(14),
                 TeamCategory.FEMININE,
+                Set.of(PlayerPosition.ATTACK, PlayerPosition.MIDFIELD),
                 "REG-2",
                 LocalDate.now().minusYears(1));
         when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
@@ -126,6 +131,7 @@ class PlayerServiceTest {
         LocalDate originalRegisterDate = player.getRegisterDate();
         PlayerUpdateRequest request = new PlayerUpdateRequest(
                 "Maria Silva",
+                null,
                 null,
                 null,
                 null,
@@ -212,6 +218,7 @@ class PlayerServiceTest {
                 "Brazil",
                 LocalDate.now().minusYears(16),
                 TeamCategory.MASCULINE,
+                Set.of(PlayerPosition.MIDFIELD),
                 registrationNumber,
                 LocalDate.now().minusYears(2));
     }
@@ -223,6 +230,7 @@ class PlayerServiceTest {
         player.setLivingCountry("Brazil");
         player.setBirthdate(LocalDate.now().minusYears(16));
         player.setTeamCategory(TeamCategory.MASCULINE);
+        player.setPositions(Set.of(PlayerPosition.MIDFIELD));
         player.setRegistrationNumber("REG-1");
         player.setRegisterDate(LocalDate.now().minusDays(10));
         player.setMemberSince(LocalDate.now().minusYears(2));

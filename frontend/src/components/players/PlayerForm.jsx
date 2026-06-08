@@ -6,9 +6,17 @@ const EMPTY_FORM = {
   livingCountry: '',
   birthdate: '',
   teamCategory: 'MASCULINE',
+  positions: [],
   registrationNumber: '',
   memberSince: '',
 }
+
+const POSITION_OPTIONS = [
+  ['GOALKEEPER', 'Goalkeeper'],
+  ['DEFENSE', 'Defense'],
+  ['MIDFIELD', 'Midfield'],
+  ['ATTACK', 'Attack'],
+]
 
 export default function PlayerForm({ initialPlayer, onCancel, onSubmit }) {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -21,6 +29,7 @@ export default function PlayerForm({ initialPlayer, onCancel, onSubmit }) {
       livingCountry: initialPlayer.livingCountry ?? '',
       birthdate: initialPlayer.birthdate ?? '',
       teamCategory: initialPlayer.teamCategory ?? 'MASCULINE',
+      positions: initialPlayer.positions ?? [],
       registrationNumber: initialPlayer.registrationNumber ?? '',
       memberSince: initialPlayer.memberSince ?? '',
     } : EMPTY_FORM)
@@ -28,6 +37,14 @@ export default function PlayerForm({ initialPlayer, onCancel, onSubmit }) {
 
   function updateField(event) {
     setForm({ ...form, [event.target.name]: event.target.value })
+  }
+
+  function togglePosition(event) {
+    const value = event.target.value
+    const positions = event.target.checked
+      ? [...form.positions, value]
+      : form.positions.filter((position) => position !== value)
+    setForm({ ...form, positions })
   }
 
   async function submit(event) {
@@ -68,6 +85,28 @@ export default function PlayerForm({ initialPlayer, onCancel, onSubmit }) {
             <option value="MASCULINE">Masculine</option>
             <option value="FEMININE">Feminine</option>
           </select>
+        </div>
+        <div className="col-md-6 mb-3">
+          <fieldset>
+            <legend className="form-label fs-6">Positions</legend>
+            <div className="d-flex flex-wrap gap-3">
+              {POSITION_OPTIONS.map(([value, label]) => (
+                <div className="form-check" key={value}>
+                  <input
+                    checked={form.positions.includes(value)}
+                    className="form-check-input"
+                    id={`player-position-${value}`}
+                    name="positions"
+                    onChange={togglePosition}
+                    required={form.positions.length === 0}
+                    type="checkbox"
+                    value={value}
+                  />
+                  <label className="form-check-label" htmlFor={`player-position-${value}`}>{label}</label>
+                </div>
+              ))}
+            </div>
+          </fieldset>
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label" htmlFor="player-registration-number">Registration number</label>
