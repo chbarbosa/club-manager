@@ -2,6 +2,7 @@ package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -90,6 +91,28 @@ class TrainerControllerTest {
                 .andExpect(jsonPath("$.content[0].uuid").isString())
                 .andExpect(jsonPath("$.content[*].uuid", hasItem(uuid)))
                 .andExpect(jsonPath("$.content[0].id").doesNotExist());
+    }
+
+    @Test
+    void getAllTrainers_WithActiveFilter_ReturnsOnlyActiveTrainers() throws Exception {
+        String token = loginToken(mockMvc);
+        String suffix = String.valueOf(System.nanoTime());
+        String activeName = "Active Trainer " + suffix;
+        String inactiveName = "Inactive Trainer " + suffix;
+        createTrainer(activeName);
+        String inactiveUuid = createTrainer(inactiveName);
+
+        mockMvc.perform(patch("/api/v1/trainers/{uuid}/deactivate", inactiveUuid)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/trainers")
+                        .param("active", "true")
+                        .param("name", suffix)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].name", hasItem(activeName)))
+                .andExpect(jsonPath("$.content[*].name", not(hasItem(inactiveName))));
     }
 
     @Test

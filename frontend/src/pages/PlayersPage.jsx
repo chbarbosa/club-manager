@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createPlayer, deactivatePlayer, getAllPlayers, reactivatePlayer } from '../api/players.js'
 import PlayerForm from '../components/players/PlayerForm.jsx'
@@ -13,6 +13,7 @@ export default function PlayersPage() {
   const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const loadRequestId = useRef(0)
 
   const activeSearch = useDebouncedValue(search, 300)
 
@@ -21,12 +22,20 @@ export default function PlayersPage() {
   }, [page, activeSearch])
 
   async function loadPlayers() {
+    const requestId = loadRequestId.current + 1
+    loadRequestId.current = requestId
     setError('')
     try {
       const response = await getAllPlayers({ page, size: PAGE_SIZE, name: activeSearch || undefined })
+      if (requestId !== loadRequestId.current) {
+        return
+      }
       setPlayers(response.content ?? [])
       setPageInfo({ number: response.number ?? 0, totalPages: response.totalPages ?? 0 })
     } catch (requestError) {
+      if (requestId !== loadRequestId.current) {
+        return
+      }
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load players.')
     }
   }

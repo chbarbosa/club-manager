@@ -130,7 +130,7 @@ export default function TeamForm({ admins = [], initialTeam, onCancel, onSubmit,
             <option value="" disabled>Select a trainer</option>
             {trainers.map((trainer) => (
               <option key={trainer.uuid} value={trainer.uuid}>
-                {trainer.name}{trainer.active ? '' : ' (inactive)'}
+                {trainer.name}
               </option>
             ))}
           </select>
@@ -147,7 +147,7 @@ export default function TeamForm({ admins = [], initialTeam, onCancel, onSubmit,
             <option value="">No sub trainer</option>
             {trainers.map((trainer) => (
               <option key={trainer.uuid} value={trainer.uuid}>
-                {trainer.name}{trainer.active ? '' : ' (inactive)'}
+                {trainer.name}
               </option>
             ))}
           </select>
@@ -164,7 +164,7 @@ export default function TeamForm({ admins = [], initialTeam, onCancel, onSubmit,
             <option value="">No administrative assistant</option>
             {admins.map((admin) => (
               <option key={admin.uuid} value={admin.uuid}>
-                {admin.name}{admin.active ? '' : ' (inactive)'}
+                {admin.name}
               </option>
             ))}
           </select>

@@ -25,7 +25,7 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await page.getByLabel('Name').fill(playerName)
   await page.getByLabel('Birth country').fill('Brazil')
   await page.getByLabel('Living country').fill('Brazil')
-  await page.getByLabel('Birthdate').fill('2012-03-15')
+  await page.getByLabel('Birthdate').fill('2013-03-15')
   await page.getByLabel('Team category').selectOption('MASCULINE')
   await page.getByLabel('Midfield').check()
   await page.getByLabel('Registration number').fill(`TEAM-${suffix}`)
@@ -57,6 +57,12 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await expect(page.getByRole('cell', { name: playerName })).toBeVisible()
   await expect(page.getByText('1 active player')).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Midfield' })).toBeVisible()
+  await expect(page.locator('tr').filter({ hasText: playerName }).getByRole('cell').nth(1)).toHaveText('13')
+
+  await page.locator('tr').filter({ hasText: playerName }).getByRole('link', { name: playerName }).click()
+  await expect(page.getByRole('heading', { name: playerName })).toBeVisible()
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: `${identification} Masculine` })).toBeVisible()
 
   await page.locator('tr').filter({ hasText: playerName }).getByRole('button', { name: 'Remove' }).click()
   await expect(page.getByText('Player removed from team.')).toBeVisible()

@@ -1,7 +1,6 @@
 package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
-import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -64,13 +63,15 @@ class EvaluationControllerTest {
 
     @Test
     void getAllEvaluations_WithValidToken_ReturnsPaginatedList() throws Exception {
-        String evaluationUuid = createEvaluation();
+        String title = "List Evaluation " + System.nanoTime();
+        String evaluationUuid = createEvaluation(title);
 
         mockMvc.perform(get("/api/v1/evaluations")
+                        .param("title", title)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].uuid").isString())
-                .andExpect(jsonPath("$.content[*].uuid", hasItem(evaluationUuid)))
+                .andExpect(jsonPath("$.content[0].uuid").value(evaluationUuid))
                 .andExpect(jsonPath("$.content[0].ageGroup").isString())
                 .andExpect(jsonPath("$.content[0].id").doesNotExist());
     }
@@ -315,10 +316,14 @@ class EvaluationControllerTest {
     }
 
     private String createEvaluation() throws Exception {
+        return createEvaluation("Spring Tryouts");
+    }
+
+    private String createEvaluation(String title) throws Exception {
         String response = mockMvc.perform(post("/api/v1/evaluations")
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validEvaluationJson()))
+                        .content(validEvaluationJson(title)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
@@ -392,12 +397,16 @@ class EvaluationControllerTest {
     }
 
     private String validEvaluationJson() {
+        return validEvaluationJson("Spring Tryouts");
+    }
+
+    private String validEvaluationJson(String title) {
         return """
                 {
-                  "title": "Spring Tryouts",
+                  "title": "%s",
                   "ageGroup": "Under 13",
                   "teamCategory": "MASCULINE"
                 }
-                """;
+                """.formatted(title);
     }
 }

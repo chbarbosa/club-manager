@@ -43,8 +43,11 @@ public class TrainerController {
     }
 
     @GetMapping
-    public PageResponse<TrainerSummaryResponse> getAllTrainers(@RequestParam(required = false) String name, Pageable pageable) {
-        return PageResponse.from(trainerService.searchTrainers(name, pageable)
+    public PageResponse<TrainerSummaryResponse> getAllTrainers(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Boolean active,
+            Pageable pageable) {
+        return PageResponse.from(trainerService.searchTrainers(name, active, pageable)
                 .map(trainerMapper::toSummaryResponse));
     }
 

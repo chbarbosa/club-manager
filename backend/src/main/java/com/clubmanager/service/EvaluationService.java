@@ -93,8 +93,40 @@ public class EvaluationService {
 
     @Transactional(readOnly = true)
     public Page<Evaluation> searchEvaluations(
-            String ageGroup, TeamCategory teamCategory, EvaluationStatus status, Pageable pageable) {
+            String title, String ageGroup, TeamCategory teamCategory, EvaluationStatus status, Pageable pageable) {
+        //TODO improve this
+        boolean hasTitle = title != null && !title.isBlank();
         boolean hasAgeGroup = ageGroup != null && !ageGroup.isBlank();
+        if (hasTitle && hasAgeGroup && teamCategory != null && status != null) {
+            return evaluationRepository.findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCaseAndTeamCategoryAndStatus(
+                    title.trim(), ageGroup.trim(), teamCategory, status, pageable);
+        }
+        if (hasTitle && hasAgeGroup && teamCategory != null) {
+            return evaluationRepository.findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCaseAndTeamCategory(
+                    title.trim(), ageGroup.trim(), teamCategory, pageable);
+        }
+        if (hasTitle && hasAgeGroup && status != null) {
+            return evaluationRepository.findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCaseAndStatus(
+                    title.trim(), ageGroup.trim(), status, pageable);
+        }
+        if (hasTitle && teamCategory != null && status != null) {
+            return evaluationRepository.findByTitleContainingIgnoreCaseAndTeamCategoryAndStatus(
+                    title.trim(), teamCategory, status, pageable);
+        }
+        if (hasTitle && hasAgeGroup) {
+            return evaluationRepository.findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCase(
+                    title.trim(), ageGroup.trim(), pageable);
+        }
+        if (hasTitle && teamCategory != null) {
+            return evaluationRepository.findByTitleContainingIgnoreCaseAndTeamCategory(
+                    title.trim(), teamCategory, pageable);
+        }
+        if (hasTitle && status != null) {
+            return evaluationRepository.findByTitleContainingIgnoreCaseAndStatus(title.trim(), status, pageable);
+        }
+        if (hasTitle) {
+            return evaluationRepository.findByTitleContainingIgnoreCase(title.trim(), pageable);
+        }
         if (hasAgeGroup && teamCategory != null && status != null) {
             return evaluationRepository.findByAgeGroupContainingIgnoreCaseAndTeamCategoryAndStatus(
                     ageGroup.trim(), teamCategory, status, pageable);

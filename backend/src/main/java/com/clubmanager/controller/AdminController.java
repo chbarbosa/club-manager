@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,8 +27,8 @@ public class AdminController {
     }
 
     @GetMapping
-    public List<AdminResponse> getAllAdmins() {
-        return adminService.getAllAdmins().stream()
+    public List<AdminResponse> getAllAdmins(@RequestParam(required = false) Boolean active) {
+        return (Boolean.TRUE.equals(active) ? adminService.getActiveAdmins() : adminService.getAllAdmins()).stream()
                 .map(adminMapper::toResponse)
                 .toList();
     }

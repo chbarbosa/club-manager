@@ -56,8 +56,17 @@ public class TrainerService {
 
     @Transactional(readOnly = true)
     public Page<Trainer> searchTrainers(String name, Pageable pageable) {
+        return searchTrainers(name, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Trainer> searchTrainers(String name, Boolean active, Pageable pageable) {
+        boolean activeOnly = Boolean.TRUE.equals(active);
         if (!StringUtils.hasText(name)) {
-            return getAllTrainers(pageable);
+            return activeOnly ? trainerRepository.findAllByActiveTrue(pageable) : getAllTrainers(pageable);
+        }
+        if (activeOnly) {
+            return trainerRepository.findByNameContainingIgnoreCaseAndActiveTrue(name.trim(), pageable);
         }
         return trainerRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
     }

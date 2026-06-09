@@ -1,6 +1,8 @@
 package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,6 +38,28 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$[0].username").value("admin"))
                 .andExpect(jsonPath("$[0].passwordHash").doesNotExist())
                 .andExpect(jsonPath("$[0].id").doesNotExist());
+    }
+
+    @Test
+    void getAllAdmins_WithActiveFilter_ReturnsOnlyActiveAdmins() throws Exception {
+        String token = loginToken(mockMvc);
+        String suffix = String.valueOf(System.nanoTime());
+        String activeUsername = "active-admin-" + suffix;
+        String inactiveUsername = "inactive-admin-" + suffix;
+        registerAdmin(token, activeUsername, activeUsername + "@club.com");
+        registerAdmin(token, inactiveUsername, inactiveUsername + "@club.com");
+        String inactiveUuid = adminRepository.findByUsername(inactiveUsername).orElseThrow().getUuid().toString();
+
+        mockMvc.perform(patch("/api/v1/admins/{uuid}/deactivate", inactiveUuid)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/admins")
+                        .param("active", "true")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].username", hasItem(activeUsername)))
+                .andExpect(jsonPath("$[*].username", not(hasItem(inactiveUsername))));
     }
 
     @Test

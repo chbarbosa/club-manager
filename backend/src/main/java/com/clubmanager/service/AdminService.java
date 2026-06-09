@@ -56,6 +56,11 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
+    public List<Admin> getActiveAdmins() {
+        return adminRepository.findByActiveTrue();
+    }
+
+    @Transactional(readOnly = true)
     public Admin getAdminByUuid(UUID uuid) {
         return adminRepository.findByUuid(uuid)
                 .orElseThrow(() -> new EntityNotFoundException("Admin not found: " + uuid));

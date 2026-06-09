@@ -42,6 +42,7 @@ class PlayerTeamControllerTest {
                 .andExpect(jsonPath("$.uuid").isString())
                 .andExpect(jsonPath("$.playerUuid").value(playerUuid))
                 .andExpect(jsonPath("$.playerName").value("Joao Silva"))
+                .andExpect(jsonPath("$.playerAge").isNumber())
                 .andExpect(jsonPath("$.playerPositions[0]").value("MIDFIELD"))
                 .andExpect(jsonPath("$.teamUuid").value(teamUuid))
                 .andExpect(jsonPath("$.assignedDate").value(LocalDate.now().toString()))
@@ -63,6 +64,22 @@ class PlayerTeamControllerTest {
                                 """.formatted(playerUuid)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void assignPlayer_WithAgeAboveTeamLimit_ReturnsBadRequest() throws Exception {
+        String trainerUuid = createTrainer();
+        String teamUuid = createTeam(trainerUuid, "MASCULINE");
+        String playerUuid = createPlayer("REG-PT-AGE", "MASCULINE", "2011-03-15");
+
+        mockMvc.perform(post("/api/v1/teams/{teamUuid}/players", teamUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"playerUuid": "%s"}
+                                """.formatted(playerUuid)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Player age must be 13 or younger for this team"));
     }
 
     @Test
@@ -88,6 +105,7 @@ class PlayerTeamControllerTest {
                 .andExpect(jsonPath("$[0].uuid").isString())
                 .andExpect(jsonPath("$[*].uuid", hasItem(assignmentUuid)))
                 .andExpect(jsonPath("$[0].playerUuid").isString())
+                .andExpect(jsonPath("$[0].playerAge").isNumber())
                 .andExpect(jsonPath("$[0].id").doesNotExist());
     }
 
@@ -126,6 +144,10 @@ class PlayerTeamControllerTest {
     }
 
     private String createPlayer(String registrationNumber, String teamCategory) throws Exception {
+        return createPlayer(registrationNumber, teamCategory, "2013-03-15");
+    }
+
+    private String createPlayer(String registrationNumber, String teamCategory, String birthdate) throws Exception {
         String response = mockMvc.perform(post("/api/v1/players")
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -134,13 +156,13 @@ class PlayerTeamControllerTest {
                                   "name": "Joao Silva",
                                   "birthCountry": "Brazil",
                                   "livingCountry": "Brazil",
-                                  "birthdate": "2012-03-15",
+                                  "birthdate": "%s",
                                   "teamCategory": "%s",
                                   "positions": ["MIDFIELD"],
                                   "registrationNumber": "%s",
                                   "memberSince": "2020-01-01"
                                 }
-                                """.formatted(teamCategory, registrationNumber)))
+                                """.formatted(birthdate, teamCategory, registrationNumber)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()

@@ -46,7 +46,7 @@ export default function TeamDetailPage() {
 
   async function loadTrainers() {
     try {
-      const response = await getAllTrainers({ page: 0, size: 100 })
+      const response = await getAllTrainers({ page: 0, size: 100, active: true })
       setTrainers(response.content ?? [])
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load trainers for teams.')
@@ -55,7 +55,7 @@ export default function TeamDetailPage() {
 
   async function loadAdmins() {
     try {
-      setAdmins(await getAllAdmins())
+      setAdmins(await getAllAdmins({ active: true }))
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load admins for teams.')
     }
@@ -196,7 +196,7 @@ export default function TeamDetailPage() {
                   <div>
                     <h2 className="h3">Roster</h2>
                     <p className="mb-1"><strong>{roster.length}</strong> active player{roster.length === 1 ? '' : 's'}</p>
-                    <p className="text-muted mb-0">Assign active players with the same team category.</p>
+                    <p className="text-muted mb-0">Assign active players with the same team category and age limit.</p>
                   </div>
                 </div>
 
@@ -226,6 +226,7 @@ export default function TeamDetailPage() {
                   <thead>
                     <tr>
                       <th>Player</th>
+                      <th>Age</th>
                       <th>Team category</th>
                       <th>Positions</th>
                       <th>Assigned date</th>
@@ -235,7 +236,8 @@ export default function TeamDetailPage() {
                   <tbody>
                     {roster.map((assignment) => (
                       <tr key={assignment.uuid}>
-                        <td>{assignment.playerName}</td>
+                        <td><Link to={`/players/${assignment.playerUuid}`}>{assignment.playerName}</Link></td>
+                        <td>{assignment.playerAge}</td>
                         <td>{formatTeamCategory(assignment.playerTeamCategory)}</td>
                         <td>{formatPositions(assignment.playerPositions)}</td>
                         <td>{formatDate(assignment.assignedDate)}</td>
@@ -279,11 +281,23 @@ function formatAgeCategory(value) {
 
 function availablePlayers(team, players, roster) {
   const assignedPlayerUuids = new Set(roster.map((assignment) => assignment.playerUuid))
+  const maxAge = maxAgeForTeam(team.ageCategory)
   return players.filter((player) => (
     player.active
     && player.teamCategory === team.teamCategory
+    && (maxAge === null || player.age <= maxAge)
     && !assignedPlayerUuids.has(player.uuid)
   ))
+}
+
+function maxAgeForTeam(ageCategory) {
+  if (ageCategory === 'U17_18') {
+    return 18
+  }
+  if (ageCategory === 'U19_PLUS') {
+    return null
+  }
+  return Number(ageCategory?.replace('U', '')) || null
 }
 
 function formatDate(value) {

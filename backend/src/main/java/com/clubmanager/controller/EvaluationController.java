@@ -55,11 +55,12 @@ public class EvaluationController {
 
     @GetMapping
     public PageResponse<EvaluationSummaryResponse> getAllEvaluations(
+            @RequestParam(required = false) String title,
             @RequestParam(required = false) String ageGroup,
             @RequestParam(required = false) TeamCategory teamCategory,
             @RequestParam(required = false) EvaluationStatus status,
             Pageable pageable) {
-        return PageResponse.from(evaluationService.searchEvaluations(ageGroup, teamCategory, status, pageable)
+        return PageResponse.from(evaluationService.searchEvaluations(title, ageGroup, teamCategory, status, pageable)
                 .map(evaluationMapper::toSummaryResponse));
     }
 

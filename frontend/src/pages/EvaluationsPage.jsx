@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createEvaluation, getAllEvaluations } from '../api/evaluations.js'
 import EvaluationForm from '../components/evaluations/EvaluationForm.jsx'
@@ -15,12 +15,15 @@ export default function EvaluationsPage() {
   const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const loadRequestId = useRef(0)
 
   useEffect(() => {
     loadEvaluations()
   }, [page, status, ageGroup, teamCategory])
 
   async function loadEvaluations() {
+    const requestId = loadRequestId.current + 1
+    loadRequestId.current = requestId
     setError('')
     try {
       const response = await getAllEvaluations({
@@ -30,9 +33,15 @@ export default function EvaluationsPage() {
         ageGroup: ageGroup || undefined,
         teamCategory: teamCategory || undefined,
       })
+      if (requestId !== loadRequestId.current) {
+        return
+      }
       setEvaluations(response.content ?? [])
       setPageInfo({ number: response.number ?? 0, totalPages: response.totalPages ?? 0 })
     } catch (requestError) {
+      if (requestId !== loadRequestId.current) {
+        return
+      }
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load evaluations.')
     }
   }
@@ -41,11 +50,15 @@ export default function EvaluationsPage() {
     setError('')
     setMessage('')
     try {
-      await createEvaluation(data)
+      const createdEvaluation = await createEvaluation(data)
+      loadRequestId.current += 1
       setShowForm(false)
       setMessage('Evaluation created.')
       setPage(0)
-      await loadEvaluations()
+      setEvaluations((currentEvaluations) => [
+        createdEvaluation,
+        ...currentEvaluations.filter((evaluation) => evaluation.uuid !== createdEvaluation.uuid),
+      ].slice(0, PAGE_SIZE))
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to save evaluation.')
     }

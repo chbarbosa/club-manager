@@ -76,6 +76,48 @@ class PlayerTeamServiceTest {
     }
 
     @Test
+    void assignPlayer_WithAgeAtTeamLimit_CreatesActiveAssignment() {
+        Team team = team(TeamCategory.MASCULINE, TeamAgeCategory.U13);
+        Player player = player(TeamCategory.MASCULINE, LocalDate.now().minusYears(13));
+        when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
+        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
+        when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)).thenReturn(false);
+        when(playerTeamRepository.findByPlayerAndActiveTrue(player)).thenReturn(Optional.empty());
+        when(playerTeamRepository.save(any(PlayerTeam.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid()));
+
+        assertThat(assignment.getPlayer()).isEqualTo(player);
+    }
+
+    @Test
+    void assignPlayer_WithAgeAboveTeamLimit_ThrowsValidationException() {
+        Team team = team(TeamCategory.MASCULINE, TeamAgeCategory.U13);
+        Player player = player(TeamCategory.MASCULINE, LocalDate.now().minusYears(14));
+        when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
+        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
+
+        assertThatThrownBy(() -> playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Player age must be 13 or younger for this team");
+    }
+
+    @Test
+    void assignPlayer_WithU19PlusTeam_DoesNotApplyUpperAgeLimit() {
+        Team team = team(TeamCategory.MASCULINE, TeamAgeCategory.U19_PLUS);
+        Player player = player(TeamCategory.MASCULINE, LocalDate.now().minusYears(25));
+        when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
+        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
+        when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)).thenReturn(false);
+        when(playerTeamRepository.findByPlayerAndActiveTrue(player)).thenReturn(Optional.empty());
+        when(playerTeamRepository.save(any(PlayerTeam.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid()));
+
+        assertThat(assignment.getPlayer()).isEqualTo(player);
+    }
+
+    @Test
     void removePlayer_WithActiveAssignment_DeactivatesAssignment() {
         Team team = team(TeamCategory.MASCULINE);
         Player player = player(TeamCategory.MASCULINE);
@@ -96,9 +138,13 @@ class PlayerTeamServiceTest {
     }
 
     private Team team(TeamCategory teamCategory) {
+        return team(teamCategory, TeamAgeCategory.U13);
+    }
+
+    private Team team(TeamCategory teamCategory, TeamAgeCategory ageCategory) {
         return Team.builder()
                 .ageGroup("Under 13")
-                .ageCategory(TeamAgeCategory.U13)
+                .ageCategory(ageCategory)
                 .teamCategory(teamCategory)
                 .trainer(Trainer.builder()
                         .name("Carlos Mendes")
@@ -109,11 +155,15 @@ class PlayerTeamServiceTest {
     }
 
     private Player player(TeamCategory teamCategory) {
+        return player(teamCategory, LocalDate.now().minusYears(12));
+    }
+
+    private Player player(TeamCategory teamCategory, LocalDate birthdate) {
         return Player.builder()
                 .name("Joao Silva")
                 .birthCountry("Brazil")
                 .livingCountry("Brazil")
-                .birthdate(LocalDate.now().minusYears(12))
+                .birthdate(birthdate)
                 .teamCategory(teamCategory)
                 .positions(Set.of(PlayerPosition.MIDFIELD))
                 .registerDate(LocalDate.now())

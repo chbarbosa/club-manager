@@ -122,8 +122,12 @@ public class TeamService {
     }
 
     private Trainer findTrainer(UUID trainerUuid) {
-        return trainerRepository.findByUuid(trainerUuid)
+        Trainer trainer = trainerRepository.findByUuid(trainerUuid)
                 .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + trainerUuid));
+        if (!trainer.isActive()) {
+            throw new IllegalArgumentException("Trainer must be active");
+        }
+        return trainer;
     }
 
     private Trainer findOptionalTrainer(UUID trainerUuid) {
@@ -134,7 +138,11 @@ public class TeamService {
         if (adminUuid == null) {
             return null;
         }
-        return adminRepository.findByUuid(adminUuid)
+        Admin admin = adminRepository.findByUuid(adminUuid)
                 .orElseThrow(() -> new EntityNotFoundException("Admin not found: " + adminUuid));
+        if (!admin.isActive()) {
+            throw new IllegalArgumentException("Administrative assistant must be active");
+        }
+        return admin;
     }
 }

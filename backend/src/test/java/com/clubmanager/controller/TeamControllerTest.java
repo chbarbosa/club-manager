@@ -1,7 +1,6 @@
 package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
-import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -80,10 +79,11 @@ class TeamControllerTest {
         String teamUuid = createTeam(trainerUuid);
 
         mockMvc.perform(get("/api/v1/teams")
+                        .param("identification", "Under 13 A")
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].uuid").isString())
-                .andExpect(jsonPath("$.content[*].uuid", hasItem(teamUuid)))
+                .andExpect(jsonPath("$.content[0].uuid").value(teamUuid))
                 .andExpect(jsonPath("$.content[0].trainerUuid").isString())
                 .andExpect(jsonPath("$.content[0].id").doesNotExist());
     }

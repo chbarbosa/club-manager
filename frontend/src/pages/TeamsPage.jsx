@@ -48,7 +48,7 @@ export default function TeamsPage() {
 
   async function loadTrainers() {
     try {
-      const response = await getAllTrainers({ page: 0, size: 100 })
+      const response = await getAllTrainers({ page: 0, size: 100, active: true })
       setTrainers(response.content ?? [])
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load trainers for teams.')
@@ -57,7 +57,7 @@ export default function TeamsPage() {
 
   async function loadAdmins() {
     try {
-      setAdmins(await getAllAdmins())
+      setAdmins(await getAllAdmins({ active: true }))
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load admins for teams.')
     }

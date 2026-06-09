@@ -1,7 +1,7 @@
 import api from './axios.js'
 
-export function getAllAdmins() {
-  return api.get('/admins').then((response) => response.data)
+export function getAllAdmins(params = {}) {
+  return api.get('/admins', { params }).then((response) => response.data)
 }
 
 export function deactivateAdmin(uuid) {

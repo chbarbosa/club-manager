@@ -10,6 +10,7 @@ public record PlayerTeamResponse(
         UUID uuid,
         UUID playerUuid,
         String playerName,
+        int playerAge,
         TeamCategory playerTeamCategory,
         Set<PlayerPosition> playerPositions,
         UUID teamUuid,

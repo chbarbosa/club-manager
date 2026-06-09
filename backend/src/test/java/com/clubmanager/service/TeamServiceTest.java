@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.clubmanager.domain.Admin;
 import com.clubmanager.domain.Team;
 import com.clubmanager.domain.TeamAgeCategory;
 import com.clubmanager.domain.TeamCategory;
@@ -85,6 +86,32 @@ class TeamServiceTest {
     }
 
     @Test
+    void createTeam_WithInactiveTrainer_ThrowsValidationException() {
+        Trainer trainer = trainer();
+        trainer.setActive(false);
+        when(trainerRepository.findByUuid(trainer.getUuid())).thenReturn(Optional.of(trainer));
+
+        assertThatThrownBy(() -> teamService.createTeam(new TeamCreateRequest(
+                "Under 13 A", TeamAgeCategory.U13, TeamCategory.MASCULINE, trainer.getUuid(), null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Trainer must be active");
+    }
+
+    @Test
+    void createTeam_WithInactiveAssistantAdmin_ThrowsValidationException() {
+        Trainer trainer = trainer();
+        Admin admin = new Admin();
+        admin.setActive(false);
+        when(trainerRepository.findByUuid(trainer.getUuid())).thenReturn(Optional.of(trainer));
+        when(adminRepository.findByUuid(admin.getUuid())).thenReturn(Optional.of(admin));
+
+        assertThatThrownBy(() -> teamService.createTeam(new TeamCreateRequest(
+                "Under 13 A", TeamAgeCategory.U13, TeamCategory.MASCULINE, trainer.getUuid(), null, admin.getUuid())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Administrative assistant must be active");
+    }
+
+    @Test
     void updateTeam_WithValidRequest_UpdatesFields() {
         Team team = team();
         Trainer newTrainer = trainer();
@@ -100,6 +127,21 @@ class TeamServiceTest {
         assertThat(updated.getAgeCategory()).isEqualTo(TeamAgeCategory.U15);
         assertThat(updated.getTeamCategory()).isEqualTo(TeamCategory.FEMININE);
         assertThat(updated.getTrainer()).isEqualTo(newTrainer);
+    }
+
+    @Test
+    void updateTeam_WithInactiveSubTrainer_ThrowsValidationException() {
+        Team team = team();
+        Trainer subTrainer = trainer();
+        subTrainer.setActive(false);
+        when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
+        when(trainerRepository.findByUuid(subTrainer.getUuid())).thenReturn(Optional.of(subTrainer));
+
+        assertThatThrownBy(() -> teamService.updateTeam(
+                team.getUuid(),
+                new TeamUpdateRequest(null, null, null, null, subTrainer.getUuid(), null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Trainer must be active");
     }
 
     @Test

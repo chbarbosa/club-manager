@@ -15,9 +15,20 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
 
     Page<Evaluation> findByStatus(EvaluationStatus status, Pageable pageable);
 
+    Page<Evaluation> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
     Page<Evaluation> findByAgeGroupContainingIgnoreCase(String ageGroup, Pageable pageable);
 
     Page<Evaluation> findByTeamCategory(TeamCategory teamCategory, Pageable pageable);
+
+    Page<Evaluation> findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCase(
+            String title, String ageGroup, Pageable pageable);
+
+    Page<Evaluation> findByTitleContainingIgnoreCaseAndTeamCategory(
+            String title, TeamCategory teamCategory, Pageable pageable);
+
+    Page<Evaluation> findByTitleContainingIgnoreCaseAndStatus(
+            String title, EvaluationStatus status, Pageable pageable);
 
     Page<Evaluation> findByAgeGroupContainingIgnoreCaseAndTeamCategory(String ageGroup, TeamCategory teamCategory, Pageable pageable);
 
@@ -25,6 +36,18 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
 
     Page<Evaluation> findByTeamCategoryAndStatus(TeamCategory teamCategory, EvaluationStatus status, Pageable pageable);
 
+    Page<Evaluation> findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCaseAndTeamCategory(
+            String title, String ageGroup, TeamCategory teamCategory, Pageable pageable);
+
+    Page<Evaluation> findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCaseAndStatus(
+            String title, String ageGroup, EvaluationStatus status, Pageable pageable);
+
+    Page<Evaluation> findByTitleContainingIgnoreCaseAndTeamCategoryAndStatus(
+            String title, TeamCategory teamCategory, EvaluationStatus status, Pageable pageable);
+
     Page<Evaluation> findByAgeGroupContainingIgnoreCaseAndTeamCategoryAndStatus(
             String ageGroup, TeamCategory teamCategory, EvaluationStatus status, Pageable pageable);
+
+    Page<Evaluation> findByTitleContainingIgnoreCaseAndAgeGroupContainingIgnoreCaseAndTeamCategoryAndStatus(
+            String title, String ageGroup, TeamCategory teamCategory, EvaluationStatus status, Pageable pageable);
 }
