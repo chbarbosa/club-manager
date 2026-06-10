@@ -38,6 +38,13 @@ const FEATURES = [
     action: 'Manage schedules',
   },
   {
+    title: 'Championships',
+    description: 'Create competition periods and manage the selected roster for each team.',
+    icon: 'championships',
+    path: '/championships',
+    action: 'Manage championships',
+  },
+  {
     title: 'Club settings',
     description: 'Adjust club identity, colours, and setup values used across the workspace.',
     icon: 'settings',
@@ -129,6 +136,16 @@ function DashboardIcon({ name }) {
         <path d="M8 12h3" />
         <path d="M13 12h3" />
         <path d="M8 16h3" />
+      </>
+    ),
+    championships: (
+      <>
+        <path d="M8 21h8" />
+        <path d="M12 17v4" />
+        <path d="M7 4h10v3a5 5 0 0 1-10 0V4Z" />
+        <path d="M7 6H4a3 3 0 0 0 3 3" />
+        <path d="M17 6h3a3 3 0 0 1-3 3" />
+        <path d="M9 17h6" />
       </>
     ),
     settings: (
