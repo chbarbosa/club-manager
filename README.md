@@ -49,6 +49,8 @@ final evaluation results are available.
 Admin accounts are deactivated instead of hard-deleted so future history and audit
 relationships can remain intact.
 
+Future product and hardening ideas are tracked in `docs/ROADMAP.md`.
+
 ## Development Login
 
 After Prompt 03, the local seed admin is:
