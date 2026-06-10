@@ -2,20 +2,15 @@ package com.clubmanager.controller;
 
 import com.clubmanager.dto.ChampionshipCreateRequest;
 import com.clubmanager.dto.ChampionshipResponse;
-import com.clubmanager.dto.ChampionshipRosterAssignRequest;
-import com.clubmanager.dto.ChampionshipRosterResponse;
 import com.clubmanager.dto.ChampionshipUpdateRequest;
 import com.clubmanager.dto.PageResponse;
 import com.clubmanager.mapper.ChampionshipMapper;
-import com.clubmanager.mapper.ChampionshipRosterMapper;
 import com.clubmanager.service.ChampionshipService;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,15 +29,12 @@ public class ChampionshipController {
 
     private final ChampionshipService championshipService;
     private final ChampionshipMapper championshipMapper;
-    private final ChampionshipRosterMapper championshipRosterMapper;
 
     public ChampionshipController(
             ChampionshipService championshipService,
-            ChampionshipMapper championshipMapper,
-            ChampionshipRosterMapper championshipRosterMapper) {
+            ChampionshipMapper championshipMapper) {
         this.championshipService = championshipService;
         this.championshipMapper = championshipMapper;
-        this.championshipRosterMapper = championshipRosterMapper;
     }
 
     @PostMapping
@@ -80,27 +72,5 @@ public class ChampionshipController {
     @PatchMapping("/{uuid}/reactivate")
     public ChampionshipResponse reactivateChampionship(@PathVariable UUID uuid) {
         return championshipMapper.toResponse(championshipService.reactivateChampionship(uuid));
-    }
-
-    @GetMapping("/{uuid}/roster")
-    public List<ChampionshipRosterResponse> getRoster(@PathVariable UUID uuid) {
-        return championshipService.getActiveRoster(uuid).stream()
-                .map(championshipRosterMapper::toResponse)
-                .toList();
-    }
-
-    @PostMapping("/{uuid}/roster")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ChampionshipRosterResponse assignRosterPlayer(
-            @PathVariable UUID uuid,
-            @Valid @RequestBody ChampionshipRosterAssignRequest request) {
-        return championshipRosterMapper.toResponse(championshipService.assignRosterPlayer(uuid, request));
-    }
-
-    @DeleteMapping("/{uuid}/roster/{rosterUuid}")
-    public ChampionshipRosterResponse removeRosterPlayer(
-            @PathVariable UUID uuid,
-            @PathVariable UUID rosterUuid) {
-        return championshipRosterMapper.toResponse(championshipService.removeRosterPlayer(uuid, rosterUuid));
     }
 }

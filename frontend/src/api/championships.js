@@ -23,15 +23,3 @@ export function deactivateChampionship(uuid) {
 export function reactivateChampionship(uuid) {
   return api.patch(`/championships/${uuid}/reactivate`).then((response) => response.data)
 }
-
-export function getChampionshipRoster(championshipUuid) {
-  return api.get(`/championships/${championshipUuid}/roster`).then((response) => response.data)
-}
-
-export function assignChampionshipRosterPlayer(championshipUuid, playerUuid, trainerUuid) {
-  return api.post(`/championships/${championshipUuid}/roster`, { playerUuid, trainerUuid }).then((response) => response.data)
-}
-
-export function removeChampionshipRosterPlayer(championshipUuid, rosterUuid) {
-  return api.delete(`/championships/${championshipUuid}/roster/${rosterUuid}`).then((response) => response.data)
-}

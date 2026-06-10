@@ -6,24 +6,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.clubmanager.domain.Championship;
-import com.clubmanager.domain.ChampionshipRoster;
-import com.clubmanager.domain.Player;
-import com.clubmanager.domain.PlayerPosition;
 import com.clubmanager.domain.Team;
 import com.clubmanager.domain.TeamAgeCategory;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.ChampionshipCreateRequest;
-import com.clubmanager.dto.ChampionshipRosterAssignRequest;
+import com.clubmanager.dto.ChampionshipUpdateRequest;
 import com.clubmanager.repository.ChampionshipRepository;
-import com.clubmanager.repository.ChampionshipRosterRepository;
-import com.clubmanager.repository.PlayerRepository;
-import com.clubmanager.repository.PlayerTeamRepository;
 import com.clubmanager.repository.TeamRepository;
-import com.clubmanager.repository.TrainerRepository;
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,19 +29,7 @@ class ChampionshipServiceTest {
     private ChampionshipRepository championshipRepository;
 
     @Mock
-    private ChampionshipRosterRepository championshipRosterRepository;
-
-    @Mock
     private TeamRepository teamRepository;
-
-    @Mock
-    private PlayerRepository playerRepository;
-
-    @Mock
-    private TrainerRepository trainerRepository;
-
-    @Mock
-    private PlayerTeamRepository playerTeamRepository;
 
     private ChampionshipService championshipService;
 
@@ -57,11 +37,7 @@ class ChampionshipServiceTest {
     void setUp() {
         championshipService = new ChampionshipService(
                 championshipRepository,
-                championshipRosterRepository,
-                teamRepository,
-                playerRepository,
-                trainerRepository,
-                playerTeamRepository);
+                teamRepository);
     }
 
     @Test
@@ -103,43 +79,32 @@ class ChampionshipServiceTest {
     }
 
     @Test
-    void assignRosterPlayer_WithEligiblePlayer_CreatesRosterEntry() {
+    void updateChampionship_WithValidPeriod_UpdatesAllowedFields() {
         Championship championship = championship(team(true));
-        Player player = player(true);
-        Trainer trainer = trainer(true);
         when(championshipRepository.findByUuid(championship.getUuid())).thenReturn(Optional.of(championship));
-        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
-        when(trainerRepository.findByUuid(trainer.getUuid())).thenReturn(Optional.of(trainer));
-        when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(championship.getTeam(), player)).thenReturn(true);
-        when(championshipRosterRepository.existsByChampionshipAndPlayerAndActiveTrue(championship, player)).thenReturn(false);
-        when(championshipRosterRepository.save(any(ChampionshipRoster.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(championshipRepository.save(any(Championship.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ChampionshipRoster roster = championshipService.assignRosterPlayer(
+        Championship updated = championshipService.updateChampionship(
                 championship.getUuid(),
-                new ChampionshipRosterAssignRequest(player.getUuid(), trainer.getUuid()));
+                new ChampionshipUpdateRequest(" Autumn Cup ", " Fall season ", null, 8, 2026, 11, 2026));
 
-        assertThat(roster.getChampionship()).isEqualTo(championship);
-        assertThat(roster.getPlayer()).isEqualTo(player);
-        assertThat(roster.getTrainer()).isEqualTo(trainer);
-        assertThat(roster.getAssignedDate()).isEqualTo(LocalDate.now());
-        assertThat(roster.isActive()).isTrue();
+        assertThat(updated.getName()).isEqualTo("Autumn Cup");
+        assertThat(updated.getDescription()).isEqualTo("Fall season");
+        assertThat(updated.getStartMonth()).isEqualTo(8);
+        assertThat(updated.getEndMonth()).isEqualTo(11);
     }
 
     @Test
-    void assignRosterPlayer_WhenPlayerNotOnTeamRoster_ThrowsValidationException() {
+    void updateChampionship_WhenInactive_ThrowsValidationException() {
         Championship championship = championship(team(true));
-        Player player = player(true);
-        Trainer trainer = trainer(true);
+        championship.setActive(false);
         when(championshipRepository.findByUuid(championship.getUuid())).thenReturn(Optional.of(championship));
-        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
-        when(trainerRepository.findByUuid(trainer.getUuid())).thenReturn(Optional.of(trainer));
-        when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(championship.getTeam(), player)).thenReturn(false);
 
-        assertThatThrownBy(() -> championshipService.assignRosterPlayer(
+        assertThatThrownBy(() -> championshipService.updateChampionship(
                 championship.getUuid(),
-                new ChampionshipRosterAssignRequest(player.getUuid(), trainer.getUuid())))
+                new ChampionshipUpdateRequest("Autumn Cup", null, null, null, null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Player must be assigned to the championship team roster");
+                .hasMessage("Inactive championships cannot be changed");
     }
 
     private Championship championship(Team team) {
@@ -174,18 +139,4 @@ class ChampionshipServiceTest {
         return trainer;
     }
 
-    private Player player(boolean active) {
-        Player player = Player.builder()
-                .name("Joao Silva")
-                .birthCountry("Brazil")
-                .livingCountry("Brazil")
-                .birthdate(LocalDate.now().minusYears(13))
-                .teamCategory(TeamCategory.MASCULINE)
-                .positions(Set.of(PlayerPosition.MIDFIELD))
-                .registerDate(LocalDate.now())
-                .memberSince(LocalDate.now())
-                .build();
-        player.setActive(active);
-        return player;
-    }
 }

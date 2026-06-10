@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  assignChampionshipRosterPlayer,
   deactivateChampionship,
   getChampionship,
-  getChampionshipRoster,
   reactivateChampionship,
-  removeChampionshipRosterPlayer,
   updateChampionship,
 } from '../api/championships.js'
-import { getAllTrainers } from '../api/trainers.js'
 import { getTeamRoster } from '../api/teams.js'
 
 const MONTHS = [
@@ -30,11 +26,7 @@ const MONTHS = [
 export default function ChampionshipDetailPage() {
   const { uuid } = useParams()
   const [championship, setChampionship] = useState(null)
-  const [teamRoster, setTeamRoster] = useState([])
-  const [championshipRoster, setChampionshipRoster] = useState([])
-  const [trainers, setTrainers] = useState([])
-  const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
-  const [selectedTrainerUuid, setSelectedTrainerUuid] = useState('')
+  const [teamPlayers, setTeamPlayers] = useState([])
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(null)
   const [message, setMessage] = useState('')
@@ -42,8 +34,6 @@ export default function ChampionshipDetailPage() {
 
   useEffect(() => {
     loadChampionship()
-    loadTrainers()
-    loadRoster()
   }, [uuid])
 
   async function loadChampionship() {
@@ -59,36 +49,9 @@ export default function ChampionshipDetailPage() {
         endMonth: String(response.endMonth),
         endYear: String(response.endYear),
       })
-      await loadTeamRoster(response.teamUuid)
+      setTeamPlayers(await getTeamRoster(response.teamUuid))
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load championship.')
-    }
-  }
-
-  async function loadTeamRoster(teamUuid) {
-    try {
-      setTeamRoster(await getTeamRoster(teamUuid))
-    } catch (requestError) {
-      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load team roster.')
-    }
-  }
-
-  async function loadTrainers() {
-    try {
-      const response = await getAllTrainers({ page: 0, size: 100, active: true })
-      const activeTrainers = response.content ?? []
-      setTrainers(activeTrainers)
-      setSelectedTrainerUuid((current) => current || activeTrainers[0]?.uuid || '')
-    } catch (requestError) {
-      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load trainers.')
-    }
-  }
-
-  async function loadRoster() {
-    try {
-      setChampionshipRoster(await getChampionshipRoster(uuid))
-    } catch (requestError) {
-      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load championship roster.')
     }
   }
 
@@ -133,40 +96,6 @@ export default function ChampionshipDetailPage() {
     }
   }
 
-  async function assignPlayer(event) {
-    event.preventDefault()
-    if (!selectedPlayerUuid || !selectedTrainerUuid) {
-      return
-    }
-    setError('')
-    setMessage('')
-    try {
-      await assignChampionshipRosterPlayer(uuid, selectedPlayerUuid, selectedTrainerUuid)
-      setSelectedPlayerUuid('')
-      await loadRoster()
-      setMessage('Player assigned to championship.')
-    } catch (requestError) {
-      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to assign player to championship.')
-    }
-  }
-
-  async function removePlayer(assignment) {
-    if (!window.confirm(`Remove ${assignment.playerName} from this championship?`)) {
-      return
-    }
-    setError('')
-    setMessage('')
-    try {
-      await removeChampionshipRosterPlayer(uuid, assignment.uuid)
-      await loadRoster()
-      setMessage('Player removed from championship.')
-    } catch (requestError) {
-      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to remove player from championship.')
-    }
-  }
-
-  const availablePlayers = eligiblePlayers(teamRoster, championshipRoster)
-
   return (
     <main className="container py-5">
       <Link to="/championships">&larr; Back to championships</Link>
@@ -179,7 +108,7 @@ export default function ChampionshipDetailPage() {
           <div className="d-flex justify-content-between align-items-center mt-3 mb-4">
             <div>
               <h1>{championship.name}</h1>
-              <p className="text-muted mb-2">{teamLabel(championship)} · {formatPeriod(championship)}</p>
+              <p className="text-muted mb-2">{teamLabel(championship)} - {formatPeriod(championship)}</p>
               <span className={`badge ${championship.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
                 {championship.active ? 'Active' : 'Inactive'}
               </span>
@@ -246,92 +175,41 @@ export default function ChampionshipDetailPage() {
           )}
 
           <section className="mt-5">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h2 className="h3">Championship roster</h2>
-                <p className="mb-1"><strong>{championshipRoster.length}</strong> active player{championshipRoster.length === 1 ? '' : 's'}</p>
-                <p className="text-muted mb-0">Only active players already assigned to this team can be added.</p>
-              </div>
+            <div className="mb-3">
+              <h2 className="h3">Team players</h2>
+              <p className="mb-1"><strong>{teamPlayers.length}</strong> active player{teamPlayers.length === 1 ? '' : 's'}</p>
+              <p className="text-muted mb-0">The complete active team participates in this championship.</p>
             </div>
-
-            <form className="row g-2 align-items-end mb-4" onSubmit={assignPlayer}>
-              <div className="col-md-5">
-                <label className="form-label" htmlFor="championship-roster-player">Player</label>
-                <select
-                  className="form-select"
-                  disabled={!championship.active}
-                  id="championship-roster-player"
-                  onChange={(event) => setSelectedPlayerUuid(event.target.value)}
-                  value={selectedPlayerUuid}
-                >
-                  <option value="">Select a player</option>
-                  {availablePlayers.map((assignment) => (
-                    <option key={assignment.playerUuid} value={assignment.playerUuid}>{assignment.playerName}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-5">
-                <label className="form-label" htmlFor="championship-roster-trainer">Responsible trainer</label>
-                <select
-                  className="form-select"
-                  disabled={!championship.active}
-                  id="championship-roster-trainer"
-                  onChange={(event) => setSelectedTrainerUuid(event.target.value)}
-                  value={selectedTrainerUuid}
-                >
-                  <option value="">Select a trainer</option>
-                  {trainers.map((trainer) => (
-                    <option key={trainer.uuid} value={trainer.uuid}>{trainer.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-2">
-                <button className="btn btn-primary w-100" disabled={!championship.active || !selectedPlayerUuid || !selectedTrainerUuid} type="submit">
-                  Assign
-                </button>
-              </div>
-            </form>
 
             <table className="table table-striped align-middle">
               <thead>
                 <tr>
                   <th>Player</th>
                   <th>Age</th>
+                  <th>Team category</th>
                   <th>Positions</th>
-                  <th>Trainer</th>
                   <th>Assigned date</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {championshipRoster.map((assignment) => (
+                {teamPlayers.map((assignment) => (
                   <tr key={assignment.uuid}>
                     <td><Link to={`/players/${assignment.playerUuid}`}>{assignment.playerName}</Link></td>
                     <td>{assignment.playerAge}</td>
+                    <td>{formatTeamCategory(assignment.playerTeamCategory)}</td>
                     <td>{formatPositions(assignment.playerPositions)}</td>
-                    <td>{assignment.trainerName}</td>
                     <td>{formatDate(assignment.assignedDate)}</td>
-                    <td>
-                      <button className="btn btn-sm btn-outline-danger" disabled={!championship.active} onClick={() => removePlayer(assignment)} type="button">
-                        Remove
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {championshipRoster.length === 0 && <p className="text-muted">No players assigned to this championship.</p>}
+            {teamPlayers.length === 0 && <p className="text-muted">No active players are assigned to this team.</p>}
           </section>
         </>
       )}
     </main>
   )
-}
-
-function eligiblePlayers(teamRoster, championshipRoster) {
-  const assignedPlayerUuids = new Set(championshipRoster.map((assignment) => assignment.playerUuid))
-  return teamRoster.filter((assignment) => !assignedPlayerUuids.has(assignment.playerUuid))
 }
 
 function teamLabel(championship) {

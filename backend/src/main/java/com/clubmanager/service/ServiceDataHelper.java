@@ -13,7 +13,7 @@ final class ServiceDataHelper {
             return;
         }
         requireText(value, field);
-        setter.accept(value);
+        setter.accept(value.trim());
     }
 
     static void requireText(String value, String field) {

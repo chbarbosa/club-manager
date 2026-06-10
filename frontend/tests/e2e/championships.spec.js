@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('admin can create a championship and manage its roster', async ({ page }) => {
+test('admin can create a championship and see the participating team players', async ({ page }) => {
   const suffix = Date.now().toString()
   const trainerName = `Championship Trainer ${suffix}`
   const playerName = `Championship Player ${suffix}`
@@ -69,17 +69,8 @@ test('admin can create a championship and manage its roster', async ({ page }) =
   await page.locator('tr').filter({ hasText: championshipName }).getByRole('link', { name: 'View' }).click()
   await expect(page.getByRole('heading', { name: championshipName })).toBeVisible()
   await expect(page.getByText(`${teamName} Masculine`)).toBeVisible()
-  await expect(page.getByText('0 active players')).toBeVisible()
-
-  await page.getByLabel('Player').selectOption({ label: playerName })
-  await page.getByLabel('Responsible trainer').selectOption({ label: trainerName })
-  await page.getByRole('button', { name: 'Assign' }).click()
-  await expect(page.getByText('Player assigned to championship.')).toBeVisible()
+  await expect(page.getByText('The complete active team participates in this championship.')).toBeVisible()
   await expect(page.getByRole('cell', { name: playerName })).toBeVisible()
   await expect(page.getByText('1 active player')).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Attack' })).toBeVisible()
-
-  await page.locator('tr').filter({ hasText: playerName }).getByRole('button', { name: 'Remove' }).click()
-  await expect(page.getByText('Player removed from championship.')).toBeVisible()
-  await expect(page.getByText('No players assigned to this championship.')).toBeVisible()
 })

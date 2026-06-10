@@ -2,7 +2,6 @@ package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
 import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -82,81 +81,18 @@ class ChampionshipControllerTest {
     }
 
     @Test
-    void rosterFlow_WithEligiblePlayer_AddsAndRemovesPlayer() throws Exception {
+    void getChampionshipByUuid_ReturnsTeamLinkedChampionship() throws Exception {
         String trainerUuid = createTrainer("Roster Trainer");
         String teamUuid = createTeam(trainerUuid);
-        String playerUuid = createPlayer();
-        assignPlayerToTeam(teamUuid, playerUuid);
         String championshipUuid = createChampionship("Roster Cup " + System.nanoTime(), teamUuid);
 
-        String rosterUuid = assignRosterPlayer(championshipUuid, playerUuid, trainerUuid);
-
-        mockMvc.perform(get("/api/v1/championships/{uuid}/roster", championshipUuid)
+        mockMvc.perform(get("/api/v1/championships/{uuid}", championshipUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].uuid", hasItem(rosterUuid)))
-                .andExpect(jsonPath("$[0].playerUuid").value(playerUuid))
-                .andExpect(jsonPath("$[0].trainerUuid").value(trainerUuid))
-                .andExpect(jsonPath("$[0].id").doesNotExist());
-
-        mockMvc.perform(delete("/api/v1/championships/{uuid}/roster/{rosterUuid}", championshipUuid, rosterUuid)
-                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.uuid").value(rosterUuid))
-                .andExpect(jsonPath("$.active").value(false))
-                .andExpect(jsonPath("$.removedDate").value(LocalDate.now().toString()));
-
-        mockMvc.perform(get("/api/v1/championships/{uuid}/roster", championshipUuid)
-                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
-    }
-
-    @Test
-    void assignRosterPlayer_WhenPlayerNotOnTeam_ReturnsBadRequest() throws Exception {
-        String trainerUuid = createTrainer("Roster Trainer");
-        String teamUuid = createTeam(trainerUuid);
-        String playerUuid = createPlayer();
-        String championshipUuid = createChampionship("Roster Cup " + System.nanoTime(), teamUuid);
-
-        mockMvc.perform(post("/api/v1/championships/{uuid}/roster", championshipUuid)
-                        .header("Authorization", "Bearer " + loginToken(mockMvc))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "playerUuid": "%s",
-                                  "trainerUuid": "%s"
-                                }
-                                """.formatted(playerUuid, trainerUuid)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Player must be assigned to the championship team roster"));
-    }
-
-    private String assignRosterPlayer(String championshipUuid, String playerUuid, String trainerUuid) throws Exception {
-        String response = mockMvc.perform(post("/api/v1/championships/{uuid}/roster", championshipUuid)
-                        .header("Authorization", "Bearer " + loginToken(mockMvc))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "playerUuid": "%s",
-                                  "trainerUuid": "%s"
-                                }
-                                """.formatted(playerUuid, trainerUuid)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return JsonPath.read(response, "$.uuid");
-    }
-
-    private void assignPlayerToTeam(String teamUuid, String playerUuid) throws Exception {
-        mockMvc.perform(post("/api/v1/teams/{teamUuid}/players", teamUuid)
-                        .header("Authorization", "Bearer " + loginToken(mockMvc))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"playerUuid": "%s"}
-                                """.formatted(playerUuid)))
-                .andExpect(status().isCreated());
+                .andExpect(jsonPath("$.uuid").value(championshipUuid))
+                .andExpect(jsonPath("$.teamUuid").value(teamUuid))
+                .andExpect(jsonPath("$.trainerName").isString())
+                .andExpect(jsonPath("$.id").doesNotExist());
     }
 
     private String createChampionship(String name, String teamUuid) throws Exception {
@@ -164,30 +100,6 @@ class ChampionshipControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validChampionshipJson(name, teamUuid)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return JsonPath.read(response, "$.uuid");
-    }
-
-    private String createPlayer() throws Exception {
-        String suffix = String.valueOf(System.nanoTime());
-        String response = mockMvc.perform(post("/api/v1/players")
-                        .header("Authorization", "Bearer " + loginToken(mockMvc))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Championship Player %s",
-                                  "birthCountry": "Brazil",
-                                  "livingCountry": "Brazil",
-                                  "birthdate": "2013-03-15",
-                                  "teamCategory": "MASCULINE",
-                                  "positions": ["MIDFIELD"],
-                                  "registrationNumber": "CHAMP-%s",
-                                  "memberSince": "2020-01-01"
-                                }
-                                """.formatted(suffix, suffix)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()

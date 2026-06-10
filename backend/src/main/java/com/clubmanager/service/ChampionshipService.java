@@ -4,22 +4,12 @@ import static com.clubmanager.service.ServiceDataHelper.applyTextUpdate;
 import static com.clubmanager.service.ServiceDataHelper.requireText;
 
 import com.clubmanager.domain.Championship;
-import com.clubmanager.domain.ChampionshipRoster;
-import com.clubmanager.domain.Player;
 import com.clubmanager.domain.Team;
-import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.ChampionshipCreateRequest;
-import com.clubmanager.dto.ChampionshipRosterAssignRequest;
 import com.clubmanager.dto.ChampionshipUpdateRequest;
 import com.clubmanager.repository.ChampionshipRepository;
-import com.clubmanager.repository.ChampionshipRosterRepository;
-import com.clubmanager.repository.PlayerRepository;
-import com.clubmanager.repository.PlayerTeamRepository;
 import com.clubmanager.repository.TeamRepository;
-import com.clubmanager.repository.TrainerRepository;
 import jakarta.persistence.EntityNotFoundException;
-import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,25 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChampionshipService {
 
     private final ChampionshipRepository championshipRepository;
-    private final ChampionshipRosterRepository championshipRosterRepository;
     private final TeamRepository teamRepository;
-    private final PlayerRepository playerRepository;
-    private final TrainerRepository trainerRepository;
-    private final PlayerTeamRepository playerTeamRepository;
 
     public ChampionshipService(
             ChampionshipRepository championshipRepository,
-            ChampionshipRosterRepository championshipRosterRepository,
-            TeamRepository teamRepository,
-            PlayerRepository playerRepository,
-            TrainerRepository trainerRepository,
-            PlayerTeamRepository playerTeamRepository) {
+            TeamRepository teamRepository) {
         this.championshipRepository = championshipRepository;
-        this.championshipRosterRepository = championshipRosterRepository;
         this.teamRepository = teamRepository;
-        this.playerRepository = playerRepository;
-        this.trainerRepository = trainerRepository;
-        this.playerTeamRepository = playerTeamRepository;
     }
 
     @Transactional
@@ -129,50 +107,6 @@ public class ChampionshipService {
         return championshipRepository.save(championship);
     }
 
-    @Transactional(readOnly = true)
-    public List<ChampionshipRoster> getActiveRoster(UUID championshipUuid) {
-        return championshipRosterRepository.findByChampionshipAndActiveTrueOrderByPlayer_NameAsc(
-                getChampionshipByUuid(championshipUuid));
-    }
-
-    @Transactional
-    public ChampionshipRoster assignRosterPlayer(UUID championshipUuid, ChampionshipRosterAssignRequest request) {
-        Championship championship = getChampionshipByUuid(championshipUuid);
-        ensureActive(championship);
-        Player player = getActivePlayer(request.playerUuid());
-        Trainer trainer = getActiveTrainer(request.trainerUuid());
-        if (!playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(championship.getTeam(), player)) {
-            throw new IllegalArgumentException("Player must be assigned to the championship team roster");
-        }
-        if (championshipRosterRepository.existsByChampionshipAndPlayerAndActiveTrue(championship, player)) {
-            throw new IllegalArgumentException("Player is already assigned to this championship roster");
-        }
-
-        ChampionshipRoster roster = ChampionshipRoster.builder()
-                .championship(championship)
-                .player(player)
-                .trainer(trainer)
-                .assignedDate(LocalDate.now())
-                .build();
-        return championshipRosterRepository.save(roster);
-    }
-
-    @Transactional
-    public ChampionshipRoster removeRosterPlayer(UUID championshipUuid, UUID rosterUuid) {
-        Championship championship = getChampionshipByUuid(championshipUuid);
-        ChampionshipRoster roster = championshipRosterRepository.findByUuid(rosterUuid)
-                .orElseThrow(() -> new EntityNotFoundException("Championship roster entry not found: " + rosterUuid));
-        if (!roster.getChampionship().getUuid().equals(championship.getUuid())) {
-            throw new IllegalArgumentException("Roster entry does not belong to this championship");
-        }
-        if (!roster.isActive()) {
-            throw new IllegalArgumentException("Roster entry is already inactive");
-        }
-        roster.setActive(false);
-        roster.setRemovedDate(LocalDate.now());
-        return championshipRosterRepository.save(roster);
-    }
-
     private Team getTeam(UUID uuid) {
         return teamRepository.findByUuid(uuid)
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + uuid));
@@ -184,24 +118,6 @@ public class ChampionshipService {
             throw new IllegalArgumentException("Championship team must be active");
         }
         return team;
-    }
-
-    private Player getActivePlayer(UUID uuid) {
-        Player player = playerRepository.findByUuid(uuid)
-                .orElseThrow(() -> new EntityNotFoundException("Player not found: " + uuid));
-        if (!player.isActive()) {
-            throw new IllegalArgumentException("Championship player must be active");
-        }
-        return player;
-    }
-
-    private Trainer getActiveTrainer(UUID uuid) {
-        Trainer trainer = trainerRepository.findByUuid(uuid)
-                .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + uuid));
-        if (!trainer.isActive()) {
-            throw new IllegalArgumentException("Championship trainer must be active");
-        }
-        return trainer;
     }
 
     private void ensureActive(Championship championship) {
