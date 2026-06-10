@@ -8,6 +8,7 @@ import EvaluationsPage from '../pages/EvaluationsPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
 import PlayerDetailPage from '../pages/PlayerDetailPage.jsx'
 import PlayersPage from '../pages/PlayersPage.jsx'
+import SchedulesPage from '../pages/SchedulesPage.jsx'
 import TeamDetailPage from '../pages/TeamDetailPage.jsx'
 import TeamsPage from '../pages/TeamsPage.jsx'
 import TrainerDetailPage from '../pages/TrainerDetailPage.jsx'
@@ -30,6 +31,7 @@ export default function AppRoutes() {
       <Route path="/trainers/:uuid" element={protectedElement(<TrainerDetailPage />)} />
       <Route path="/teams" element={protectedElement(<TeamsPage />)} />
       <Route path="/teams/:uuid" element={protectedElement(<TeamDetailPage />)} />
+      <Route path="/schedules" element={protectedElement(<SchedulesPage />)} />
       <Route path="/evaluations" element={protectedElement(<EvaluationsPage />)} />
       <Route path="/evaluations/:uuid" element={protectedElement(<EvaluationDetailPage />)} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

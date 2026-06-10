@@ -31,6 +31,13 @@ const FEATURES = [
     action: 'Manage evaluations',
   },
   {
+    title: 'Schedules',
+    description: 'Plan team sessions by field, date, time, duration, and type.',
+    icon: 'schedules',
+    path: '/schedules',
+    action: 'Manage schedules',
+  },
+  {
     title: 'Club settings',
     description: 'Adjust club identity, colours, and setup values used across the workspace.',
     icon: 'settings',
@@ -111,6 +118,17 @@ function DashboardIcon({ name }) {
         <path d="M9 11l2 2 4-5" />
         <path d="M5 4h14v16H5z" />
         <path d="M8 17h8" />
+      </>
+    ),
+    schedules: (
+      <>
+        <path d="M7 3v3" />
+        <path d="M17 3v3" />
+        <path d="M4 8h16" />
+        <path d="M5 5h14v16H5z" />
+        <path d="M8 12h3" />
+        <path d="M13 12h3" />
+        <path d="M8 16h3" />
       </>
     ),
     settings: (
