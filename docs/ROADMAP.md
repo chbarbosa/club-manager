@@ -9,10 +9,9 @@ each item should become a focused implementation plan before coding starts.
 ### Championships
 
 - Create and manage championships or tournaments.
-- Link championships to teams.
+- Link each championship to one complete team.
 - Track start and end month/year.
-- Manage championship rosters with players and trainers.
-- Preserve historical roster data instead of deleting it.
+- Show the participating team players from the active team roster.
 
 ### Reports And Exports
 
@@ -23,6 +22,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Team Composition Advice
 
+- Active next feature.
 - Show team-balance advice on the team detail/edit experience.
 - After a team has about 12 assigned players, highlight composition risks:
   no goalkeeper, only one goalkeeper, few defenders, few midfielders, or few

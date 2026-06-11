@@ -16,5 +16,6 @@ public record TeamResponse(
         String subTrainerName,
         UUID assistantAdminUuid,
         String assistantAdminName,
+        TeamAdviceResponse advice,
         boolean active) {
 }

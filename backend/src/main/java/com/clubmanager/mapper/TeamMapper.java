@@ -16,7 +16,17 @@ public interface TeamMapper {
     @Mapping(target = "subTrainerName", expression = "java(team.getSubTrainer() == null ? null : team.getSubTrainer().getName())")
     @Mapping(target = "assistantAdminUuid", expression = "java(team.getAssistantAdmin() == null ? null : team.getAssistantAdmin().getUuid())")
     @Mapping(target = "assistantAdminName", expression = "java(team.getAssistantAdmin() == null ? null : team.getAssistantAdmin().getName())")
+    @Mapping(target = "advice", ignore = true)
     TeamResponse toResponse(Team team);
+
+    @Mapping(target = "trainerUuid", source = "team.trainer.uuid")
+    @Mapping(target = "trainerName", source = "team.trainer.name")
+    @Mapping(target = "identification", source = "team.ageGroup")
+    @Mapping(target = "subTrainerUuid", expression = "java(team.getSubTrainer() == null ? null : team.getSubTrainer().getUuid())")
+    @Mapping(target = "subTrainerName", expression = "java(team.getSubTrainer() == null ? null : team.getSubTrainer().getName())")
+    @Mapping(target = "assistantAdminUuid", expression = "java(team.getAssistantAdmin() == null ? null : team.getAssistantAdmin().getUuid())")
+    @Mapping(target = "assistantAdminName", expression = "java(team.getAssistantAdmin() == null ? null : team.getAssistantAdmin().getName())")
+    TeamResponse toResponse(Team team, com.clubmanager.dto.TeamAdviceResponse advice);
 
     @Mapping(target = "trainerUuid", source = "trainer.uuid")
     @Mapping(target = "trainerName", source = "trainer.name")

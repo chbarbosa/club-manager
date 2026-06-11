@@ -7,6 +7,9 @@ import com.clubmanager.dto.TeamResponse;
 import com.clubmanager.dto.TeamSummaryResponse;
 import com.clubmanager.dto.TeamUpdateRequest;
 import com.clubmanager.mapper.TeamMapper;
+import com.clubmanager.mapper.TeamAdviceMapper;
+import com.clubmanager.domain.Team;
+import com.clubmanager.service.TeamAdviceService;
 import com.clubmanager.service.TeamService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -31,10 +34,18 @@ public class TeamController {
 
     private final TeamService teamService;
     private final TeamMapper teamMapper;
+    private final TeamAdviceService teamAdviceService;
+    private final TeamAdviceMapper teamAdviceMapper;
 
-    public TeamController(TeamService teamService, TeamMapper teamMapper) {
+    public TeamController(
+            TeamService teamService,
+            TeamMapper teamMapper,
+            TeamAdviceService teamAdviceService,
+            TeamAdviceMapper teamAdviceMapper) {
         this.teamService = teamService;
         this.teamMapper = teamMapper;
+        this.teamAdviceService = teamAdviceService;
+        this.teamAdviceMapper = teamAdviceMapper;
     }
 
     @PostMapping
@@ -56,7 +67,8 @@ public class TeamController {
 
     @GetMapping("/{uuid}")
     public TeamResponse getTeamByUuid(@PathVariable UUID uuid) {
-        return teamMapper.toResponse(teamService.getTeamByUuid(uuid));
+        Team team = teamService.getTeamByUuid(uuid);
+        return teamMapper.toResponse(team, teamAdviceMapper.toResponse(teamAdviceService.analyze(team)));
     }
 
     @PutMapping("/{uuid}")

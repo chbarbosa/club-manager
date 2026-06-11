@@ -98,6 +98,10 @@ class TeamControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uuid").value(teamUuid))
                 .andExpect(jsonPath("$.trainerUuid").value(trainerUuid))
+                .andExpect(jsonPath("$.advice.totalPlayers").value(0))
+                .andExpect(jsonPath("$.advice.minimumPlayersForAdvice").value(12))
+                .andExpect(jsonPath("$.advice.goalkeepers").value(0))
+                .andExpect(jsonPath("$.advice.items").isArray())
                 .andExpect(jsonPath("$.id").doesNotExist());
     }
 

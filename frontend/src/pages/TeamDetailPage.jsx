@@ -116,7 +116,7 @@ export default function TeamDetailPage() {
     try {
       await assignPlayerToTeam(uuid, selectedPlayerUuid)
       setSelectedPlayerUuid('')
-      await loadRoster()
+      await Promise.all([loadTeam(), loadRoster()])
       setMessage('Player assigned to team.')
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to assign player to team.')
@@ -131,7 +131,7 @@ export default function TeamDetailPage() {
     setMessage('')
     try {
       await removePlayerFromTeam(uuid, assignment.uuid)
-      await loadRoster()
+      await Promise.all([loadTeam(), loadRoster()])
       setMessage('Player removed from team.')
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to remove player from team.')
@@ -166,6 +166,8 @@ export default function TeamDetailPage() {
               </button>
             </div>
           </div>
+
+          <TeamAdviceSummary advice={team.advice} />
 
           {editing ? (
             <div className="card">
@@ -259,6 +261,76 @@ export default function TeamDetailPage() {
       )}
     </main>
   )
+}
+
+function TeamAdviceSummary({ advice }) {
+  if (!advice) {
+    return null
+  }
+
+  const positionCounts = [
+    ['Goalkeepers', advice.goalkeepers],
+    ['Defenders', advice.defenders],
+    ['Midfielders', advice.midfielders],
+    ['Attackers', advice.attackers],
+  ]
+
+  return (
+    <section className="card mb-4">
+      <div className="card-body">
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div>
+            <h2 className="h5 mb-1">Team composition</h2>
+            <p className="text-muted mb-0">
+              Advice starts at {advice.minimumPlayersForAdvice} active players.
+            </p>
+          </div>
+          <span className="badge text-bg-secondary">
+            {advice.totalPlayers} active player{advice.totalPlayers === 1 ? '' : 's'}
+          </span>
+        </div>
+
+        <div className="table-responsive mt-3">
+          <table className="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                {positionCounts.map(([label]) => (
+                  <th key={label}>{label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {positionCounts.map(([label, count]) => (
+                  <td key={label}>
+                    <span className={`badge ${positionBadgeClass(label, count, advice)}`}>{count}</span>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {advice.items.length > 0 && (
+          <div className="d-flex flex-wrap gap-2 mt-3">
+            {advice.items.map((item) => (
+              <span className="badge text-bg-warning" key={item.code}>{item.message}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function positionBadgeClass(label, count, advice) {
+  if (advice.totalPlayers < advice.minimumPlayersForAdvice) {
+    return 'text-bg-secondary'
+  }
+  if (label === 'Goalkeepers') {
+    return count < 2 ? 'text-bg-warning' : 'text-bg-success'
+  }
+  return count < 3 ? 'text-bg-warning' : 'text-bg-success'
 }
 
 function formatTeamCategory(value) {

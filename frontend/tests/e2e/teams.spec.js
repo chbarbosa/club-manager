@@ -49,13 +49,16 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await page.locator('tr').filter({ hasText: identification }).getByRole('link', { name: 'View' }).click()
   await expect(page.getByRole('heading', { name: `${identification} Masculine` })).toBeVisible()
   await expect(page.getByText(trainerName)).toBeVisible()
-  await expect(page.getByText('0 active players')).toBeVisible()
+  await expect(page.getByText('0 active players').first()).toBeVisible()
 
   await page.getByLabel('Player').selectOption({ label: playerName })
   await page.getByRole('button', { name: 'Assign player' }).click()
   await expect(page.getByText('Player assigned to team.')).toBeVisible()
   await expect(page.getByRole('cell', { name: playerName })).toBeVisible()
-  await expect(page.getByText('1 active player')).toBeVisible()
+  await expect(page.getByText('1 active player').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Team composition' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Goalkeepers' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Midfielders' })).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Midfield' })).toBeVisible()
   await expect(page.locator('tr').filter({ hasText: playerName }).getByRole('cell').nth(1)).toHaveText('13')
 
@@ -72,3 +75,101 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await expect(page.getByText('Team deactivated.')).toBeVisible()
   await expect(page.getByText('Inactive')).toBeVisible()
 })
+
+test('admin sees composition advice when a team reaches 12 players', async ({ page, request }) => {
+  const suffix = Date.now().toString()
+  const trainerName = `Advice Trainer ${suffix}`
+  const teamName = `Advice Team ${suffix}`
+  const token = await loginToken(request)
+  const trainerUuid = await createTrainer(request, token, trainerName, suffix)
+  const teamUuid = await createTeam(request, token, teamName, trainerUuid)
+
+  for (let index = 0; index < 12; index += 1) {
+    const playerUuid = await createPlayer(request, token, `Advice Player ${index} ${suffix}`, `ADVICE-${suffix}-${index}`)
+    await assignPlayer(request, token, teamUuid, playerUuid)
+  }
+
+  await page.goto('/login')
+  await page.getByLabel('Username').fill('admin')
+  await page.getByLabel('Password').fill('admin123')
+  await page.getByRole('button', { name: 'Login' }).click()
+  await page.getByRole('navigation').getByRole('link', { name: 'Teams' }).click()
+  await page.getByLabel('Search teams').fill(teamName)
+  await expect(page.getByRole('cell', { name: teamName })).toBeVisible()
+  await page.locator('tr').filter({ hasText: teamName }).getByRole('link', { name: 'View' }).click()
+
+  await expect(page.getByRole('heading', { name: `${teamName} Masculine` })).toBeVisible()
+  await expect(page.getByText('12 active players').first()).toBeVisible()
+  await expect(page.getByText('No goalkeepers assigned.')).toBeVisible()
+  await expect(page.getByText('Few defenders assigned.')).toBeVisible()
+  await expect(page.getByText('Few attackers assigned.')).toBeVisible()
+})
+
+async function loginToken(request) {
+  const response = await request.post('/api/v1/auth/login', {
+    data: { username: 'admin', password: 'admin123' },
+  })
+  expect(response.ok()).toBeTruthy()
+  return (await response.json()).token
+}
+
+async function createTrainer(request, token, name, suffix) {
+  const response = await request.post('/api/v1/trainers', {
+    headers: authHeaders(token),
+    data: {
+      name,
+      birthCountry: 'Brazil',
+      livingCountry: 'Brazil',
+      birthdate: '1988-04-20',
+      email: `advice-trainer-${suffix}@club.com`,
+      phone: '555-0100',
+      memberSince: '2018-06-01',
+    },
+  })
+  expect(response.ok()).toBeTruthy()
+  return (await response.json()).uuid
+}
+
+async function createTeam(request, token, identification, trainerUuid) {
+  const response = await request.post('/api/v1/teams', {
+    headers: authHeaders(token),
+    data: {
+      identification,
+      ageCategory: 'U13',
+      teamCategory: 'MASCULINE',
+      trainerUuid,
+    },
+  })
+  expect(response.ok()).toBeTruthy()
+  return (await response.json()).uuid
+}
+
+async function createPlayer(request, token, name, registrationNumber) {
+  const response = await request.post('/api/v1/players', {
+    headers: authHeaders(token),
+    data: {
+      name,
+      birthCountry: 'Brazil',
+      livingCountry: 'Brazil',
+      birthdate: '2013-03-15',
+      teamCategory: 'MASCULINE',
+      positions: ['MIDFIELD'],
+      registrationNumber,
+      memberSince: '2020-01-01',
+    },
+  })
+  expect(response.ok()).toBeTruthy()
+  return (await response.json()).uuid
+}
+
+async function assignPlayer(request, token, teamUuid, playerUuid) {
+  const response = await request.post(`/api/v1/teams/${teamUuid}/players`, {
+    headers: authHeaders(token),
+    data: { playerUuid },
+  })
+  expect(response.ok()).toBeTruthy()
+}
+
+function authHeaders(token) {
+  return { Authorization: `Bearer ${token}` }
+}
