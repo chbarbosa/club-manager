@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { getAllAdmins } from '../api/admins.js'
+import { getAllChampionships } from '../api/championships.js'
+import { createTeamMatch, getTeamMatches } from '../api/matches.js'
 import { getAllPlayers } from '../api/players.js'
 import { getAllTrainers } from '../api/trainers.js'
 import {
@@ -14,6 +16,17 @@ import {
 } from '../api/teams.js'
 import TeamForm from '../components/teams/TeamForm.jsx'
 
+const EMPTY_MATCH_FORM = {
+  championshipUuid: '',
+  opponent: '',
+  place: '',
+  matchDate: '',
+  matchTime: '18:00',
+  teamScore: '',
+  opponentScore: '',
+  notes: '',
+}
+
 export default function TeamDetailPage() {
   const { uuid } = useParams()
   const location = useLocation()
@@ -22,6 +35,9 @@ export default function TeamDetailPage() {
   const [admins, setAdmins] = useState([])
   const [players, setPlayers] = useState([])
   const [roster, setRoster] = useState([])
+  const [matches, setMatches] = useState([])
+  const [championships, setChampionships] = useState([])
+  const [matchForm, setMatchForm] = useState(EMPTY_MATCH_FORM)
   const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
   const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
@@ -33,14 +49,26 @@ export default function TeamDetailPage() {
     loadAdmins()
     loadPlayers()
     loadRoster()
+    loadMatches()
   }, [uuid])
 
   async function loadTeam() {
     setError('')
     try {
-      setTeam(await getTeam(uuid))
+      const loadedTeam = await getTeam(uuid)
+      setTeam(loadedTeam)
+      await loadChampionships(loadedTeam.uuid)
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load team.')
+    }
+  }
+
+  async function loadChampionships(teamUuid) {
+    try {
+      const response = await getAllChampionships({ page: 0, size: 100, teamUuid })
+      setChampionships((response.content ?? []).filter((championship) => championship.active))
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load championships for matches.')
     }
   }
 
@@ -78,6 +106,14 @@ export default function TeamDetailPage() {
     }
   }
 
+  async function loadMatches() {
+    try {
+      setMatches(await getTeamMatches(uuid))
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load matches.')
+    }
+  }
+
   async function submitTeam(data) {
     setError('')
     setMessage('')
@@ -87,6 +123,32 @@ export default function TeamDetailPage() {
       setMessage('Team updated.')
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to save team.')
+    }
+  }
+
+  function updateMatchForm(event) {
+    setMatchForm({ ...matchForm, [event.target.name]: event.target.value })
+  }
+
+  async function submitMatch(event) {
+    event.preventDefault()
+    setError('')
+    setMessage('')
+    try {
+      await createTeamMatch(uuid, {
+        championshipUuid: matchForm.championshipUuid || null,
+        opponent: matchForm.opponent.trim(),
+        place: matchForm.place.trim(),
+        matchDateTime: `${matchForm.matchDate}T${matchForm.matchTime}`,
+        teamScore: matchForm.teamScore === '' ? null : Number(matchForm.teamScore),
+        opponentScore: matchForm.opponentScore === '' ? null : Number(matchForm.opponentScore),
+        notes: matchForm.notes.trim() || null,
+      })
+      setMatchForm(EMPTY_MATCH_FORM)
+      await loadMatches()
+      setMessage('Match created.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to save match.')
     }
   }
 
@@ -255,6 +317,86 @@ export default function TeamDetailPage() {
 
                 {roster.length === 0 && <p className="text-muted">No players assigned to this team.</p>}
               </section>
+
+              <section className="mt-5">
+                <h2 className="h3">Matches</h2>
+                <p className="text-muted">Create standalone matches and register trainer analysis for players.</p>
+
+                <form className="card mb-4" onSubmit={submitMatch}>
+                  <div className="card-body">
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <label className="form-label" htmlFor="match-opponent">Opponent</label>
+                        <input className="form-control" id="match-opponent" name="opponent" onChange={updateMatchForm} required value={matchForm.opponent} />
+                      </div>
+                      <div className="col-md-4">
+                        <label className="form-label" htmlFor="match-place">Place</label>
+                        <input className="form-control" id="match-place" name="place" onChange={updateMatchForm} required value={matchForm.place} />
+                      </div>
+                      <div className="col-md-4">
+                        <label className="form-label" htmlFor="match-championship">Championship</label>
+                        <select className="form-select" id="match-championship" name="championshipUuid" onChange={updateMatchForm} value={matchForm.championshipUuid}>
+                          <option value="">No championship</option>
+                          {championships.map((championship) => (
+                            <option key={championship.uuid} value={championship.uuid}>{championship.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label" htmlFor="match-date">Date</label>
+                        <input className="form-control" id="match-date" name="matchDate" onChange={updateMatchForm} required type="date" value={matchForm.matchDate} />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label" htmlFor="match-time">Time</label>
+                        <input className="form-control" id="match-time" name="matchTime" onChange={updateMatchForm} required type="time" value={matchForm.matchTime} />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label" htmlFor="match-team-score">Team score</label>
+                        <input className="form-control" id="match-team-score" min="0" name="teamScore" onChange={updateMatchForm} type="number" value={matchForm.teamScore} />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label" htmlFor="match-opponent-score">Opponent score</label>
+                        <input className="form-control" id="match-opponent-score" min="0" name="opponentScore" onChange={updateMatchForm} type="number" value={matchForm.opponentScore} />
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label" htmlFor="match-notes">Notes</label>
+                        <input className="form-control" id="match-notes" name="notes" onChange={updateMatchForm} value={matchForm.notes} />
+                      </div>
+                      <div className="col-12">
+                        <button className="btn btn-primary" type="submit">Save match</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+
+                <table className="table table-striped align-middle">
+                  <thead>
+                    <tr>
+                      <th>Opponent</th>
+                      <th>Date and time</th>
+                      <th>Score</th>
+                      <th>Championship</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matches.map((match) => (
+                      <tr key={match.uuid}>
+                        <td>{match.opponent}</td>
+                        <td>{formatDateTime(match.matchDateTime)}</td>
+                        <td>{formatScore(match)}</td>
+                        <td>{match.championshipName ?? '-'}</td>
+                        <td>
+                          <Link className="btn btn-sm btn-outline-primary" to={`/teams/${uuid}/matches/${match.uuid}`}>
+                            Analyze
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {matches.length === 0 && <p className="text-muted">No matches registered for this team.</p>}
+              </section>
             </>
           )}
         </>
@@ -374,6 +516,17 @@ function maxAgeForTeam(ageCategory) {
 
 function formatDate(value) {
   return value ? new Date(`${value}T00:00:00`).toLocaleDateString() : '-'
+}
+
+function formatDateTime(value) {
+  return value ? new Date(value).toLocaleString() : '-'
+}
+
+function formatScore(match) {
+  if (match.teamScore === null || match.teamScore === undefined || match.opponentScore === null || match.opponentScore === undefined) {
+    return '-'
+  }
+  return `${match.teamScore} - ${match.opponentScore}`
 }
 
 function formatPositions(values = []) {

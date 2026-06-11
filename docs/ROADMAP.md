@@ -18,11 +18,10 @@ each item should become a focused implementation plan before coding starts.
 - Export operational data for club administration.
 - Start with CSV exports, then consider PDF reports.
 - Useful exports include player lists, team rosters, evaluation results,
-  schedules, skill history, and championship rosters.
+  schedules, skill history, championships, and match analysis.
 
 ### Team Composition Advice
 
-- Active next feature.
 - Show team-balance advice on the team detail/edit experience.
 - After a team has about 12 assigned players, highlight composition risks:
   no goalkeeper, only one goalkeeper, few defenders, few midfielders, or few
@@ -33,6 +32,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Match Player Analysis
 
+- Active feature.
 - Let trainers register matches for a team.
 - For each player, record improvement opportunities such as passing, physical
   preparation, shooting, positioning, decision making, or excessive ball

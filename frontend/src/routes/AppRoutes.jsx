@@ -12,6 +12,7 @@ import PlayerDetailPage from '../pages/PlayerDetailPage.jsx'
 import PlayersPage from '../pages/PlayersPage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
 import TeamDetailPage from '../pages/TeamDetailPage.jsx'
+import TeamMatchDetailPage from '../pages/TeamMatchDetailPage.jsx'
 import TeamsPage from '../pages/TeamsPage.jsx'
 import TrainerDetailPage from '../pages/TrainerDetailPage.jsx'
 import TrainersPage from '../pages/TrainersPage.jsx'
@@ -33,6 +34,7 @@ export default function AppRoutes() {
       <Route path="/trainers/:uuid" element={protectedElement(<TrainerDetailPage />)} />
       <Route path="/teams" element={protectedElement(<TeamsPage />)} />
       <Route path="/teams/:uuid" element={protectedElement(<TeamDetailPage />)} />
+      <Route path="/teams/:teamUuid/matches/:matchUuid" element={protectedElement(<TeamMatchDetailPage />)} />
       <Route path="/schedules" element={protectedElement(<SchedulesPage />)} />
       <Route path="/championships" element={protectedElement(<ChampionshipsPage />)} />
       <Route path="/championships/:uuid" element={protectedElement(<ChampionshipDetailPage />)} />
