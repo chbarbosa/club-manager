@@ -92,6 +92,17 @@ class TeamAdviceServiceTest {
         assertThat(advice.midfielders()).isEqualTo(12);
     }
 
+    @Test
+    void analyze_WithMoreThanRecommendedPlayers_ReturnsTooManyPlayersAdvice() {
+        Team team = team();
+        when(playerTeamRepository.findByTeamAndActiveTrueOrderByPlayer_NameAsc(team))
+                .thenReturn(roster(team, 23, Set.of(PlayerPosition.DEFENSE)));
+
+        var advice = new TeamAdviceService(playerTeamRepository).analyze(team);
+
+        assertThat(advice.items()).extracting("code").contains("TOO_MANY_PLAYERS");
+    }
+
     private List<PlayerTeam> roster(Team team, int total, Set<PlayerPosition> positions) {
         java.util.ArrayList<PlayerTeam> roster = new java.util.ArrayList<>();
         for (int index = 0; index < total; index++) {

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TeamAdviceService {
 
     public static final int MINIMUM_PLAYERS_FOR_ADVICE = 12;
+    public static final int MAXIMUM_RECOMMENDED_PLAYERS = 22;
     private static final int MINIMUM_GOALKEEPERS = 2;
     private static final int MINIMUM_FIELD_POSITION_PLAYERS = 3;
     private static final String WARNING = "WARNING";
@@ -35,7 +36,7 @@ public class TeamAdviceService {
 
         List<TeamAdviceItem> items = roster.size() < MINIMUM_PLAYERS_FOR_ADVICE
                 ? List.of()
-                : buildAdviceItems(goalkeepers, defenders, midfielders, attackers);
+                : buildAdviceItems(roster.size(), goalkeepers, defenders, midfielders, attackers);
 
         return new TeamAdvice(
                 roster.size(),
@@ -47,8 +48,16 @@ public class TeamAdviceService {
                 items);
     }
 
-    private List<TeamAdviceItem> buildAdviceItems(int goalkeepers, int defenders, int midfielders, int attackers) {
+    private List<TeamAdviceItem> buildAdviceItems(
+            int totalPlayers,
+            int goalkeepers,
+            int defenders,
+            int midfielders,
+            int attackers) {
         List<TeamAdviceItem> items = new ArrayList<>();
+        if (totalPlayers > MAXIMUM_RECOMMENDED_PLAYERS) {
+            items.add(new TeamAdviceItem("TOO_MANY_PLAYERS", WARNING, "Too many players assigned."));
+        }
         if (goalkeepers == 0) {
             items.add(new TeamAdviceItem("NO_GOALKEEPER", WARNING, "No goalkeepers assigned."));
         } else if (goalkeepers < MINIMUM_GOALKEEPERS) {
