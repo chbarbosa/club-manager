@@ -4,6 +4,7 @@ import { getAllAdmins } from '../api/admins.js'
 import { getAllChampionships } from '../api/championships.js'
 import { createTeamMatch, getTeamMatches } from '../api/matches.js'
 import { getAllPlayers } from '../api/players.js'
+import { exportTeamRosterCsv } from '../api/reports.js'
 import { getAllTrainers } from '../api/trainers.js'
 import {
   assignPlayerToTeam,
@@ -200,6 +201,17 @@ export default function TeamDetailPage() {
     }
   }
 
+  async function exportRoster() {
+    setError('')
+    setMessage('')
+    try {
+      await exportTeamRosterCsv(uuid)
+      setMessage('Team roster CSV export started.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to export team roster.')
+    }
+  }
+
   return (
     <main className="container py-5">
       <Link to="/teams">&larr; Back to teams</Link>
@@ -262,6 +274,9 @@ export default function TeamDetailPage() {
                     <p className="mb-1"><strong>{roster.length}</strong> active player{roster.length === 1 ? '' : 's'}</p>
                     <p className="text-muted mb-0">Assign active players with the same team category and age limit.</p>
                   </div>
+                  <button className="btn btn-outline-secondary" onClick={exportRoster} type="button">
+                    Export roster CSV
+                  </button>
                 </div>
 
                 <form className="row g-2 align-items-end mb-4" onSubmit={assignPlayer}>

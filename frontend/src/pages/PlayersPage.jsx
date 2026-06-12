@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createPlayer, deactivatePlayer, getAllPlayers, reactivatePlayer } from '../api/players.js'
+import { exportPlayersCsv } from '../api/reports.js'
 import PlayerForm from '../components/players/PlayerForm.jsx'
 
 const PAGE_SIZE = 20
@@ -75,6 +76,17 @@ export default function PlayersPage() {
     }
   }
 
+  async function exportPlayers() {
+    setError('')
+    setMessage('')
+    try {
+      await exportPlayersCsv()
+      setMessage('Players CSV export started.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to export players.')
+    }
+  }
+
   function changeSearch(event) {
     setSearch(event.target.value)
     setPage(0)
@@ -90,9 +102,14 @@ export default function PlayersPage() {
           <h1>Players</h1>
           <p className="text-muted mb-0">Register and manage young athletes for this club.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)} type="button">
-          Add Player
-        </button>
+        <div className="d-flex gap-2">
+          <button className="btn btn-outline-secondary" onClick={exportPlayers} type="button">
+            Export CSV
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowForm(true)} type="button">
+            Add Player
+          </button>
+        </div>
       </div>
 
       {error && <p className="alert alert-danger">{error}</p>}

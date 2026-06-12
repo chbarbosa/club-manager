@@ -15,8 +15,9 @@ each item should become a focused implementation plan before coding starts.
 
 ### Reports And Exports
 
+- Active feature.
 - Export operational data for club administration.
-- Start with CSV exports, then consider PDF reports.
+- Start with CSV exports for players and team rosters, then consider PDF reports.
 - Useful exports include player lists, team rosters, evaluation results,
   schedules, skill history, championships, and match analysis.
 
