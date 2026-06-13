@@ -72,6 +72,11 @@ public class GlobalExceptionHandler {
         return response(HttpStatus.UNAUTHORIZED, "BAD_CREDENTIALS", "Invalid username or password");
     }
 
+    @ExceptionHandler(LoginRateLimitException.class)
+    ResponseEntity<ErrorResponse> handleLoginRateLimit(LoginRateLimitException exception) {
+        return response(HttpStatus.TOO_MANY_REQUESTS, "LOGIN_RATE_LIMITED", exception.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<ErrorResponse> handleGeneric(Exception exception) {
         return response(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", exception.getMessage());

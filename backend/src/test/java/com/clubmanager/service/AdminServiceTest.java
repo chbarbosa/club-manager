@@ -6,10 +6,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
+import com.clubmanager.config.AppSecurityConfig;
 import com.clubmanager.domain.Admin;
 import com.clubmanager.dto.AdminRegisterRequest;
 import com.clubmanager.dto.LoginRequest;
 import com.clubmanager.repository.AdminRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,16 +32,25 @@ class AdminServiceTest {
 
     private PasswordEncoder passwordEncoder;
     private AdminService adminService;
+    private LoginRateLimitService loginRateLimitService;
 
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        adminService = new AdminService(adminRepository, passwordEncoder);
+        AppSecurityConfig securityConfig = securityConfig(true, 5, 15);
+        loginRateLimitService = new LoginRateLimitService(
+                securityConfig,
+                new AppMetricsService(new SimpleMeterRegistry()));
+        adminService = new AdminService(
+                adminRepository,
+                passwordEncoder,
+                new AdminPasswordPolicyService(securityConfig),
+                loginRateLimitService);
     }
 
     @Test
     void register_WithValidRequest_ReturnsAdmin() {
-        AdminRegisterRequest request = new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "secret1");
+        AdminRegisterRequest request = new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "StrongPass1");
         when(adminRepository.existsByUsername("jane")).thenReturn(false);
         when(adminRepository.existsByEmail("jane@club.com")).thenReturn(false);
         when(adminRepository.save(org.mockito.ArgumentMatchers.any(Admin.class)))
@@ -48,13 +59,13 @@ class AdminServiceTest {
         Admin admin = adminService.register(request);
 
         assertThat(admin.getName()).isEqualTo("Jane Admin");
-        assertThat(admin.getPasswordHash()).isNotEqualTo("secret1");
-        assertThat(passwordEncoder.matches("secret1", admin.getPasswordHash())).isTrue();
+        assertThat(admin.getPasswordHash()).isNotEqualTo("StrongPass1");
+        assertThat(passwordEncoder.matches("StrongPass1", admin.getPasswordHash())).isTrue();
     }
 
     @Test
     void register_WithDuplicateUsername_ThrowsException() {
-        AdminRegisterRequest request = new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "secret1");
+        AdminRegisterRequest request = new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "StrongPass1");
         when(adminRepository.existsByUsername("jane")).thenReturn(true);
 
         assertThatThrownBy(() -> adminService.register(request))
@@ -64,13 +75,32 @@ class AdminServiceTest {
 
     @Test
     void register_WithDuplicateEmail_ThrowsException() {
-        AdminRegisterRequest request = new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "secret1");
+        AdminRegisterRequest request = new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "StrongPass1");
         when(adminRepository.existsByUsername("jane")).thenReturn(false);
         when(adminRepository.existsByEmail("jane@club.com")).thenReturn(true);
 
         assertThatThrownBy(() -> adminService.register(request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Email");
+    }
+
+    @Test
+    void register_WithWeakPasswords_ThrowsException() {
+        assertThatThrownBy(() -> adminService.register(new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "Short1")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 10 and 128");
+        assertThatThrownBy(() -> adminService.register(new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "lowercase1")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("uppercase");
+        assertThatThrownBy(() -> adminService.register(new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "UPPERCASE1")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("lowercase");
+        assertThatThrownBy(() -> adminService.register(new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "NoDigitsHere")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("digit");
+        assertThatThrownBy(() -> adminService.register(new AdminRegisterRequest("Jane Admin", "jane@club.com", "jane", "Strong Pass1")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("whitespace");
     }
 
     @Test
@@ -87,6 +117,35 @@ class AdminServiceTest {
         when(adminRepository.findByUsername("admin")).thenReturn(Optional.of(admin));
 
         assertThatThrownBy(() -> adminService.authenticate(new LoginRequest("admin", "wrong")))
+                .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void authenticate_WhenFailuresReachLimit_BlocksFurtherAttempts() {
+        Admin admin = admin("admin", "admin123");
+        when(adminRepository.findByUsername("admin")).thenReturn(Optional.of(admin));
+
+        for (int i = 0; i < 5; i++) {
+            assertThatThrownBy(() -> adminService.authenticate(new LoginRequest("admin", "wrong"), "127.0.0.1"))
+                    .isInstanceOf(BadCredentialsException.class);
+        }
+
+        assertThatThrownBy(() -> adminService.authenticate(new LoginRequest("admin", "wrong"), "127.0.0.1"))
+                .isInstanceOf(com.clubmanager.exception.LoginRateLimitException.class);
+    }
+
+    @Test
+    void authenticate_WhenLoginSucceeds_ClearsFailures() {
+        Admin admin = admin("admin", "admin123");
+        when(adminRepository.findByUsername("admin")).thenReturn(Optional.of(admin));
+
+        for (int i = 0; i < 4; i++) {
+            assertThatThrownBy(() -> adminService.authenticate(new LoginRequest("admin", "wrong"), "127.0.0.1"))
+                    .isInstanceOf(BadCredentialsException.class);
+        }
+
+        assertThat(adminService.authenticate(new LoginRequest("admin", "admin123"), "127.0.0.1")).isEqualTo(admin);
+        assertThatThrownBy(() -> adminService.authenticate(new LoginRequest("admin", "wrong"), "127.0.0.1"))
                 .isInstanceOf(BadCredentialsException.class);
     }
 
@@ -153,5 +212,11 @@ class AdminServiceTest {
         admin.setUsername(username);
         admin.setPasswordHash(passwordEncoder.encode(password));
         return admin;
+    }
+
+    private AppSecurityConfig securityConfig(boolean enabled, int maxFailures, int windowMinutes) {
+        return new AppSecurityConfig(
+                new AppSecurityConfig.PasswordPolicy(10),
+                new AppSecurityConfig.LoginRateLimit(enabled, maxFailures, windowMinutes));
     }
 }

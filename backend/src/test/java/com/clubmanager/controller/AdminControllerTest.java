@@ -125,7 +125,7 @@ class AdminControllerTest {
                                   "name": "Jane Admin",
                                   "email": "%s",
                                   "username": "%s",
-                                  "password": "secret1"
+                                  "password": "StrongPass1"
                                 }
                                 """.formatted(email, username)))
                 .andExpect(status().isCreated());

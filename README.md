@@ -37,6 +37,7 @@ Business and security metric names:
 
 - `club.auth.login.success`
 - `club.auth.login.failure`
+- `club.auth.login.blocked`
 - `club.validation.failure`
 - `club.access.denied`
 - `club.schedule.created`
@@ -46,6 +47,29 @@ Business and security metric names:
 - `club.evaluation.event.completed`
 - `club.audit.event.recorded`
 - `club.match.analysis.saved`
+
+## Backend Security
+
+Local development keeps the seeded admin login available:
+
+- Username: `admin`
+- Password: `admin123`
+
+New admin passwords must be 10-128 characters and include uppercase,
+lowercase, and a digit, with no whitespace. Login rate limiting is enabled by
+default with 5 failed attempts per username and client IP over 15 minutes.
+
+Security configuration:
+
+- `JWT_SECRET`: required in production; must be Base64 and decode to at least
+  256 bits. The development fallback is rejected when the `prod` profile is
+  active.
+- `JWT_EXPIRATION_MS`: defaults to `86400000`.
+- `CORS_ALLOWED_ORIGINS`: defaults to `http://localhost:5173`.
+- `ADMIN_PASSWORD_MIN_LENGTH`: defaults to `10`.
+- `LOGIN_RATE_LIMIT_ENABLED`: defaults to `true`.
+- `LOGIN_RATE_LIMIT_MAX_FAILURES`: defaults to `5`.
+- `LOGIN_RATE_LIMIT_WINDOW_MINUTES`: defaults to `15`.
 
 ## Run the frontend
 
@@ -77,10 +101,3 @@ Admin accounts are deactivated instead of hard-deleted so future history and aud
 relationships can remain intact.
 
 Future product and hardening ideas are tracked in `docs/ROADMAP.md`.
-
-## Development Login
-
-After Prompt 03, the local seed admin is:
-
-- Username: `admin`
-- Password: `admin123`

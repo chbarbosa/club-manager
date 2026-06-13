@@ -17,14 +17,23 @@ public class AdminService {
 
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdminPasswordPolicyService adminPasswordPolicyService;
+    private final LoginRateLimitService loginRateLimitService;
 
-    public AdminService(AdminRepository adminRepository, PasswordEncoder passwordEncoder) {
+    public AdminService(
+            AdminRepository adminRepository,
+            PasswordEncoder passwordEncoder,
+            AdminPasswordPolicyService adminPasswordPolicyService,
+            LoginRateLimitService loginRateLimitService) {
         this.adminRepository = adminRepository;
         this.passwordEncoder = passwordEncoder;
+        this.adminPasswordPolicyService = adminPasswordPolicyService;
+        this.loginRateLimitService = loginRateLimitService;
     }
 
     @Transactional
     public Admin register(AdminRegisterRequest request) {
+        adminPasswordPolicyService.validate(request.password());
         if (adminRepository.existsByUsername(request.username())) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -42,12 +51,24 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public Admin authenticate(LoginRequest request) {
+        return authenticate(request, "unknown");
+    }
+
+    @Transactional(readOnly = true)
+    public Admin authenticate(LoginRequest request, String clientAddress) {
+        loginRateLimitService.ensureAllowed(request.username(), clientAddress);
         Admin admin = adminRepository.findByUsername(request.username())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+                .orElseThrow(() -> badCredentials(request.username(), clientAddress));
         if (!admin.isActive() || !passwordEncoder.matches(request.password(), admin.getPasswordHash())) {
-            throw new BadCredentialsException("Invalid username or password");
+            throw badCredentials(request.username(), clientAddress);
         }
+        loginRateLimitService.recordSuccess(request.username(), clientAddress);
         return admin;
+    }
+
+    private BadCredentialsException badCredentials(String username, String clientAddress) {
+        loginRateLimitService.recordFailure(username, clientAddress);
+        return new BadCredentialsException("Invalid username or password");
     }
 
     @Transactional(readOnly = true)

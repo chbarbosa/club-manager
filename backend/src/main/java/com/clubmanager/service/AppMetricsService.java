@@ -9,6 +9,7 @@ public class AppMetricsService {
 
     public static final String LOGIN_SUCCESS = "club.auth.login.success";
     public static final String LOGIN_FAILURE = "club.auth.login.failure";
+    public static final String LOGIN_BLOCKED = "club.auth.login.blocked";
     public static final String VALIDATION_FAILURE = "club.validation.failure";
     public static final String ACCESS_DENIED = "club.access.denied";
     public static final String SCHEDULE_CREATED = "club.schedule.created";
@@ -31,6 +32,10 @@ public class AppMetricsService {
 
     public void recordLoginFailure() {
         increment(LOGIN_FAILURE);
+    }
+
+    public void recordLoginBlocked() {
+        increment(LOGIN_BLOCKED);
     }
 
     public void recordValidationFailure(String type) {

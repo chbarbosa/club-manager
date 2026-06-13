@@ -10,6 +10,7 @@ import com.clubmanager.mapper.AdminMapper;
 import com.clubmanager.service.AdminService;
 import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +48,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        Admin admin = adminService.authenticate(request);
+    public LoginResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        Admin admin = adminService.authenticate(request, clientAddress(httpRequest));
         appMetricsService.recordLoginSuccess();
         LOGGER.info("Admin login succeeded for username={}", admin.getUsername());
         return new LoginResponse(jwtService.generateToken(admin), admin.getUuid(), admin.getName());
@@ -66,5 +67,13 @@ public class AuthController {
                 admin.getUsername(),
                 "Admin registered: " + admin.getUsername());
         return adminMapper.toResponse(admin);
+    }
+
+    private String clientAddress(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

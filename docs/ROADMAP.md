@@ -62,6 +62,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Security Hardening
 
+- Active feature.
 - Externalize and strengthen JWT secrets.
 - Add password policy and login rate limiting.
 - Review CORS and environment-specific configuration.
