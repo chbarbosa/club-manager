@@ -35,6 +35,28 @@ public class ReportExportController {
         return csvResponse(reportExportService.exportTeamRosterCsv(teamUuid), "team-roster.csv");
     }
 
+    @GetMapping("/schedules.csv")
+    public ResponseEntity<String> exportSchedules() {
+        return csvResponse(reportExportService.exportSchedulesCsv(), "schedules.csv");
+    }
+
+    @GetMapping("/championships.csv")
+    public ResponseEntity<String> exportChampionships() {
+        return csvResponse(reportExportService.exportChampionshipsCsv(), "championships.csv");
+    }
+
+    @GetMapping("/evaluations/{evaluationUuid}/results.csv")
+    public ResponseEntity<String> exportEvaluationResults(@PathVariable UUID evaluationUuid) {
+        return csvResponse(reportExportService.exportEvaluationResultsCsv(evaluationUuid), "evaluation-results.csv");
+    }
+
+    @GetMapping("/teams/{teamUuid}/matches/{matchUuid}/analysis.csv")
+    public ResponseEntity<String> exportMatchAnalysis(
+            @PathVariable UUID teamUuid,
+            @PathVariable UUID matchUuid) {
+        return csvResponse(reportExportService.exportMatchAnalysisCsv(teamUuid, matchUuid), "match-analysis.csv");
+    }
+
     private ResponseEntity<String> csvResponse(String csv, String filename) {
         return ResponseEntity.ok()
                 .contentType(TEXT_CSV)

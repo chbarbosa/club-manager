@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getAllSetup } from '../api/club.js'
 import { getTeamMatch, saveMatchPlayerAnalysis, updateTeamMatch } from '../api/matches.js'
+import { exportMatchAnalysisCsv } from '../api/reports.js'
 
 const IMPROVEMENT_TYPE = 'MATCH_IMPROVEMENT_OPPORTUNITY'
 const HIGHLIGHT_TYPE = 'MATCH_HIGHLIGHT'
@@ -100,6 +101,17 @@ export default function TeamMatchDetailPage() {
     }
   }
 
+  async function exportCsv() {
+    setError('')
+    setMessage('')
+    try {
+      await exportMatchAnalysisCsv(teamUuid, matchUuid)
+      setMessage('Match analysis CSV export started.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to export match analysis.')
+    }
+  }
+
   return (
     <main className="container py-5">
       <Link to={`/teams/${teamUuid}`}>&larr; Back to team</Link>
@@ -109,12 +121,17 @@ export default function TeamMatchDetailPage() {
 
       {match && form && (
         <>
-          <div className="mt-3 mb-4">
-            <h1>Match analysis</h1>
-            <p className="text-muted mb-0">
-              {match.teamIdentification} vs {match.opponent}
-              {match.championshipName ? ` · ${match.championshipName}` : ''}
-            </p>
+          <div className="d-flex justify-content-between align-items-start gap-3 mt-3 mb-4">
+            <div>
+              <h1>Match analysis</h1>
+              <p className="text-muted mb-0">
+                {match.teamIdentification} vs {match.opponent}
+                {match.championshipName ? ` · ${match.championshipName}` : ''}
+              </p>
+            </div>
+            <button className="btn btn-outline-primary" onClick={exportCsv} type="button">
+              Export CSV
+            </button>
           </div>
 
           <form className="card mb-4" onSubmit={submitMatch}>

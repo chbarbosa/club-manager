@@ -15,11 +15,12 @@ each item should become a focused implementation plan before coding starts.
 
 ### Reports And Exports
 
-- Active feature.
+- Implemented for the first CSV set.
 - Export operational data for club administration.
-- Start with CSV exports for players and team rosters, then consider PDF reports.
-- Useful exports include player lists, team rosters, evaluation results,
-  schedules, skill history, championships, and match analysis.
+- Current CSV exports include player lists, team rosters, schedules,
+  championships, evaluation results, and match analysis.
+- Future improvements can add skill history exports, filtered exports, and PDF
+  reports.
 
 ### Team Composition Advice
 
@@ -33,7 +34,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Match Player Analysis
 
-- Active feature.
+- Implemented.
 - Let trainers register matches for a team.
 - For each player, record improvement opportunities such as passing, physical
   preparation, shooting, positioning, decision making, or excessive ball
@@ -47,6 +48,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Trackability And Audit Trail
 
+- Implemented as an internal-only audit API.
 - Track who created, updated, canceled, deactivated, or reactivated important
   records.
 - Add audit fields or audit events for players, trainers, teams, schedules,
@@ -55,6 +57,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Observability Hardening
 
+- Implemented for backend Actuator, Prometheus, and key business counters.
 - Improve structured logs and make trace IDs easy to follow.
 - Add meaningful metrics for login, validation failures, schedules,
   evaluations, and error rates.
@@ -62,7 +65,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Security Hardening
 
-- Active feature.
+- Implemented for the first backend hardening slice.
 - Externalize and strengthen JWT secrets.
 - Add password policy and login rate limiting, with Redis-backed storage for
   elastic deployments.
@@ -71,6 +74,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Docker And Deployment Readiness
 
+- Active next hardening feature.
 - Add Dockerfiles for backend and frontend.
 - Add Docker Compose for local full-stack startup.
 - Support PostgreSQL deployment while keeping H2 convenient for local

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createChampionship, deactivateChampionship, getAllChampionships, reactivateChampionship } from '../api/championships.js'
+import { exportChampionshipsCsv } from '../api/reports.js'
 import { getAllTeams } from '../api/teams.js'
 
 const PAGE_SIZE = 20
@@ -127,6 +128,17 @@ export default function ChampionshipsPage() {
     }
   }
 
+  async function exportCsv() {
+    setError('')
+    setMessage('')
+    try {
+      await exportChampionshipsCsv()
+      setMessage('Championships CSV export started.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to export championships.')
+    }
+  }
+
   function submitSearch(event) {
     event.preventDefault()
     setPage(0)
@@ -143,9 +155,14 @@ export default function ChampionshipsPage() {
 
   return (
     <main className="container py-5">
-      <div className="mb-4">
-        <h1>Championships</h1>
-        <p className="text-muted mb-0">Create championships and manage the competition roster for each team.</p>
+      <div className="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+          <h1>Championships</h1>
+          <p className="text-muted mb-0">Create championships and manage the competition roster for each team.</p>
+        </div>
+        <button className="btn btn-outline-primary" onClick={exportCsv} type="button">
+          Export CSV
+        </button>
       </div>
 
       {error && <p className="alert alert-danger">{error}</p>}

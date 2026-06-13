@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getFields } from '../api/fields.js'
+import { exportSchedulesCsv } from '../api/reports.js'
 import { createSchedule, cancelSchedule, getAllSchedules } from '../api/schedules.js'
 import { getAllTeams } from '../api/teams.js'
 
@@ -116,6 +117,17 @@ export default function SchedulesPage() {
     }
   }
 
+  async function exportCsv() {
+    setError('')
+    setMessage('')
+    try {
+      await exportSchedulesCsv()
+      setMessage('Schedules CSV export started.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to export schedules.')
+    }
+  }
+
   function changeTeamFilter(event) {
     setTeamFilter(event.target.value)
     setPage(0)
@@ -131,9 +143,14 @@ export default function SchedulesPage() {
 
   return (
     <main className="container py-5">
-      <div className="mb-4">
-        <h1>Schedules</h1>
-        <p className="text-muted mb-0">Plan club sessions for teams and fields.</p>
+      <div className="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+          <h1>Schedules</h1>
+          <p className="text-muted mb-0">Plan club sessions for teams and fields.</p>
+        </div>
+        <button className="btn btn-outline-primary" onClick={exportCsv} type="button">
+          Export CSV
+        </button>
       </div>
 
       {error && <p className="alert alert-danger">{error}</p>}

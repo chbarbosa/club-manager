@@ -74,6 +74,17 @@ Security configuration:
   elastic/cloud deployments where multiple backend instances must share
   throttling counters.
 
+## Reports And Exports
+
+Admin CSV exports are available from the UI and API:
+
+- `GET /api/v1/reports/players.csv`
+- `GET /api/v1/reports/teams/{teamUuid}/roster.csv`
+- `GET /api/v1/reports/schedules.csv`
+- `GET /api/v1/reports/championships.csv`
+- `GET /api/v1/reports/evaluations/{evaluationUuid}/results.csv`
+- `GET /api/v1/reports/teams/{teamUuid}/matches/{matchUuid}/analysis.csv`
+
 ## Run the frontend
 
 ```powershell
@@ -97,8 +108,9 @@ npm.cmd run test:e2e:list
 
 Authentication is available for club admins. Player, trainer, team
 registration, current team roster assignment, evaluation groups, evaluation
-events, attendance, event skill-level recording, player skill history, and
-final evaluation results are available.
+events, attendance, event skill-level recording, player skill history, final
+evaluation results, schedules, championships, match analysis, audit logging,
+observability metrics, security hardening, and CSV exports are available.
 
 Admin accounts are deactivated instead of hard-deleted so future history and audit
 relationships can remain intact.

@@ -18,6 +18,7 @@ import {
   updateEvaluationResult,
 } from '../api/evaluations.js'
 import { getAllPlayers } from '../api/players.js'
+import { exportEvaluationResultsCsv } from '../api/reports.js'
 import EvaluationForm from '../components/evaluations/EvaluationForm.jsx'
 
 const EMPTY_EVENT = {
@@ -167,6 +168,12 @@ export default function EvaluationDetailPage() {
         window.alert('All events are closed. You cannot add another event; evaluate all participants before finalizing.')
       }
       await loadAll()
+    })
+  }
+
+  async function exportResultsCsv() {
+    await runAction('Evaluation results CSV export started.', async () => {
+      await exportEvaluationResultsCsv(uuid)
     })
   }
 
@@ -385,7 +392,12 @@ export default function EvaluationDetailPage() {
           {evaluation.status === 'FINALIZED' && (
             <section className="card mt-4">
               <div className="card-body">
-                <h2 className="h4">Results</h2>
+                <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+                  <h2 className="h4 mb-0">Results</h2>
+                  <button className="btn btn-outline-primary btn-sm" onClick={exportResultsCsv} type="button">
+                    Export CSV
+                  </button>
+                </div>
                 {evaluationResults.length > 0 ? (
                   <table className="table table-sm align-middle">
                     <thead>
