@@ -8,6 +8,7 @@ import com.clubmanager.dto.LoginRequest;
 import com.clubmanager.dto.LoginResponse;
 import com.clubmanager.mapper.AdminMapper;
 import com.clubmanager.service.AdminService;
+import com.clubmanager.service.AuditEventService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,11 +25,17 @@ public class AuthController {
     private final AdminService adminService;
     private final AdminMapper adminMapper;
     private final JwtService jwtService;
+    private final AuditEventService auditEventService;
 
-    public AuthController(AdminService adminService, AdminMapper adminMapper, JwtService jwtService) {
+    public AuthController(
+            AdminService adminService,
+            AdminMapper adminMapper,
+            JwtService jwtService,
+            AuditEventService auditEventService) {
         this.adminService = adminService;
         this.adminMapper = adminMapper;
         this.jwtService = jwtService;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping("/login")
@@ -41,7 +48,13 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public AdminResponse register(@Valid @RequestBody AdminRegisterRequest request) {
-        return adminMapper.toResponse(adminService.register(request));
+        Admin admin = adminService.register(request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.ADMIN,
+                admin.getUuid(),
+                admin.getUsername(),
+                "Admin registered: " + admin.getUsername());
+        return adminMapper.toResponse(admin);
     }
 }
-

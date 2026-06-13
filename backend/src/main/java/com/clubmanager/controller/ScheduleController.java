@@ -7,6 +7,7 @@ import com.clubmanager.dto.ScheduleCreateRequest;
 import com.clubmanager.dto.ScheduleResponse;
 import com.clubmanager.dto.ScheduleUpdateRequest;
 import com.clubmanager.mapper.ScheduleMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.ScheduleService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -31,16 +32,28 @@ public class ScheduleController {
 
     private final ScheduleService scheduleService;
     private final ScheduleMapper scheduleMapper;
+    private final AuditEventService auditEventService;
 
-    public ScheduleController(ScheduleService scheduleService, ScheduleMapper scheduleMapper) {
+    public ScheduleController(
+            ScheduleService scheduleService,
+            ScheduleMapper scheduleMapper,
+            AuditEventService auditEventService) {
         this.scheduleService = scheduleService;
         this.scheduleMapper = scheduleMapper;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ScheduleResponse createSchedule(@Valid @RequestBody ScheduleCreateRequest request) {
-        return scheduleMapper.toResponse(scheduleService.createSchedule(request));
+        var schedule = scheduleService.createSchedule(request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.SCHEDULE,
+                schedule.getUuid(),
+                scheduleLabel(schedule),
+                "Schedule created: " + scheduleLabel(schedule));
+        return scheduleMapper.toResponse(schedule);
     }
 
     @GetMapping
@@ -59,15 +72,33 @@ public class ScheduleController {
 
     @PutMapping("/{uuid}")
     public ScheduleResponse updateSchedule(@PathVariable UUID uuid, @Valid @RequestBody ScheduleUpdateRequest request) {
-        return scheduleMapper.toResponse(scheduleService.updateSchedule(uuid, request));
+        var schedule = scheduleService.updateSchedule(uuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.SCHEDULE,
+                schedule.getUuid(),
+                scheduleLabel(schedule),
+                "Schedule updated: " + scheduleLabel(schedule));
+        return scheduleMapper.toResponse(schedule);
     }
 
     @PatchMapping("/{uuid}/cancel")
     public ScheduleResponse cancelSchedule(
             @PathVariable UUID uuid,
             @RequestBody(required = false) ScheduleCancelRequest request) {
-        return scheduleMapper.toResponse(scheduleService.cancelSchedule(
+        var schedule = scheduleService.cancelSchedule(
                 uuid,
-                request == null ? new ScheduleCancelRequest(null) : request));
+                request == null ? new ScheduleCancelRequest(null) : request);
+        auditEventService.record(
+                AuditEventService.CANCELED,
+                AuditEventService.SCHEDULE,
+                schedule.getUuid(),
+                scheduleLabel(schedule),
+                "Schedule canceled: " + scheduleLabel(schedule));
+        return scheduleMapper.toResponse(schedule);
+    }
+
+    private String scheduleLabel(com.clubmanager.domain.Schedule schedule) {
+        return schedule.getTeam().getAgeGroup() + " " + schedule.getDateTime();
     }
 }

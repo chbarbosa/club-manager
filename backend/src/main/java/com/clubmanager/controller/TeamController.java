@@ -9,6 +9,7 @@ import com.clubmanager.dto.TeamUpdateRequest;
 import com.clubmanager.mapper.TeamMapper;
 import com.clubmanager.mapper.TeamAdviceMapper;
 import com.clubmanager.domain.Team;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.TeamAdviceService;
 import com.clubmanager.service.TeamService;
 import jakarta.validation.Valid;
@@ -36,22 +37,32 @@ public class TeamController {
     private final TeamMapper teamMapper;
     private final TeamAdviceService teamAdviceService;
     private final TeamAdviceMapper teamAdviceMapper;
+    private final AuditEventService auditEventService;
 
     public TeamController(
             TeamService teamService,
             TeamMapper teamMapper,
             TeamAdviceService teamAdviceService,
-            TeamAdviceMapper teamAdviceMapper) {
+            TeamAdviceMapper teamAdviceMapper,
+            AuditEventService auditEventService) {
         this.teamService = teamService;
         this.teamMapper = teamMapper;
         this.teamAdviceService = teamAdviceService;
         this.teamAdviceMapper = teamAdviceMapper;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TeamResponse createTeam(@Valid @RequestBody TeamCreateRequest request) {
-        return teamMapper.toResponse(teamService.createTeam(request));
+        Team team = teamService.createTeam(request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.TEAM,
+                team.getUuid(),
+                teamLabel(team),
+                "Team created: " + teamLabel(team));
+        return teamMapper.toResponse(team);
     }
 
     @GetMapping
@@ -73,16 +84,41 @@ public class TeamController {
 
     @PutMapping("/{uuid}")
     public TeamResponse updateTeam(@PathVariable UUID uuid, @Valid @RequestBody TeamUpdateRequest request) {
-        return teamMapper.toResponse(teamService.updateTeam(uuid, request));
+        Team team = teamService.updateTeam(uuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.TEAM,
+                team.getUuid(),
+                teamLabel(team),
+                "Team updated: " + teamLabel(team));
+        return teamMapper.toResponse(team);
     }
 
     @PatchMapping("/{uuid}/deactivate")
     public TeamResponse deactivateTeam(@PathVariable UUID uuid) {
-        return teamMapper.toResponse(teamService.deactivateTeam(uuid));
+        Team team = teamService.deactivateTeam(uuid);
+        auditEventService.record(
+                AuditEventService.DEACTIVATED,
+                AuditEventService.TEAM,
+                team.getUuid(),
+                teamLabel(team),
+                "Team deactivated: " + teamLabel(team));
+        return teamMapper.toResponse(team);
     }
 
     @PatchMapping("/{uuid}/reactivate")
     public TeamResponse reactivateTeam(@PathVariable UUID uuid) {
-        return teamMapper.toResponse(teamService.reactivateTeam(uuid));
+        Team team = teamService.reactivateTeam(uuid);
+        auditEventService.record(
+                AuditEventService.REACTIVATED,
+                AuditEventService.TEAM,
+                team.getUuid(),
+                teamLabel(team),
+                "Team reactivated: " + teamLabel(team));
+        return teamMapper.toResponse(team);
+    }
+
+    private String teamLabel(Team team) {
+        return team.getAgeGroup() + " " + team.getTeamCategory();
     }
 }

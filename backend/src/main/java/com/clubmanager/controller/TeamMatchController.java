@@ -7,6 +7,7 @@ import com.clubmanager.dto.TeamMatchCreateRequest;
 import com.clubmanager.dto.TeamMatchResponse;
 import com.clubmanager.dto.TeamMatchUpdateRequest;
 import com.clubmanager.mapper.TeamMatchMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.TeamMatchService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -29,10 +30,15 @@ public class TeamMatchController {
 
     private final TeamMatchService teamMatchService;
     private final TeamMatchMapper teamMatchMapper;
+    private final AuditEventService auditEventService;
 
-    public TeamMatchController(TeamMatchService teamMatchService, TeamMatchMapper teamMatchMapper) {
+    public TeamMatchController(
+            TeamMatchService teamMatchService,
+            TeamMatchMapper teamMatchMapper,
+            AuditEventService auditEventService) {
         this.teamMatchService = teamMatchService;
         this.teamMatchMapper = teamMatchMapper;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping
@@ -40,7 +46,14 @@ public class TeamMatchController {
     public TeamMatchResponse createMatch(
             @PathVariable UUID teamUuid,
             @Valid @RequestBody TeamMatchCreateRequest request) {
-        return teamMatchMapper.toSummaryResponse(teamMatchService.createMatch(teamUuid, request));
+        var match = teamMatchService.createMatch(teamUuid, request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.TEAM_MATCH,
+                match.getUuid(),
+                matchLabel(match),
+                "Team match created: " + matchLabel(match));
+        return teamMatchMapper.toSummaryResponse(match);
     }
 
     @GetMapping
@@ -64,7 +77,14 @@ public class TeamMatchController {
             @PathVariable UUID teamUuid,
             @PathVariable UUID matchUuid,
             @Valid @RequestBody TeamMatchUpdateRequest request) {
-        return teamMatchMapper.toSummaryResponse(teamMatchService.updateMatch(teamUuid, matchUuid, request));
+        var match = teamMatchService.updateMatch(teamUuid, matchUuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.TEAM_MATCH,
+                match.getUuid(),
+                matchLabel(match),
+                "Team match updated: " + matchLabel(match));
+        return teamMatchMapper.toSummaryResponse(match);
     }
 
     @PutMapping("/{matchUuid}/players/{playerUuid}")
@@ -73,7 +93,17 @@ public class TeamMatchController {
             @PathVariable UUID matchUuid,
             @PathVariable UUID playerUuid,
             @RequestBody MatchPlayerAnalysisUpdateRequest request) {
-        return teamMatchMapper.toPlayerAnalysisResponse(
-                teamMatchService.savePlayerAnalysis(teamUuid, matchUuid, playerUuid, request));
+        var analysis = teamMatchService.savePlayerAnalysis(teamUuid, matchUuid, playerUuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.MATCH_PLAYER_ANALYSIS,
+                analysis.getUuid(),
+                analysis.getPlayer().getName(),
+                "Match player analysis saved for player: " + analysis.getPlayer().getName());
+        return teamMatchMapper.toPlayerAnalysisResponse(analysis);
+    }
+
+    private String matchLabel(TeamMatch match) {
+        return match.getTeam().getAgeGroup() + " vs " + match.getOpponent();
     }
 }

@@ -3,6 +3,7 @@ package com.clubmanager.controller;
 import com.clubmanager.dto.AdminResponse;
 import com.clubmanager.mapper.AdminMapper;
 import com.clubmanager.service.AdminService;
+import com.clubmanager.service.AuditEventService;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +21,12 @@ public class AdminController {
 
     private final AdminService adminService;
     private final AdminMapper adminMapper;
+    private final AuditEventService auditEventService;
 
-    public AdminController(AdminService adminService, AdminMapper adminMapper) {
+    public AdminController(AdminService adminService, AdminMapper adminMapper, AuditEventService auditEventService) {
         this.adminService = adminService;
         this.adminMapper = adminMapper;
+        this.auditEventService = auditEventService;
     }
 
     @GetMapping
@@ -40,11 +43,25 @@ public class AdminController {
 
     @PatchMapping("/{uuid}/deactivate")
     public AdminResponse deactivateAdmin(@PathVariable UUID uuid) {
-        return adminMapper.toResponse(adminService.deactivateAdmin(uuid));
+        var admin = adminService.deactivateAdmin(uuid);
+        auditEventService.record(
+                AuditEventService.DEACTIVATED,
+                AuditEventService.ADMIN,
+                admin.getUuid(),
+                admin.getUsername(),
+                "Admin deactivated: " + admin.getUsername());
+        return adminMapper.toResponse(admin);
     }
 
     @PatchMapping("/{uuid}/reactivate")
     public AdminResponse reactivateAdmin(@PathVariable UUID uuid) {
-        return adminMapper.toResponse(adminService.reactivateAdmin(uuid));
+        var admin = adminService.reactivateAdmin(uuid);
+        auditEventService.record(
+                AuditEventService.REACTIVATED,
+                AuditEventService.ADMIN,
+                admin.getUuid(),
+                admin.getUsername(),
+                "Admin reactivated: " + admin.getUsername());
+        return adminMapper.toResponse(admin);
     }
 }

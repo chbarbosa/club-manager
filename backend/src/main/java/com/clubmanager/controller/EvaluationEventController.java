@@ -7,6 +7,7 @@ import com.clubmanager.dto.EvaluationEventCreateRequest;
 import com.clubmanager.dto.EvaluationEventResponse;
 import com.clubmanager.mapper.EvaluationEventAttendanceMapper;
 import com.clubmanager.mapper.EvaluationEventMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.EvaluationEventService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -29,14 +30,17 @@ public class EvaluationEventController {
     private final EvaluationEventService evaluationEventService;
     private final EvaluationEventMapper evaluationEventMapper;
     private final EvaluationEventAttendanceMapper attendanceMapper;
+    private final AuditEventService auditEventService;
 
     public EvaluationEventController(
             EvaluationEventService evaluationEventService,
             EvaluationEventMapper evaluationEventMapper,
-            EvaluationEventAttendanceMapper attendanceMapper) {
+            EvaluationEventAttendanceMapper attendanceMapper,
+            AuditEventService auditEventService) {
         this.evaluationEventService = evaluationEventService;
         this.evaluationEventMapper = evaluationEventMapper;
         this.attendanceMapper = attendanceMapper;
+        this.auditEventService = auditEventService;
     }
 
     @GetMapping("/api/v1/evaluations/{evaluationUuid}/events")
@@ -51,7 +55,14 @@ public class EvaluationEventController {
     public EvaluationEventResponse createEvent(
             @PathVariable UUID evaluationUuid,
             @Valid @RequestBody EvaluationEventCreateRequest request) {
-        return evaluationEventMapper.toResponse(evaluationEventService.createEvent(evaluationUuid, request));
+        var event = evaluationEventService.createEvent(evaluationUuid, request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.EVALUATION_EVENT,
+                event.getUuid(),
+                eventLabel(event),
+                "Evaluation event created: " + eventLabel(event));
+        return evaluationEventMapper.toResponse(event);
     }
 
     @GetMapping("/api/v1/evaluation-events/{eventUuid}/attendance")
@@ -66,18 +77,43 @@ public class EvaluationEventController {
             @PathVariable UUID eventUuid,
             @PathVariable UUID playerUuid,
             @Valid @RequestBody EvaluationEventAttendanceUpdateRequest request) {
-        return attendanceMapper.toResponse(evaluationEventService.updateAttendance(eventUuid, playerUuid, request));
+        var attendance = evaluationEventService.updateAttendance(eventUuid, playerUuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.EVALUATION_ATTENDANCE,
+                attendance.getUuid(),
+                attendance.getPlayer().getName(),
+                "Evaluation attendance updated for player: " + attendance.getPlayer().getName());
+        return attendanceMapper.toResponse(attendance);
     }
 
     @PatchMapping("/api/v1/evaluation-events/{eventUuid}/complete")
     public EvaluationEventResponse completeEvent(@PathVariable UUID eventUuid) {
-        return evaluationEventMapper.toResponse(evaluationEventService.completeEvent(eventUuid));
+        var event = evaluationEventService.completeEvent(eventUuid);
+        auditEventService.record(
+                AuditEventService.COMPLETED,
+                AuditEventService.EVALUATION_EVENT,
+                event.getUuid(),
+                eventLabel(event),
+                "Evaluation event completed: " + eventLabel(event));
+        return evaluationEventMapper.toResponse(event);
     }
 
     @PatchMapping("/api/v1/evaluation-events/{eventUuid}/cancel")
     public EvaluationEventResponse cancelEvent(
             @PathVariable UUID eventUuid,
             @RequestBody(required = false) EvaluationEventCancelRequest request) {
-        return evaluationEventMapper.toResponse(evaluationEventService.cancelEvent(eventUuid, request));
+        var event = evaluationEventService.cancelEvent(eventUuid, request);
+        auditEventService.record(
+                AuditEventService.CANCELED,
+                AuditEventService.EVALUATION_EVENT,
+                event.getUuid(),
+                eventLabel(event),
+                "Evaluation event canceled: " + eventLabel(event));
+        return evaluationEventMapper.toResponse(event);
+    }
+
+    private String eventLabel(com.clubmanager.domain.EvaluationEvent event) {
+        return event.getEvaluation().getTitle() + " " + event.getEventDate() + " " + event.getStartTime();
     }
 }

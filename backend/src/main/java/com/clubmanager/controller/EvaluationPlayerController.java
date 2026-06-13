@@ -3,6 +3,7 @@ package com.clubmanager.controller;
 import com.clubmanager.dto.EvaluationPlayerAssignRequest;
 import com.clubmanager.dto.EvaluationPlayerResponse;
 import com.clubmanager.mapper.EvaluationPlayerMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.EvaluationPlayerService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -24,11 +25,15 @@ public class EvaluationPlayerController {
 
     private final EvaluationPlayerService evaluationPlayerService;
     private final EvaluationPlayerMapper evaluationPlayerMapper;
+    private final AuditEventService auditEventService;
 
     public EvaluationPlayerController(
-            EvaluationPlayerService evaluationPlayerService, EvaluationPlayerMapper evaluationPlayerMapper) {
+            EvaluationPlayerService evaluationPlayerService,
+            EvaluationPlayerMapper evaluationPlayerMapper,
+            AuditEventService auditEventService) {
         this.evaluationPlayerService = evaluationPlayerService;
         this.evaluationPlayerMapper = evaluationPlayerMapper;
+        this.auditEventService = auditEventService;
     }
 
     @GetMapping
@@ -43,11 +48,29 @@ public class EvaluationPlayerController {
     public EvaluationPlayerResponse assignPlayer(
             @PathVariable UUID evaluationUuid,
             @Valid @RequestBody EvaluationPlayerAssignRequest request) {
-        return evaluationPlayerMapper.toResponse(evaluationPlayerService.assignPlayer(evaluationUuid, request));
+        var assignment = evaluationPlayerService.assignPlayer(evaluationUuid, request);
+        auditEventService.record(
+                AuditEventService.ASSIGNED,
+                AuditEventService.EVALUATION_PLAYER,
+                assignment.getUuid(),
+                assignmentLabel(assignment),
+                "Player assigned to evaluation: " + assignmentLabel(assignment));
+        return evaluationPlayerMapper.toResponse(assignment);
     }
 
     @DeleteMapping("/{assignmentUuid}")
     public EvaluationPlayerResponse removePlayer(@PathVariable UUID evaluationUuid, @PathVariable UUID assignmentUuid) {
-        return evaluationPlayerMapper.toResponse(evaluationPlayerService.removePlayer(evaluationUuid, assignmentUuid));
+        var assignment = evaluationPlayerService.removePlayer(evaluationUuid, assignmentUuid);
+        auditEventService.record(
+                AuditEventService.REMOVED,
+                AuditEventService.EVALUATION_PLAYER,
+                assignment.getUuid(),
+                assignmentLabel(assignment),
+                "Player removed from evaluation: " + assignmentLabel(assignment));
+        return evaluationPlayerMapper.toResponse(assignment);
+    }
+
+    private String assignmentLabel(com.clubmanager.domain.EvaluationPlayer assignment) {
+        return assignment.getPlayer().getName() + " / " + assignment.getEvaluation().getTitle();
     }
 }

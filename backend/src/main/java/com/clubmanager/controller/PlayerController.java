@@ -8,6 +8,7 @@ import com.clubmanager.dto.PlayerSummaryResponse;
 import com.clubmanager.dto.PlayerUpdateRequest;
 import com.clubmanager.mapper.PlayerMapper;
 import com.clubmanager.mapper.PlayerSkillHistoryMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.PlayerService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -33,20 +34,30 @@ public class PlayerController {
     private final PlayerService playerService;
     private final PlayerMapper playerMapper;
     private final PlayerSkillHistoryMapper playerSkillHistoryMapper;
+    private final AuditEventService auditEventService;
 
     public PlayerController(
             PlayerService playerService,
             PlayerMapper playerMapper,
-            PlayerSkillHistoryMapper playerSkillHistoryMapper) {
+            PlayerSkillHistoryMapper playerSkillHistoryMapper,
+            AuditEventService auditEventService) {
         this.playerService = playerService;
         this.playerMapper = playerMapper;
         this.playerSkillHistoryMapper = playerSkillHistoryMapper;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PlayerResponse createPlayer(@Valid @RequestBody PlayerCreateRequest request) {
-        return playerMapper.toResponse(playerService.createPlayer(request));
+        var player = playerService.createPlayer(request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.PLAYER,
+                player.getUuid(),
+                player.getName(),
+                "Player created: " + player.getName());
+        return playerMapper.toResponse(player);
     }
 
     @GetMapping
@@ -69,16 +80,37 @@ public class PlayerController {
 
     @PutMapping("/{uuid}")
     public PlayerResponse updatePlayer(@PathVariable UUID uuid, @Valid @RequestBody PlayerUpdateRequest request) {
-        return playerMapper.toResponse(playerService.updatePlayer(uuid, request));
+        var player = playerService.updatePlayer(uuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.PLAYER,
+                player.getUuid(),
+                player.getName(),
+                "Player updated: " + player.getName());
+        return playerMapper.toResponse(player);
     }
 
     @PatchMapping("/{uuid}/deactivate")
     public PlayerResponse deactivatePlayer(@PathVariable UUID uuid) {
-        return playerMapper.toResponse(playerService.deactivatePlayer(uuid));
+        var player = playerService.deactivatePlayer(uuid);
+        auditEventService.record(
+                AuditEventService.DEACTIVATED,
+                AuditEventService.PLAYER,
+                player.getUuid(),
+                player.getName(),
+                "Player deactivated: " + player.getName());
+        return playerMapper.toResponse(player);
     }
 
     @PatchMapping("/{uuid}/reactivate")
     public PlayerResponse reactivatePlayer(@PathVariable UUID uuid) {
-        return playerMapper.toResponse(playerService.reactivatePlayer(uuid));
+        var player = playerService.reactivatePlayer(uuid);
+        auditEventService.record(
+                AuditEventService.REACTIVATED,
+                AuditEventService.PLAYER,
+                player.getUuid(),
+                player.getName(),
+                "Player reactivated: " + player.getName());
+        return playerMapper.toResponse(player);
     }
 }

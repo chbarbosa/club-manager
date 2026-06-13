@@ -21,6 +21,11 @@ app:
   jwt:
     secret: ${JWT_SECRET:Y2x1Yi1tYW5hZ2VyLWRldmVsb3BtZW50LXNlY3JldC1tdXN0LWNoYW5nZQ==}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  audit:
+    internal-api:
+      enabled: ${AUDIT_INTERNAL_API_ENABLED:false}
+      allowed-cidrs: ${AUDIT_INTERNAL_API_ALLOWED_CIDRS:}
+      trusted-proxy-header: ${AUDIT_INTERNAL_API_TRUSTED_PROXY_HEADER:}
 
 management:
   endpoints:

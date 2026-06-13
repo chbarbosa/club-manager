@@ -3,6 +3,7 @@ package com.clubmanager.controller;
 import com.clubmanager.dto.PlayerTeamAssignRequest;
 import com.clubmanager.dto.PlayerTeamResponse;
 import com.clubmanager.mapper.PlayerTeamMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.PlayerTeamService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -25,10 +26,15 @@ public class PlayerTeamController {
 
     private final PlayerTeamService playerTeamService;
     private final PlayerTeamMapper playerTeamMapper;
+    private final AuditEventService auditEventService;
 
-    public PlayerTeamController(PlayerTeamService playerTeamService, PlayerTeamMapper playerTeamMapper) {
+    public PlayerTeamController(
+            PlayerTeamService playerTeamService,
+            PlayerTeamMapper playerTeamMapper,
+            AuditEventService auditEventService) {
         this.playerTeamService = playerTeamService;
         this.playerTeamMapper = playerTeamMapper;
+        this.auditEventService = auditEventService;
     }
 
     @GetMapping
@@ -43,12 +49,29 @@ public class PlayerTeamController {
     public PlayerTeamResponse assignPlayer(
             @PathVariable UUID teamUuid,
             @Valid @RequestBody PlayerTeamAssignRequest request) {
-        return playerTeamMapper.toResponse(playerTeamService.assignPlayer(teamUuid, request));
+        var assignment = playerTeamService.assignPlayer(teamUuid, request);
+        auditEventService.record(
+                AuditEventService.ASSIGNED,
+                AuditEventService.TEAM_ROSTER,
+                assignment.getUuid(),
+                assignmentLabel(assignment),
+                "Player assigned to team: " + assignmentLabel(assignment));
+        return playerTeamMapper.toResponse(assignment);
     }
 
     @DeleteMapping("/{assignmentUuid}")
     public PlayerTeamResponse removePlayer(@PathVariable UUID teamUuid, @PathVariable UUID assignmentUuid) {
-        return playerTeamMapper.toResponse(playerTeamService.removePlayer(teamUuid, assignmentUuid));
+        var assignment = playerTeamService.removePlayer(teamUuid, assignmentUuid);
+        auditEventService.record(
+                AuditEventService.REMOVED,
+                AuditEventService.TEAM_ROSTER,
+                assignment.getUuid(),
+                assignmentLabel(assignment),
+                "Player removed from team: " + assignmentLabel(assignment));
+        return playerTeamMapper.toResponse(assignment);
+    }
+
+    private String assignmentLabel(com.clubmanager.domain.PlayerTeam assignment) {
+        return assignment.getPlayer().getName() + " / " + assignment.getTeam().getAgeGroup();
     }
 }
-

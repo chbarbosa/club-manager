@@ -5,6 +5,7 @@ import com.clubmanager.dto.ChampionshipResponse;
 import com.clubmanager.dto.ChampionshipUpdateRequest;
 import com.clubmanager.dto.PageResponse;
 import com.clubmanager.mapper.ChampionshipMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.ChampionshipService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -29,18 +30,28 @@ public class ChampionshipController {
 
     private final ChampionshipService championshipService;
     private final ChampionshipMapper championshipMapper;
+    private final AuditEventService auditEventService;
 
     public ChampionshipController(
             ChampionshipService championshipService,
-            ChampionshipMapper championshipMapper) {
+            ChampionshipMapper championshipMapper,
+            AuditEventService auditEventService) {
         this.championshipService = championshipService;
         this.championshipMapper = championshipMapper;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ChampionshipResponse createChampionship(@Valid @RequestBody ChampionshipCreateRequest request) {
-        return championshipMapper.toResponse(championshipService.createChampionship(request));
+        var championship = championshipService.createChampionship(request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.CHAMPIONSHIP,
+                championship.getUuid(),
+                championship.getName(),
+                "Championship created: " + championship.getName());
+        return championshipMapper.toResponse(championship);
     }
 
     @GetMapping
@@ -61,16 +72,37 @@ public class ChampionshipController {
     public ChampionshipResponse updateChampionship(
             @PathVariable UUID uuid,
             @Valid @RequestBody ChampionshipUpdateRequest request) {
-        return championshipMapper.toResponse(championshipService.updateChampionship(uuid, request));
+        var championship = championshipService.updateChampionship(uuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.CHAMPIONSHIP,
+                championship.getUuid(),
+                championship.getName(),
+                "Championship updated: " + championship.getName());
+        return championshipMapper.toResponse(championship);
     }
 
     @PatchMapping("/{uuid}/deactivate")
     public ChampionshipResponse deactivateChampionship(@PathVariable UUID uuid) {
-        return championshipMapper.toResponse(championshipService.deactivateChampionship(uuid));
+        var championship = championshipService.deactivateChampionship(uuid);
+        auditEventService.record(
+                AuditEventService.DEACTIVATED,
+                AuditEventService.CHAMPIONSHIP,
+                championship.getUuid(),
+                championship.getName(),
+                "Championship deactivated: " + championship.getName());
+        return championshipMapper.toResponse(championship);
     }
 
     @PatchMapping("/{uuid}/reactivate")
     public ChampionshipResponse reactivateChampionship(@PathVariable UUID uuid) {
-        return championshipMapper.toResponse(championshipService.reactivateChampionship(uuid));
+        var championship = championshipService.reactivateChampionship(uuid);
+        auditEventService.record(
+                AuditEventService.REACTIVATED,
+                AuditEventService.CHAMPIONSHIP,
+                championship.getUuid(),
+                championship.getName(),
+                "Championship reactivated: " + championship.getName());
+        return championshipMapper.toResponse(championship);
     }
 }

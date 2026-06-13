@@ -6,6 +6,7 @@ import com.clubmanager.dto.TrainerResponse;
 import com.clubmanager.dto.TrainerSummaryResponse;
 import com.clubmanager.dto.TrainerUpdateRequest;
 import com.clubmanager.mapper.TrainerMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.TrainerService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -30,16 +31,28 @@ public class TrainerController {
 
     private final TrainerService trainerService;
     private final TrainerMapper trainerMapper;
+    private final AuditEventService auditEventService;
 
-    public TrainerController(TrainerService trainerService, TrainerMapper trainerMapper) {
+    public TrainerController(
+            TrainerService trainerService,
+            TrainerMapper trainerMapper,
+            AuditEventService auditEventService) {
         this.trainerService = trainerService;
         this.trainerMapper = trainerMapper;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TrainerResponse createTrainer(@Valid @RequestBody TrainerCreateRequest request) {
-        return trainerMapper.toResponse(trainerService.createTrainer(request));
+        var trainer = trainerService.createTrainer(request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.TRAINER,
+                trainer.getUuid(),
+                trainer.getName(),
+                "Trainer created: " + trainer.getName());
+        return trainerMapper.toResponse(trainer);
     }
 
     @GetMapping
@@ -58,16 +71,37 @@ public class TrainerController {
 
     @PutMapping("/{uuid}")
     public TrainerResponse updateTrainer(@PathVariable UUID uuid, @Valid @RequestBody TrainerUpdateRequest request) {
-        return trainerMapper.toResponse(trainerService.updateTrainer(uuid, request));
+        var trainer = trainerService.updateTrainer(uuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.TRAINER,
+                trainer.getUuid(),
+                trainer.getName(),
+                "Trainer updated: " + trainer.getName());
+        return trainerMapper.toResponse(trainer);
     }
 
     @PatchMapping("/{uuid}/deactivate")
     public TrainerResponse deactivateTrainer(@PathVariable UUID uuid) {
-        return trainerMapper.toResponse(trainerService.deactivateTrainer(uuid));
+        var trainer = trainerService.deactivateTrainer(uuid);
+        auditEventService.record(
+                AuditEventService.DEACTIVATED,
+                AuditEventService.TRAINER,
+                trainer.getUuid(),
+                trainer.getName(),
+                "Trainer deactivated: " + trainer.getName());
+        return trainerMapper.toResponse(trainer);
     }
 
     @PatchMapping("/{uuid}/reactivate")
     public TrainerResponse reactivateTrainer(@PathVariable UUID uuid) {
-        return trainerMapper.toResponse(trainerService.reactivateTrainer(uuid));
+        var trainer = trainerService.reactivateTrainer(uuid);
+        auditEventService.record(
+                AuditEventService.REACTIVATED,
+                AuditEventService.TRAINER,
+                trainer.getUuid(),
+                trainer.getName(),
+                "Trainer reactivated: " + trainer.getName());
+        return trainerMapper.toResponse(trainer);
     }
 }

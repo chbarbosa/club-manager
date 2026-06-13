@@ -13,5 +13,6 @@ public interface MatchPlayerAnalysisRepository extends JpaRepository<MatchPlayer
     @EntityGraph(attributePaths = {"player", "player.positions", "match"})
     List<MatchPlayerAnalysis> findByMatch(TeamMatch match);
 
+    @EntityGraph(attributePaths = {"player", "match"})
     Optional<MatchPlayerAnalysis> findByMatchAndPlayer(TeamMatch match, Player player);
 }

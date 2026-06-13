@@ -14,13 +14,17 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties(JwtConfig.class)
+@EnableConfigurationProperties({JwtConfig.class, AuditInternalApiConfig.class})
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final InternalAuditAccessFilter internalAuditAccessFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            InternalAuditAccessFilter internalAuditAccessFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.internalAuditAccessFilter = internalAuditAccessFilter;
     }
 
     @Bean
@@ -35,7 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**", "/actuator/health").permitAll()
                         .anyRequest().hasRole("ADMIN")
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(internalAuditAccessFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 

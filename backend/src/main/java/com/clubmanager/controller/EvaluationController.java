@@ -11,6 +11,7 @@ import com.clubmanager.dto.EvaluationUpdateRequest;
 import com.clubmanager.dto.PageResponse;
 import com.clubmanager.mapper.EvaluationMapper;
 import com.clubmanager.mapper.EvaluationResultMapper;
+import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.EvaluationService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -37,20 +38,30 @@ public class EvaluationController {
     private final EvaluationService evaluationService;
     private final EvaluationMapper evaluationMapper;
     private final EvaluationResultMapper evaluationResultMapper;
+    private final AuditEventService auditEventService;
 
     public EvaluationController(
             EvaluationService evaluationService,
             EvaluationMapper evaluationMapper,
-            EvaluationResultMapper evaluationResultMapper) {
+            EvaluationResultMapper evaluationResultMapper,
+            AuditEventService auditEventService) {
         this.evaluationService = evaluationService;
         this.evaluationMapper = evaluationMapper;
         this.evaluationResultMapper = evaluationResultMapper;
+        this.auditEventService = auditEventService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EvaluationResponse createEvaluation(@Valid @RequestBody EvaluationCreateRequest request) {
-        return evaluationMapper.toResponse(evaluationService.createEvaluation(request));
+        var evaluation = evaluationService.createEvaluation(request);
+        auditEventService.record(
+                AuditEventService.CREATED,
+                AuditEventService.EVALUATION,
+                evaluation.getUuid(),
+                evaluation.getTitle(),
+                "Evaluation created: " + evaluation.getTitle());
+        return evaluationMapper.toResponse(evaluation);
     }
 
     @GetMapping
@@ -71,17 +82,38 @@ public class EvaluationController {
 
     @PutMapping("/{uuid}")
     public EvaluationResponse updateEvaluation(@PathVariable UUID uuid, @Valid @RequestBody EvaluationUpdateRequest request) {
-        return evaluationMapper.toResponse(evaluationService.updateEvaluation(uuid, request));
+        var evaluation = evaluationService.updateEvaluation(uuid, request);
+        auditEventService.record(
+                AuditEventService.UPDATED,
+                AuditEventService.EVALUATION,
+                evaluation.getUuid(),
+                evaluation.getTitle(),
+                "Evaluation updated: " + evaluation.getTitle());
+        return evaluationMapper.toResponse(evaluation);
     }
 
     @PatchMapping("/{uuid}/start")
     public EvaluationResponse startEvaluation(@PathVariable UUID uuid) {
-        return evaluationMapper.toResponse(evaluationService.startEvaluation(uuid));
+        var evaluation = evaluationService.startEvaluation(uuid);
+        auditEventService.record(
+                AuditEventService.STARTED,
+                AuditEventService.EVALUATION,
+                evaluation.getUuid(),
+                evaluation.getTitle(),
+                "Evaluation started: " + evaluation.getTitle());
+        return evaluationMapper.toResponse(evaluation);
     }
 
     @PatchMapping("/{uuid}/finalize")
     public EvaluationResponse finalizeEvaluation(@PathVariable UUID uuid) {
-        return evaluationMapper.toResponse(evaluationService.finalizeEvaluation(uuid));
+        var evaluation = evaluationService.finalizeEvaluation(uuid);
+        auditEventService.record(
+                AuditEventService.FINALIZED,
+                AuditEventService.EVALUATION,
+                evaluation.getUuid(),
+                evaluation.getTitle(),
+                "Evaluation finalized: " + evaluation.getTitle());
+        return evaluationMapper.toResponse(evaluation);
     }
 
     @GetMapping("/{uuid}/results")
@@ -96,6 +128,13 @@ public class EvaluationController {
             @PathVariable UUID uuid,
             @PathVariable UUID playerUuid,
             @Valid @RequestBody EvaluationResultUpdateRequest request) {
-        return evaluationResultMapper.toResponse(evaluationService.updateResult(uuid, playerUuid, request));
+        var result = evaluationService.updateResult(uuid, playerUuid, request);
+        auditEventService.record(
+                AuditEventService.EVALUATED,
+                AuditEventService.EVALUATION_RESULT,
+                result.getUuid(),
+                result.getPlayer().getName(),
+                "Evaluation result saved for player: " + result.getPlayer().getName());
+        return evaluationResultMapper.toResponse(result);
     }
 }
