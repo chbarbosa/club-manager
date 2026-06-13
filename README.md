@@ -70,6 +70,9 @@ Security configuration:
 - `LOGIN_RATE_LIMIT_ENABLED`: defaults to `true`.
 - `LOGIN_RATE_LIMIT_MAX_FAILURES`: defaults to `5`.
 - `LOGIN_RATE_LIMIT_WINDOW_MINUTES`: defaults to `15`.
+- `LOGIN_RATE_LIMIT_STORAGE`: defaults to `in-memory`; use `redis` for
+  elastic/cloud deployments where multiple backend instances must share
+  throttling counters.
 
 ## Run the frontend
 

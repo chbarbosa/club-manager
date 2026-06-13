@@ -64,7 +64,8 @@ each item should become a focused implementation plan before coding starts.
 
 - Active feature.
 - Externalize and strengthen JWT secrets.
-- Add password policy and login rate limiting.
+- Add password policy and login rate limiting, with Redis-backed storage for
+  elastic deployments.
 - Review CORS and environment-specific configuration.
 - Prepare role separation for admin, trainer, and shared player credentials.
 

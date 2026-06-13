@@ -10,11 +10,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 @Service
-public class LoginRateLimitService {
+@ConditionalOnProperty(prefix = "app.security.login-rate-limit", name = "storage", havingValue = "in-memory", matchIfMissing = true)
+public class LoginRateLimitService implements LoginRateLimiter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginRateLimitService.class);
 
@@ -28,12 +30,13 @@ public class LoginRateLimitService {
         this(appSecurityConfig, appMetricsService, Clock.systemUTC());
     }
 
-    LoginRateLimitService(AppSecurityConfig appSecurityConfig, AppMetricsService appMetricsService, Clock clock) {
+    public LoginRateLimitService(AppSecurityConfig appSecurityConfig, AppMetricsService appMetricsService, Clock clock) {
         this.appSecurityConfig = appSecurityConfig;
         this.appMetricsService = appMetricsService;
         this.clock = clock;
     }
 
+    @Override
     public void ensureAllowed(String username, String clientAddress) {
         if (!appSecurityConfig.loginRateLimit().enabled()) {
             return;
@@ -47,6 +50,7 @@ public class LoginRateLimitService {
         }
     }
 
+    @Override
     public void recordFailure(String username, String clientAddress) {
         if (!appSecurityConfig.loginRateLimit().enabled()) {
             return;
@@ -60,6 +64,7 @@ public class LoginRateLimitService {
         });
     }
 
+    @Override
     public void recordSuccess(String username, String clientAddress) {
         attempts.remove(key(username, clientAddress));
     }

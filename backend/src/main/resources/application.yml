@@ -16,6 +16,10 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  data:
+    redis:
+      repositories:
+        enabled: false
 
 app:
   jwt:
@@ -30,6 +34,7 @@ app:
       enabled: ${LOGIN_RATE_LIMIT_ENABLED:true}
       max-failures: ${LOGIN_RATE_LIMIT_MAX_FAILURES:5}
       window-minutes: ${LOGIN_RATE_LIMIT_WINDOW_MINUTES:15}
+      storage: ${LOGIN_RATE_LIMIT_STORAGE:in-memory}
   audit:
     internal-api:
       enabled: ${AUDIT_INTERNAL_API_ENABLED:false}
@@ -37,6 +42,9 @@ app:
       trusted-proxy-header: ${AUDIT_INTERNAL_API_TRUSTED_PROXY_HEADER:}
 
 management:
+  health:
+    redis:
+      enabled: ${REDIS_HEALTH_ENABLED:false}
   prometheus:
     metrics:
       export:

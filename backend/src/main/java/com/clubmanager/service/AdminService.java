@@ -18,17 +18,17 @@ public class AdminService {
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminPasswordPolicyService adminPasswordPolicyService;
-    private final LoginRateLimitService loginRateLimitService;
+    private final LoginRateLimiter loginRateLimiter;
 
     public AdminService(
             AdminRepository adminRepository,
             PasswordEncoder passwordEncoder,
             AdminPasswordPolicyService adminPasswordPolicyService,
-            LoginRateLimitService loginRateLimitService) {
+            LoginRateLimiter loginRateLimiter) {
         this.adminRepository = adminRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminPasswordPolicyService = adminPasswordPolicyService;
-        this.loginRateLimitService = loginRateLimitService;
+        this.loginRateLimiter = loginRateLimiter;
     }
 
     @Transactional
@@ -56,18 +56,18 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public Admin authenticate(LoginRequest request, String clientAddress) {
-        loginRateLimitService.ensureAllowed(request.username(), clientAddress);
+        loginRateLimiter.ensureAllowed(request.username(), clientAddress);
         Admin admin = adminRepository.findByUsername(request.username())
                 .orElseThrow(() -> badCredentials(request.username(), clientAddress));
         if (!admin.isActive() || !passwordEncoder.matches(request.password(), admin.getPasswordHash())) {
             throw badCredentials(request.username(), clientAddress);
         }
-        loginRateLimitService.recordSuccess(request.username(), clientAddress);
+        loginRateLimiter.recordSuccess(request.username(), clientAddress);
         return admin;
     }
 
     private BadCredentialsException badCredentials(String username, String clientAddress) {
-        loginRateLimitService.recordFailure(username, clientAddress);
+        loginRateLimiter.recordFailure(username, clientAddress);
         return new BadCredentialsException("Invalid username or password");
     }
 

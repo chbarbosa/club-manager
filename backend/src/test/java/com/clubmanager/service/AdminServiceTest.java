@@ -217,6 +217,6 @@ class AdminServiceTest {
     private AppSecurityConfig securityConfig(boolean enabled, int maxFailures, int windowMinutes) {
         return new AppSecurityConfig(
                 new AppSecurityConfig.PasswordPolicy(10),
-                new AppSecurityConfig.LoginRateLimit(enabled, maxFailures, windowMinutes));
+                new AppSecurityConfig.LoginRateLimit(enabled, maxFailures, windowMinutes, "in-memory"));
     }
 }

@@ -10,6 +10,6 @@ public record AppSecurityConfig(
     public record PasswordPolicy(int minLength) {
     }
 
-    public record LoginRateLimit(boolean enabled, int maxFailures, int windowMinutes) {
+    public record LoginRateLimit(boolean enabled, int maxFailures, int windowMinutes, String storage) {
     }
 }
