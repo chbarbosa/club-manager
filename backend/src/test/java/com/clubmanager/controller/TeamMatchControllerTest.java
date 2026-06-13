@@ -1,6 +1,7 @@
 package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -9,6 +10,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.clubmanager.service.AppMetricsService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +29,9 @@ class TeamMatchControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
 
     @Test
     void matchFlow_WithAdminToken_CreatesListsUpdatesAndSavesPlayerAnalysis() throws Exception {
@@ -66,6 +73,7 @@ class TeamMatchControllerTest {
                 .andExpect(jsonPath("$.opponent").value("Updated Rivals"))
                 .andExpect(jsonPath("$.teamScore").value(3));
 
+        double matchAnalysisBefore = count(AppMetricsService.MATCH_ANALYSIS_SAVED);
         mockMvc.perform(put("/api/v1/teams/{teamUuid}/matches/{matchUuid}/players/{playerUuid}", teamUuid, matchUuid, playerUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,6 +90,7 @@ class TeamMatchControllerTest {
                 .andExpect(jsonPath("$.highlightTags[0]").value("Good passes"))
                 .andExpect(jsonPath("$.notes").value("Good match reading"))
                 .andExpect(jsonPath("$.id").doesNotExist());
+        assertThat(count(AppMetricsService.MATCH_ANALYSIS_SAVED)).isEqualTo(matchAnalysisBefore + 1.0);
     }
 
     @Test
@@ -197,5 +206,10 @@ class TeamMatchControllerTest {
                 .getResponse()
                 .getContentAsString();
         return JsonPath.read(response, "$.uuid");
+    }
+
+    private double count(String name) {
+        Counter counter = meterRegistry.find(name).counter();
+        return counter == null ? 0.0 : counter.count();
     }
 }

@@ -1,6 +1,7 @@
 package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -9,6 +10,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.clubmanager.service.AppMetricsService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -27,6 +31,9 @@ class ScheduleControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private MeterRegistry meterRegistry;
+
     @Test
     void getFields_WithValidToken_ReturnsSeededFields() throws Exception {
         mockMvc.perform(get("/api/v1/fields")
@@ -42,6 +49,7 @@ class ScheduleControllerTest {
         String teamUuid = createTeam();
         String fieldUuid = getFirstFieldUuid();
         String dateTime = LocalDateTime.now().plusDays(5).withNano(0).toString();
+        double before = count(AppMetricsService.SCHEDULE_CREATED);
 
         mockMvc.perform(post("/api/v1/schedules")
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
@@ -56,6 +64,8 @@ class ScheduleControllerTest {
                 .andExpect(jsonPath("$.type").value("TRAINING"))
                 .andExpect(jsonPath("$.status").value("SCHEDULED"))
                 .andExpect(jsonPath("$.id").doesNotExist());
+
+        assertThat(count(AppMetricsService.SCHEDULE_CREATED)).isEqualTo(before + 1.0);
     }
 
     @Test
@@ -92,6 +102,7 @@ class ScheduleControllerTest {
         String teamUuid = createTeam();
         String fieldUuid = getFirstFieldUuid();
         String scheduleUuid = createSchedule(teamUuid, fieldUuid);
+        double before = count(AppMetricsService.SCHEDULE_CANCELED);
 
         mockMvc.perform(patch("/api/v1/schedules/{uuid}/cancel", scheduleUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
@@ -103,6 +114,8 @@ class ScheduleControllerTest {
                 .andExpect(jsonPath("$.uuid").value(scheduleUuid))
                 .andExpect(jsonPath("$.status").value("CANCELED"))
                 .andExpect(jsonPath("$.cancelReason").value("Weather"));
+
+        assertThat(count(AppMetricsService.SCHEDULE_CANCELED)).isEqualTo(before + 1.0);
     }
 
     @Test
@@ -190,5 +203,10 @@ class ScheduleControllerTest {
                   "notes": "Evening practice"
                 }
                 """.formatted(teamUuid, fieldUuid, dateTime);
+    }
+
+    private double count(String name) {
+        Counter counter = meterRegistry.find(name).counter();
+        return counter == null ? 0.0 : counter.count();
     }
 }

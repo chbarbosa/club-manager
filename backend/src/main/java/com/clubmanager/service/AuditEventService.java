@@ -9,6 +9,8 @@ import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,6 +22,8 @@ import org.springframework.util.StringUtils;
 
 @Service
 public class AuditEventService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuditEventService.class);
 
     public static final String CREATED = "CREATED";
     public static final String UPDATED = "UPDATED";
@@ -50,16 +54,21 @@ public class AuditEventService {
 
     private final AuditEventRepository auditEventRepository;
     private final AdminRepository adminRepository;
+    private final AppMetricsService appMetricsService;
 
-    public AuditEventService(AuditEventRepository auditEventRepository, AdminRepository adminRepository) {
+    public AuditEventService(
+            AuditEventRepository auditEventRepository,
+            AdminRepository adminRepository,
+            AppMetricsService appMetricsService) {
         this.auditEventRepository = auditEventRepository;
         this.adminRepository = adminRepository;
+        this.appMetricsService = appMetricsService;
     }
 
     @Transactional
     public AuditEvent record(String action, String entityType, UUID entityUuid, String entityLabel, String message) {
         Admin actor = getCurrentAdmin();
-        return auditEventRepository.save(AuditEvent.builder()
+        AuditEvent auditEvent = auditEventRepository.save(AuditEvent.builder()
                 .occurredAt(LocalDateTime.now())
                 .actorAdmin(actor)
                 .actorName(actor.getName())
@@ -69,6 +78,9 @@ public class AuditEventService {
                 .entityLabel(clean(entityLabel))
                 .message(clean(message))
                 .build());
+        appMetricsService.recordAuditEventRecorded();
+        LOGGER.info("Audit event recorded action={} entityType={} entityUuid={}", action, entityType, entityUuid);
+        return auditEvent;
     }
 
     @Transactional(readOnly = true)

@@ -1,6 +1,7 @@
 package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -10,6 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.clubmanager.service.AppMetricsService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +30,9 @@ class EvaluationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
 
     @Test
     void createEvaluation_WithValidToken_ReturnsCreatedEvaluation() throws Exception {
@@ -115,7 +122,11 @@ class EvaluationControllerTest {
         String playerUuid = createPlayer("EV-001");
         assignPlayer(evaluationUuid, playerUuid);
         String eventUuid = createEvent(evaluationUuid);
+        double startBefore = count(AppMetricsService.EVALUATION_STARTED);
+        double eventCompletedBefore = count(AppMetricsService.EVALUATION_EVENT_COMPLETED);
+        double finalizedBefore = count(AppMetricsService.EVALUATION_FINALIZED);
         startEvaluation(evaluationUuid);
+        assertThat(count(AppMetricsService.EVALUATION_STARTED)).isEqualTo(startBefore + 1.0);
 
         mockMvc.perform(patch("/api/v1/evaluation-events/{eventUuid}/complete", eventUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -139,6 +150,7 @@ class EvaluationControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
+        assertThat(count(AppMetricsService.EVALUATION_EVENT_COMPLETED)).isEqualTo(eventCompletedBefore + 1.0);
 
         mockMvc.perform(get("/api/v1/players/{uuid}", playerUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -184,6 +196,7 @@ class EvaluationControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FINALIZED"));
+        assertThat(count(AppMetricsService.EVALUATION_FINALIZED)).isEqualTo(finalizedBefore + 1.0);
 
         mockMvc.perform(get("/api/v1/evaluations/{uuid}/results", evaluationUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -408,5 +421,10 @@ class EvaluationControllerTest {
                   "teamCategory": "MASCULINE"
                 }
                 """.formatted(title);
+    }
+
+    private double count(String name) {
+        Counter counter = meterRegistry.find(name).counter();
+        return counter == null ? 0.0 : counter.count();
     }
 }

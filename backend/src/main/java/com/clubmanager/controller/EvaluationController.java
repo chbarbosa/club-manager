@@ -11,11 +11,14 @@ import com.clubmanager.dto.EvaluationUpdateRequest;
 import com.clubmanager.dto.PageResponse;
 import com.clubmanager.mapper.EvaluationMapper;
 import com.clubmanager.mapper.EvaluationResultMapper;
+import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.EvaluationService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,20 +38,25 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN')")
 public class EvaluationController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationController.class);
+
     private final EvaluationService evaluationService;
     private final EvaluationMapper evaluationMapper;
     private final EvaluationResultMapper evaluationResultMapper;
     private final AuditEventService auditEventService;
+    private final AppMetricsService appMetricsService;
 
     public EvaluationController(
             EvaluationService evaluationService,
             EvaluationMapper evaluationMapper,
             EvaluationResultMapper evaluationResultMapper,
-            AuditEventService auditEventService) {
+            AuditEventService auditEventService,
+            AppMetricsService appMetricsService) {
         this.evaluationService = evaluationService;
         this.evaluationMapper = evaluationMapper;
         this.evaluationResultMapper = evaluationResultMapper;
         this.auditEventService = auditEventService;
+        this.appMetricsService = appMetricsService;
     }
 
     @PostMapping
@@ -101,6 +109,8 @@ public class EvaluationController {
                 evaluation.getUuid(),
                 evaluation.getTitle(),
                 "Evaluation started: " + evaluation.getTitle());
+        appMetricsService.recordEvaluationStarted();
+        LOGGER.info("Evaluation started uuid={}", evaluation.getUuid());
         return evaluationMapper.toResponse(evaluation);
     }
 
@@ -113,6 +123,8 @@ public class EvaluationController {
                 evaluation.getUuid(),
                 evaluation.getTitle(),
                 "Evaluation finalized: " + evaluation.getTitle());
+        appMetricsService.recordEvaluationFinalized();
+        LOGGER.info("Evaluation finalized uuid={}", evaluation.getUuid());
         return evaluationMapper.toResponse(evaluation);
     }
 

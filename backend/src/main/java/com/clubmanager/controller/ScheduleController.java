@@ -7,10 +7,13 @@ import com.clubmanager.dto.ScheduleCreateRequest;
 import com.clubmanager.dto.ScheduleResponse;
 import com.clubmanager.dto.ScheduleUpdateRequest;
 import com.clubmanager.mapper.ScheduleMapper;
+import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.ScheduleService;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,17 +33,22 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN')")
 public class ScheduleController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScheduleController.class);
+
     private final ScheduleService scheduleService;
     private final ScheduleMapper scheduleMapper;
     private final AuditEventService auditEventService;
+    private final AppMetricsService appMetricsService;
 
     public ScheduleController(
             ScheduleService scheduleService,
             ScheduleMapper scheduleMapper,
-            AuditEventService auditEventService) {
+            AuditEventService auditEventService,
+            AppMetricsService appMetricsService) {
         this.scheduleService = scheduleService;
         this.scheduleMapper = scheduleMapper;
         this.auditEventService = auditEventService;
+        this.appMetricsService = appMetricsService;
     }
 
     @PostMapping
@@ -53,6 +61,8 @@ public class ScheduleController {
                 schedule.getUuid(),
                 scheduleLabel(schedule),
                 "Schedule created: " + scheduleLabel(schedule));
+        appMetricsService.recordScheduleCreated();
+        LOGGER.info("Schedule created uuid={}", schedule.getUuid());
         return scheduleMapper.toResponse(schedule);
     }
 
@@ -95,6 +105,8 @@ public class ScheduleController {
                 schedule.getUuid(),
                 scheduleLabel(schedule),
                 "Schedule canceled: " + scheduleLabel(schedule));
+        appMetricsService.recordScheduleCanceled();
+        LOGGER.info("Schedule canceled uuid={}", schedule.getUuid());
         return scheduleMapper.toResponse(schedule);
     }
 

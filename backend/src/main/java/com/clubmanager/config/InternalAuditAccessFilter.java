@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class InternalAuditAccessFilter extends OncePerRequestFilter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(InternalAuditAccessFilter.class);
     private static final String AUDIT_PATH_PREFIX = "/internal/api/v1/audit-events";
 
     private final AuditInternalApiConfig config;
@@ -32,6 +35,7 @@ public class InternalAuditAccessFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         if (!isAllowed(request)) {
+            LOGGER.warn("Internal audit API rejected clientAddress={}", clientAddress(request));
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Internal audit API is not available");
             return;
         }

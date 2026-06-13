@@ -7,11 +7,14 @@ import com.clubmanager.dto.EvaluationEventCreateRequest;
 import com.clubmanager.dto.EvaluationEventResponse;
 import com.clubmanager.mapper.EvaluationEventAttendanceMapper;
 import com.clubmanager.mapper.EvaluationEventMapper;
+import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.EvaluationEventService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,20 +30,25 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN')")
 public class EvaluationEventController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationEventController.class);
+
     private final EvaluationEventService evaluationEventService;
     private final EvaluationEventMapper evaluationEventMapper;
     private final EvaluationEventAttendanceMapper attendanceMapper;
     private final AuditEventService auditEventService;
+    private final AppMetricsService appMetricsService;
 
     public EvaluationEventController(
             EvaluationEventService evaluationEventService,
             EvaluationEventMapper evaluationEventMapper,
             EvaluationEventAttendanceMapper attendanceMapper,
-            AuditEventService auditEventService) {
+            AuditEventService auditEventService,
+            AppMetricsService appMetricsService) {
         this.evaluationEventService = evaluationEventService;
         this.evaluationEventMapper = evaluationEventMapper;
         this.attendanceMapper = attendanceMapper;
         this.auditEventService = auditEventService;
+        this.appMetricsService = appMetricsService;
     }
 
     @GetMapping("/api/v1/evaluations/{evaluationUuid}/events")
@@ -96,6 +104,8 @@ public class EvaluationEventController {
                 event.getUuid(),
                 eventLabel(event),
                 "Evaluation event completed: " + eventLabel(event));
+        appMetricsService.recordEvaluationEventCompleted();
+        LOGGER.info("Evaluation event completed uuid={}", event.getUuid());
         return evaluationEventMapper.toResponse(event);
     }
 

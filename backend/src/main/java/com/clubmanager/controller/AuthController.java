@@ -8,8 +8,11 @@ import com.clubmanager.dto.LoginRequest;
 import com.clubmanager.dto.LoginResponse;
 import com.clubmanager.mapper.AdminMapper;
 import com.clubmanager.service.AdminService;
+import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,25 +25,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
+
     private final AdminService adminService;
     private final AdminMapper adminMapper;
     private final JwtService jwtService;
     private final AuditEventService auditEventService;
+    private final AppMetricsService appMetricsService;
 
     public AuthController(
             AdminService adminService,
             AdminMapper adminMapper,
             JwtService jwtService,
-            AuditEventService auditEventService) {
+            AuditEventService auditEventService,
+            AppMetricsService appMetricsService) {
         this.adminService = adminService;
         this.adminMapper = adminMapper;
         this.jwtService = jwtService;
         this.auditEventService = auditEventService;
+        this.appMetricsService = appMetricsService;
     }
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         Admin admin = adminService.authenticate(request);
+        appMetricsService.recordLoginSuccess();
+        LOGGER.info("Admin login succeeded for username={}", admin.getUsername());
         return new LoginResponse(jwtService.generateToken(admin), admin.getUuid(), admin.getName());
     }
 

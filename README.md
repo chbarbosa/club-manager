@@ -20,6 +20,33 @@ The API runs at `http://localhost:8080`. Health is available at
 `http://localhost:8080/actuator/health`. Local H2 data is stored under
 `data/` at the repository root and is ignored by Git.
 
+## Backend Observability
+
+Local Actuator URLs:
+
+- Health: `http://localhost:8080/actuator/health`
+- Liveness: `http://localhost:8080/actuator/health/liveness`
+- Readiness: `http://localhost:8080/actuator/health/readiness`
+- Metrics catalog: `http://localhost:8080/actuator/metrics`
+- Prometheus scrape output: `http://localhost:8080/actuator/prometheus`
+
+Only health endpoints are public. Metrics, Prometheus, loggers, and info follow
+the admin-protected actuator surface. Zipkin export remains disabled by default.
+
+Business and security metric names:
+
+- `club.auth.login.success`
+- `club.auth.login.failure`
+- `club.validation.failure`
+- `club.access.denied`
+- `club.schedule.created`
+- `club.schedule.canceled`
+- `club.evaluation.started`
+- `club.evaluation.finalized`
+- `club.evaluation.event.completed`
+- `club.audit.event.recorded`
+- `club.match.analysis.saved`
+
 ## Run the frontend
 
 ```powershell

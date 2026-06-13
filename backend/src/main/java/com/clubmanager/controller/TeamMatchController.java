@@ -7,11 +7,14 @@ import com.clubmanager.dto.TeamMatchCreateRequest;
 import com.clubmanager.dto.TeamMatchResponse;
 import com.clubmanager.dto.TeamMatchUpdateRequest;
 import com.clubmanager.mapper.TeamMatchMapper;
+import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.TeamMatchService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,17 +31,22 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN')")
 public class TeamMatchController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TeamMatchController.class);
+
     private final TeamMatchService teamMatchService;
     private final TeamMatchMapper teamMatchMapper;
     private final AuditEventService auditEventService;
+    private final AppMetricsService appMetricsService;
 
     public TeamMatchController(
             TeamMatchService teamMatchService,
             TeamMatchMapper teamMatchMapper,
-            AuditEventService auditEventService) {
+            AuditEventService auditEventService,
+            AppMetricsService appMetricsService) {
         this.teamMatchService = teamMatchService;
         this.teamMatchMapper = teamMatchMapper;
         this.auditEventService = auditEventService;
+        this.appMetricsService = appMetricsService;
     }
 
     @PostMapping
@@ -100,6 +108,8 @@ public class TeamMatchController {
                 analysis.getUuid(),
                 analysis.getPlayer().getName(),
                 "Match player analysis saved for player: " + analysis.getPlayer().getName());
+        appMetricsService.recordMatchAnalysisSaved();
+        LOGGER.info("Match player analysis saved uuid={} playerUuid={}", analysis.getUuid(), analysis.getPlayer().getUuid());
         return teamMatchMapper.toPlayerAnalysisResponse(analysis);
     }
 
