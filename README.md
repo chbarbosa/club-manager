@@ -8,6 +8,7 @@ the Prompt 01 scaffold: a Spring Boot backend and a React/Vite frontend.
 - Java 21
 - Maven 3.9+
 - Node.js and npm
+- Docker Desktop or Docker Engine with Compose
 
 ## Run the backend
 
@@ -94,6 +95,32 @@ npm.cmd run dev
 ```
 
 The SPA runs at `http://localhost:5173`.
+
+## Run With Docker Compose
+
+The local Docker setup starts the React SPA, Spring Boot backend, Redis, and
+persistent H2 file data:
+
+```powershell
+cd D:\workspace\club-manager
+docker compose up --build
+```
+
+Local Docker URLs:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
+- Health: `http://localhost:8080/actuator/health`
+- Login: `admin` / `admin123`
+
+The backend container stores H2 files in `/app/data`, mounted from the
+repository `data/` directory. Redis is used for login rate limiting in Compose
+with `LOGIN_RATE_LIMIT_STORAGE=redis`.
+
+PostgreSQL deployment is intentionally deferred. Current Flyway migrations
+contain H2-specific SQL such as `RANDOM_UUID()`, `AUTO_INCREMENT`, and
+`IF NOT EXISTS` constraint clauses, so PostgreSQL needs a dedicated migration
+portability or vendor-specific migration slice.
 
 ## Test
 

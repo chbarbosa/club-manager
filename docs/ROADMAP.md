@@ -74,9 +74,11 @@ each item should become a focused implementation plan before coding starts.
 
 ### Docker And Deployment Readiness
 
-- Active next hardening feature.
-- Add Dockerfiles for backend and frontend.
-- Add Docker Compose for local full-stack startup.
-- Support PostgreSQL deployment while keeping H2 convenient for local
-  development.
-- Document required environment variables and deployment profiles.
+- Implemented for local Docker startup.
+- Dockerfiles exist for backend and frontend.
+- Docker Compose starts the frontend, backend, Redis-backed login throttling,
+  and persistent H2 file data.
+- PostgreSQL deployment remains the next deployment subtask because existing
+  Flyway migrations need a portability or vendor-specific migration pass.
+- Future work should document production profiles, reverse proxy/firewall
+  expectations, secret handling, and PostgreSQL backup/restore.
