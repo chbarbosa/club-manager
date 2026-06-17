@@ -12,6 +12,31 @@ each item should become a focused implementation plan before coding starts.
 - Link each championship to one complete team.
 - Track start and end month/year.
 - Show the participating team players from the active team roster.
+- Add the number of expected matches so completed championships can be checked
+  against registered team matches.
+
+### Club Analysis
+
+- Planned as a daily club health snapshot generated from current backend data.
+- The feature name in the UI should remain "Club Analysis".
+- When an admin opens the Club Analysis page, the backend checks whether an
+  analysis already exists for the current day. If it exists, return it. If not,
+  generate and persist one analysis for that day.
+- Keep historical analyses readable through a history list and a detail page.
+- Analysis items should support severity values such as info, warning, and
+  critical so the UI can guide administrators without blocking normal work.
+- Initial checks should include:
+  - number of players and lists of players without skill level or positions;
+  - teams with fewer than 18 active players;
+  - teams without goalkeepers;
+  - teams missing any assistant role;
+  - championships started more than one month ago without registered matches;
+  - ended championships where registered matches are fewer than expected
+    matches;
+  - number and list of evaluations that are not ended;
+  - teams without a scheduled training schedule.
+- Prefer backend-generated analysis items so the rules are consistent across
+  the UI, reports, and future notifications.
 
 ### Reports And Exports
 
