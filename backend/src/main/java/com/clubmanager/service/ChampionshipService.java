@@ -15,19 +15,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ChampionshipService {
 
     private final ChampionshipRepository championshipRepository;
     private final TeamRepository teamRepository;
 
-    public ChampionshipService(
-            ChampionshipRepository championshipRepository,
-            TeamRepository teamRepository) {
-        this.championshipRepository = championshipRepository;
-        this.teamRepository = teamRepository;
-    }
+
 
     @Transactional
     public Championship createChampionship(ChampionshipCreateRequest request) {

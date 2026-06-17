@@ -12,17 +12,16 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final AdminRepository adminRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService, AdminRepository adminRepository) {
-        this.jwtService = jwtService;
-        this.adminRepository = adminRepository;
-    }
+
 
     @Override
     protected void doFilterInternal(

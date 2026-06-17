@@ -3,8 +3,10 @@ package com.clubmanager.service;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AppMetricsService {
 
     public static final String LOGIN_SUCCESS = "club.auth.login.success";
@@ -22,9 +24,7 @@ public class AppMetricsService {
 
     private final MeterRegistry meterRegistry;
 
-    public AppMetricsService(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
-    }
+
 
     public void recordLoginSuccess() {
         increment(LOGIN_SUCCESS);

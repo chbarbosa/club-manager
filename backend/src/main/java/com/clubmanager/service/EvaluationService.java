@@ -39,8 +39,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class EvaluationService {
 
     private final EvaluationRepository evaluationRepository;
@@ -52,24 +54,7 @@ public class EvaluationService {
     private final PlayerSkillHistoryRepository playerSkillHistoryRepository;
     private final AdminRepository adminRepository;
 
-    public EvaluationService(
-            EvaluationRepository evaluationRepository,
-            EvaluationEventRepository evaluationEventRepository,
-            EvaluationEventAttendanceRepository attendanceRepository,
-            EvaluationPlayerRepository evaluationPlayerRepository,
-            EvaluationResultRepository evaluationResultRepository,
-            PlayerRepository playerRepository,
-            PlayerSkillHistoryRepository playerSkillHistoryRepository,
-            AdminRepository adminRepository) {
-        this.evaluationRepository = evaluationRepository;
-        this.evaluationEventRepository = evaluationEventRepository;
-        this.attendanceRepository = attendanceRepository;
-        this.evaluationPlayerRepository = evaluationPlayerRepository;
-        this.evaluationResultRepository = evaluationResultRepository;
-        this.playerRepository = playerRepository;
-        this.playerSkillHistoryRepository = playerSkillHistoryRepository;
-        this.adminRepository = adminRepository;
-    }
+
 
     @Transactional
     public Evaluation createEvaluation(EvaluationCreateRequest request) {

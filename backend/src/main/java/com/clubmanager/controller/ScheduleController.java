@@ -27,10 +27,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/schedules")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class ScheduleController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduleController.class);
@@ -40,16 +42,7 @@ public class ScheduleController {
     private final AuditEventService auditEventService;
     private final AppMetricsService appMetricsService;
 
-    public ScheduleController(
-            ScheduleService scheduleService,
-            ScheduleMapper scheduleMapper,
-            AuditEventService auditEventService,
-            AppMetricsService appMetricsService) {
-        this.scheduleService = scheduleService;
-        this.scheduleMapper = scheduleMapper;
-        this.auditEventService = auditEventService;
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

@@ -13,15 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class TeamMatchMapper {
 
     private final TeamMatchService teamMatchService;
 
-    public TeamMatchMapper(TeamMatchService teamMatchService) {
-        this.teamMatchService = teamMatchService;
-    }
+
 
     public TeamMatchResponse toSummaryResponse(TeamMatch match) {
         return toResponse(match, List.of());

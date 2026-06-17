@@ -21,19 +21,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class TeamService {
 
     private final TeamRepository teamRepository;
     private final TrainerRepository trainerRepository;
     private final AdminRepository adminRepository;
 
-    public TeamService(TeamRepository teamRepository, TrainerRepository trainerRepository, AdminRepository adminRepository) {
-        this.teamRepository = teamRepository;
-        this.trainerRepository = trainerRepository;
-        this.adminRepository = adminRepository;
-    }
+
 
     @Transactional
     public Team createTeam(TeamCreateRequest request) {

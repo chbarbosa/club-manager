@@ -3,17 +3,17 @@ package com.clubmanager.service;
 import com.clubmanager.config.AppSecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AdminPasswordPolicyService {
 
     private static final int MAX_LENGTH = 128;
 
     private final AppSecurityConfig appSecurityConfig;
 
-    public AdminPasswordPolicyService(AppSecurityConfig appSecurityConfig) {
-        this.appSecurityConfig = appSecurityConfig;
-    }
+
 
     public void validate(String password) {
         if (!StringUtils.hasText(password)) {

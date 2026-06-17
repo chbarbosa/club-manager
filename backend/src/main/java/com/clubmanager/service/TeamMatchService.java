@@ -33,8 +33,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class TeamMatchService {
 
     static final String IMPROVEMENT_SETUP_TYPE = "MATCH_IMPROVEMENT_OPPORTUNITY";
@@ -52,24 +54,7 @@ public class TeamMatchService {
     private final ClubSetupRepository clubSetupRepository;
     private final ObjectMapper objectMapper;
 
-    public TeamMatchService(
-            TeamMatchRepository teamMatchRepository,
-            MatchPlayerAnalysisRepository matchPlayerAnalysisRepository,
-            TeamRepository teamRepository,
-            ChampionshipRepository championshipRepository,
-            PlayerRepository playerRepository,
-            PlayerTeamRepository playerTeamRepository,
-            ClubSetupRepository clubSetupRepository,
-            ObjectMapper objectMapper) {
-        this.teamMatchRepository = teamMatchRepository;
-        this.matchPlayerAnalysisRepository = matchPlayerAnalysisRepository;
-        this.teamRepository = teamRepository;
-        this.championshipRepository = championshipRepository;
-        this.playerRepository = playerRepository;
-        this.playerTeamRepository = playerTeamRepository;
-        this.clubSetupRepository = clubSetupRepository;
-        this.objectMapper = objectMapper;
-    }
+
 
     @Transactional
     public TeamMatch createMatch(UUID teamUuid, TeamMatchCreateRequest request) {

@@ -18,8 +18,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ScheduleService {
 
     private static final Set<Integer> ALLOWED_DURATIONS = Set.of(60, 90, 120);
@@ -28,14 +30,7 @@ public class ScheduleService {
     private final TeamRepository teamRepository;
     private final ClubFieldRepository clubFieldRepository;
 
-    public ScheduleService(
-            ScheduleRepository scheduleRepository,
-            TeamRepository teamRepository,
-            ClubFieldRepository clubFieldRepository) {
-        this.scheduleRepository = scheduleRepository;
-        this.teamRepository = teamRepository;
-        this.clubFieldRepository = clubFieldRepository;
-    }
+
 
     @Transactional
     public Schedule createSchedule(ScheduleCreateRequest request) {

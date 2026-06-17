@@ -14,22 +14,17 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class EvaluationPlayerService {
 
     private final EvaluationRepository evaluationRepository;
     private final PlayerRepository playerRepository;
     private final EvaluationPlayerRepository evaluationPlayerRepository;
 
-    public EvaluationPlayerService(
-            EvaluationRepository evaluationRepository,
-            PlayerRepository playerRepository,
-            EvaluationPlayerRepository evaluationPlayerRepository) {
-        this.evaluationRepository = evaluationRepository;
-        this.playerRepository = playerRepository;
-        this.evaluationPlayerRepository = evaluationPlayerRepository;
-    }
+
 
     @Transactional(readOnly = true)
     public List<EvaluationPlayer> getActivePlayers(UUID evaluationUuid) {

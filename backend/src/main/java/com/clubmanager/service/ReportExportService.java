@@ -34,8 +34,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ReportExportService {
 
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
@@ -53,30 +55,7 @@ public class ReportExportService {
     private final MatchPlayerAnalysisRepository matchPlayerAnalysisRepository;
     private final ObjectMapper objectMapper;
 
-    public ReportExportService(
-            PlayerRepository playerRepository,
-            PlayerTeamRepository playerTeamRepository,
-            TeamService teamService,
-            ScheduleRepository scheduleRepository,
-            ChampionshipRepository championshipRepository,
-            EvaluationRepository evaluationRepository,
-            EvaluationPlayerRepository evaluationPlayerRepository,
-            EvaluationResultRepository evaluationResultRepository,
-            TeamMatchRepository teamMatchRepository,
-            MatchPlayerAnalysisRepository matchPlayerAnalysisRepository,
-            ObjectMapper objectMapper) {
-        this.playerRepository = playerRepository;
-        this.playerTeamRepository = playerTeamRepository;
-        this.teamService = teamService;
-        this.scheduleRepository = scheduleRepository;
-        this.championshipRepository = championshipRepository;
-        this.evaluationRepository = evaluationRepository;
-        this.evaluationPlayerRepository = evaluationPlayerRepository;
-        this.evaluationResultRepository = evaluationResultRepository;
-        this.teamMatchRepository = teamMatchRepository;
-        this.matchPlayerAnalysisRepository = matchPlayerAnalysisRepository;
-        this.objectMapper = objectMapper;
-    }
+
 
     @Transactional(readOnly = true)
     public String exportPlayersCsv() {

@@ -15,22 +15,17 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class PlayerTeamService {
 
     private final PlayerTeamRepository playerTeamRepository;
     private final PlayerRepository playerRepository;
     private final TeamRepository teamRepository;
 
-    public PlayerTeamService(
-            PlayerTeamRepository playerTeamRepository,
-            PlayerRepository playerRepository,
-            TeamRepository teamRepository) {
-        this.playerTeamRepository = playerTeamRepository;
-        this.playerRepository = playerRepository;
-        this.teamRepository = teamRepository;
-    }
+
 
     @Transactional(readOnly = true)
     public List<PlayerTeam> getActiveRoster(UUID teamUuid) {

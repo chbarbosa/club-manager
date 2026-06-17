@@ -21,17 +21,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
     private final PlayerSkillHistoryRepository playerSkillHistoryRepository;
 
-    public PlayerService(PlayerRepository playerRepository, PlayerSkillHistoryRepository playerSkillHistoryRepository) {
-        this.playerRepository = playerRepository;
-        this.playerSkillHistoryRepository = playerSkillHistoryRepository;
-    }
+
 
     @Transactional
     public Player createPlayer(PlayerCreateRequest request) {

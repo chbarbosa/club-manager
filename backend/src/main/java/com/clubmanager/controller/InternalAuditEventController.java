@@ -13,19 +13,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/internal/api/v1/audit-events")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class InternalAuditEventController {
 
     private final AuditEventService auditEventService;
     private final AuditEventMapper auditEventMapper;
 
-    public InternalAuditEventController(AuditEventService auditEventService, AuditEventMapper auditEventMapper) {
-        this.auditEventService = auditEventService;
-        this.auditEventMapper = auditEventMapper;
-    }
+
 
     @GetMapping
     public PageResponse<AuditEventResponse> getAuditEvents(

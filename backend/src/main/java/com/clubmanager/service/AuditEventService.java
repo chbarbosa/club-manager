@@ -19,8 +19,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AuditEventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditEventService.class);
@@ -56,14 +58,7 @@ public class AuditEventService {
     private final AdminRepository adminRepository;
     private final AppMetricsService appMetricsService;
 
-    public AuditEventService(
-            AuditEventRepository auditEventRepository,
-            AdminRepository adminRepository,
-            AppMetricsService appMetricsService) {
-        this.auditEventRepository = auditEventRepository;
-        this.adminRepository = adminRepository;
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @Transactional
     public AuditEvent record(String action, String entityType, UUID entityUuid, String entityLabel, String message) {

@@ -11,19 +11,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/reports")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class ReportExportController {
 
     private static final MediaType TEXT_CSV = MediaType.parseMediaType("text/csv");
 
     private final ReportExportService reportExportService;
 
-    public ReportExportController(ReportExportService reportExportService) {
-        this.reportExportService = reportExportService;
-    }
+
 
     @GetMapping("/players.csv")
     public ResponseEntity<String> exportPlayers() {

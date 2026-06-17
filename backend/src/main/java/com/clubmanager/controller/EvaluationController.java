@@ -32,10 +32,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/evaluations")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class EvaluationController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationController.class);
@@ -46,18 +48,7 @@ public class EvaluationController {
     private final AuditEventService auditEventService;
     private final AppMetricsService appMetricsService;
 
-    public EvaluationController(
-            EvaluationService evaluationService,
-            EvaluationMapper evaluationMapper,
-            EvaluationResultMapper evaluationResultMapper,
-            AuditEventService auditEventService,
-            AppMetricsService appMetricsService) {
-        this.evaluationService = evaluationService;
-        this.evaluationMapper = evaluationMapper;
-        this.evaluationResultMapper = evaluationResultMapper;
-        this.auditEventService = auditEventService;
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

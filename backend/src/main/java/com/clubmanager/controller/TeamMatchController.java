@@ -25,10 +25,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/teams/{teamUuid}/matches")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class TeamMatchController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TeamMatchController.class);
@@ -38,16 +40,7 @@ public class TeamMatchController {
     private final AuditEventService auditEventService;
     private final AppMetricsService appMetricsService;
 
-    public TeamMatchController(
-            TeamMatchService teamMatchService,
-            TeamMatchMapper teamMatchMapper,
-            AuditEventService auditEventService,
-            AppMetricsService appMetricsService) {
-        this.teamMatchService = teamMatchService;
-        this.teamMatchMapper = teamMatchMapper;
-        this.auditEventService = auditEventService;
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

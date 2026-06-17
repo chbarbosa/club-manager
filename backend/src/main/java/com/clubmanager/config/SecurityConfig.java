@@ -16,10 +16,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableMethodSecurity
 @EnableConfigurationProperties({JwtConfig.class, AuditInternalApiConfig.class, AppSecurityConfig.class, CorsConfigProperties.class})
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
@@ -28,14 +30,7 @@ public class SecurityConfig {
     private final InternalAuditAccessFilter internalAuditAccessFilter;
     private final AppMetricsService appMetricsService;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter,
-            InternalAuditAccessFilter internalAuditAccessFilter,
-            AppMetricsService appMetricsService) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.internalAuditAccessFilter = internalAuditAccessFilter;
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

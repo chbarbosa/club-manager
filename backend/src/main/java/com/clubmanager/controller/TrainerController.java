@@ -23,24 +23,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/trainers")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class TrainerController {
 
     private final TrainerService trainerService;
     private final TrainerMapper trainerMapper;
     private final AuditEventService auditEventService;
 
-    public TrainerController(
-            TrainerService trainerService,
-            TrainerMapper trainerMapper,
-            AuditEventService auditEventService) {
-        this.trainerService = trainerService;
-        this.trainerMapper = trainerMapper;
-        this.auditEventService = auditEventService;
-    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

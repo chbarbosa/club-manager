@@ -18,23 +18,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/evaluations/{evaluationUuid}/players")
+@RequiredArgsConstructor
 public class EvaluationPlayerController {
 
     private final EvaluationPlayerService evaluationPlayerService;
     private final EvaluationPlayerMapper evaluationPlayerMapper;
     private final AuditEventService auditEventService;
 
-    public EvaluationPlayerController(
-            EvaluationPlayerService evaluationPlayerService,
-            EvaluationPlayerMapper evaluationPlayerMapper,
-            AuditEventService auditEventService) {
-        this.evaluationPlayerService = evaluationPlayerService;
-        this.evaluationPlayerMapper = evaluationPlayerMapper;
-        this.auditEventService = auditEventService;
-    }
+
 
     @GetMapping
     public List<EvaluationPlayerResponse> getActivePlayers(@PathVariable UUID evaluationUuid) {

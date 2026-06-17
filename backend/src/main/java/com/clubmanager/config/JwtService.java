@@ -10,15 +10,15 @@ import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
     private final JwtConfig jwtConfig;
 
-    public JwtService(JwtConfig jwtConfig) {
-        this.jwtConfig = jwtConfig;
-    }
+
 
     public String generateToken(Admin admin) {
         Instant now = Instant.now();

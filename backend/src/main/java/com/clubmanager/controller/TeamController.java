@@ -27,10 +27,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/teams")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class TeamController {
 
     private final TeamService teamService;
@@ -39,18 +41,7 @@ public class TeamController {
     private final TeamAdviceMapper teamAdviceMapper;
     private final AuditEventService auditEventService;
 
-    public TeamController(
-            TeamService teamService,
-            TeamMapper teamMapper,
-            TeamAdviceService teamAdviceService,
-            TeamAdviceMapper teamAdviceMapper,
-            AuditEventService auditEventService) {
-        this.teamService = teamService;
-        this.teamMapper = teamMapper;
-        this.teamAdviceService = teamAdviceService;
-        this.teamAdviceMapper = teamAdviceMapper;
-        this.auditEventService = auditEventService;
-    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

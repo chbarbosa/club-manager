@@ -14,17 +14,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import lombok.RequiredArgsConstructor;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private final AppMetricsService appMetricsService;
 
-    public GlobalExceptionHandler(AppMetricsService appMetricsService) {
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @ExceptionHandler(EntityNotFoundException.class)
     ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException exception) {

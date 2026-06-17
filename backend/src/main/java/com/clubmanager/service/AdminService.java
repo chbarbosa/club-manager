@@ -11,8 +11,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AdminService {
 
     private final AdminRepository adminRepository;
@@ -20,16 +22,7 @@ public class AdminService {
     private final AdminPasswordPolicyService adminPasswordPolicyService;
     private final LoginRateLimiter loginRateLimiter;
 
-    public AdminService(
-            AdminRepository adminRepository,
-            PasswordEncoder passwordEncoder,
-            AdminPasswordPolicyService adminPasswordPolicyService,
-            LoginRateLimiter loginRateLimiter) {
-        this.adminRepository = adminRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.adminPasswordPolicyService = adminPasswordPolicyService;
-        this.loginRateLimiter = loginRateLimiter;
-    }
+
 
     @Transactional
     public Admin register(AdminRegisterRequest request) {

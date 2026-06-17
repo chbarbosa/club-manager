@@ -8,8 +8,10 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class JwtConfigValidator implements ApplicationRunner {
 
     public static final String DEVELOPMENT_SECRET = "Y2x1Yi1tYW5hZ2VyLWRldmVsb3BtZW50LXNlY3JldC1tdXN0LWNoYW5nZQ==";
@@ -19,10 +21,7 @@ public class JwtConfigValidator implements ApplicationRunner {
     private final JwtConfig jwtConfig;
     private final Environment environment;
 
-    public JwtConfigValidator(JwtConfig jwtConfig, Environment environment) {
-        this.jwtConfig = jwtConfig;
-        this.environment = environment;
-    }
+
 
     @Override
     public void run(ApplicationArguments args) {

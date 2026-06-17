@@ -25,9 +25,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class EvaluationEventController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationEventController.class);
@@ -38,18 +40,7 @@ public class EvaluationEventController {
     private final AuditEventService auditEventService;
     private final AppMetricsService appMetricsService;
 
-    public EvaluationEventController(
-            EvaluationEventService evaluationEventService,
-            EvaluationEventMapper evaluationEventMapper,
-            EvaluationEventAttendanceMapper attendanceMapper,
-            AuditEventService auditEventService,
-            AppMetricsService appMetricsService) {
-        this.evaluationEventService = evaluationEventService;
-        this.evaluationEventMapper = evaluationEventMapper;
-        this.attendanceMapper = attendanceMapper;
-        this.auditEventService = auditEventService;
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @GetMapping("/api/v1/evaluations/{evaluationUuid}/events")
     public List<EvaluationEventResponse> getEvents(@PathVariable UUID evaluationUuid) {

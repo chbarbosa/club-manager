@@ -21,9 +21,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
@@ -34,18 +36,7 @@ public class AuthController {
     private final AuditEventService auditEventService;
     private final AppMetricsService appMetricsService;
 
-    public AuthController(
-            AdminService adminService,
-            AdminMapper adminMapper,
-            JwtService jwtService,
-            AuditEventService auditEventService,
-            AppMetricsService appMetricsService) {
-        this.adminService = adminService;
-        this.adminMapper = adminMapper;
-        this.jwtService = jwtService;
-        this.auditEventService = auditEventService;
-        this.appMetricsService = appMetricsService;
-    }
+
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {

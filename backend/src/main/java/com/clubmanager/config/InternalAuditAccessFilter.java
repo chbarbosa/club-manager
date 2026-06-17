@@ -11,8 +11,10 @@ import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class InternalAuditAccessFilter extends OncePerRequestFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InternalAuditAccessFilter.class);
@@ -20,9 +22,7 @@ public class InternalAuditAccessFilter extends OncePerRequestFilter {
 
     private final AuditInternalApiConfig config;
 
-    public InternalAuditAccessFilter(AuditInternalApiConfig config) {
-        this.config = config;
-    }
+
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {

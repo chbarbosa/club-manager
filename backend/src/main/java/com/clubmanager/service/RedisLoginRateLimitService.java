@@ -10,9 +10,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @ConditionalOnProperty(prefix = "app.security.login-rate-limit", name = "storage", havingValue = "redis")
+@RequiredArgsConstructor
 public class RedisLoginRateLimitService implements LoginRateLimiter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisLoginRateLimitService.class);
@@ -22,14 +24,7 @@ public class RedisLoginRateLimitService implements LoginRateLimiter {
     private final AppMetricsService appMetricsService;
     private final StringRedisTemplate redisTemplate;
 
-    public RedisLoginRateLimitService(
-            AppSecurityConfig appSecurityConfig,
-            AppMetricsService appMetricsService,
-            StringRedisTemplate redisTemplate) {
-        this.appSecurityConfig = appSecurityConfig;
-        this.appMetricsService = appMetricsService;
-        this.redisTemplate = redisTemplate;
-    }
+
 
     @Override
     public void ensureAllowed(String username, String clientAddress) {

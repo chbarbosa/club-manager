@@ -25,8 +25,10 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class EvaluationEventService {
 
     private static final Set<Integer> ALLOWED_DURATIONS = Set.of(60, 90, 120);
@@ -37,18 +39,7 @@ public class EvaluationEventService {
     private final EvaluationEventAttendanceRepository attendanceRepository;
     private final PlayerRepository playerRepository;
 
-    public EvaluationEventService(
-            EvaluationRepository evaluationRepository,
-            EvaluationEventRepository evaluationEventRepository,
-            EvaluationPlayerRepository evaluationPlayerRepository,
-            EvaluationEventAttendanceRepository attendanceRepository,
-            PlayerRepository playerRepository) {
-        this.evaluationRepository = evaluationRepository;
-        this.evaluationEventRepository = evaluationEventRepository;
-        this.evaluationPlayerRepository = evaluationPlayerRepository;
-        this.attendanceRepository = attendanceRepository;
-        this.playerRepository = playerRepository;
-    }
+
 
     @Transactional(readOnly = true)
     public List<EvaluationEvent> getEvents(UUID evaluationUuid) {

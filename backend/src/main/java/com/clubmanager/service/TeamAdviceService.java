@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class TeamAdviceService {
 
     public static final int MINIMUM_PLAYERS_FOR_ADVICE = 12;
@@ -22,9 +24,7 @@ public class TeamAdviceService {
 
     private final PlayerTeamRepository playerTeamRepository;
 
-    public TeamAdviceService(PlayerTeamRepository playerTeamRepository) {
-        this.playerTeamRepository = playerTeamRepository;
-    }
+
 
     @Transactional(readOnly = true)
     public TeamAdvice analyze(Team team) {

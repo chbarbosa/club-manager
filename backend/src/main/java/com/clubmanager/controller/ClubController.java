@@ -17,20 +17,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/club")
+@RequiredArgsConstructor
 public class ClubController {
 
     private final ClubService clubService;
     private final ClubMapper clubMapper;
     private final ClubSetupMapper clubSetupMapper;
 
-    public ClubController(ClubService clubService, ClubMapper clubMapper, ClubSetupMapper clubSetupMapper) {
-        this.clubService = clubService;
-        this.clubMapper = clubMapper;
-        this.clubSetupMapper = clubSetupMapper;
-    }
+
 
     @GetMapping
     public ClubResponse getClub() {

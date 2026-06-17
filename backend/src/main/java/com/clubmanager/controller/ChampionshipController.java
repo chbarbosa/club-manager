@@ -22,24 +22,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/championships")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class ChampionshipController {
 
     private final ChampionshipService championshipService;
     private final ChampionshipMapper championshipMapper;
     private final AuditEventService auditEventService;
 
-    public ChampionshipController(
-            ChampionshipService championshipService,
-            ChampionshipMapper championshipMapper,
-            AuditEventService auditEventService) {
-        this.championshipService = championshipService;
-        this.championshipMapper = championshipMapper;
-        this.auditEventService = auditEventService;
-    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

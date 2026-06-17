@@ -17,8 +17,10 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ClubService {
 
     private static final Pattern HEX_COLOUR = Pattern.compile("^#[0-9A-Fa-f]{6}$");
@@ -27,15 +29,7 @@ public class ClubService {
     private final ClubSetupRepository clubSetupRepository;
     private final ObjectMapper objectMapper;
 
-    public ClubService(
-            ClubRepository clubRepository,
-            ClubSetupRepository clubSetupRepository,
-            ObjectMapper objectMapper
-    ) {
-        this.clubRepository = clubRepository;
-        this.clubSetupRepository = clubSetupRepository;
-        this.objectMapper = objectMapper;
-    }
+
 
     @Transactional(readOnly = true)
     public Club getClub() {
