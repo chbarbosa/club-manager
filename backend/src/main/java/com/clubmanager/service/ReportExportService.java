@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -54,8 +54,6 @@ public class ReportExportService {
     private final TeamMatchRepository teamMatchRepository;
     private final MatchPlayerAnalysisRepository matchPlayerAnalysisRepository;
     private final ObjectMapper objectMapper;
-
-
 
     @Transactional(readOnly = true)
     public String exportPlayersCsv() {
@@ -143,6 +141,7 @@ public class ReportExportService {
                 "Name",
                 "Team",
                 "Period",
+                "Expected Matches",
                 "Status",
                 "Description"));
 
@@ -153,6 +152,7 @@ public class ReportExportService {
                         teamLabel(championship.getTeam()),
                         championship.getStartMonth() + "/" + championship.getStartYear()
                                 + " - " + championship.getEndMonth() + "/" + championship.getEndYear(),
+                        String.valueOf(championship.getExpectedMatches()),
                         championship.isActive() ? "Active" : "Inactive",
                         valueOrBlank(championship.getDescription()))));
         return csv.toString();

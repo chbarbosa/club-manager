@@ -11,11 +11,11 @@ import com.clubmanager.repository.ChampionshipRepository;
 import com.clubmanager.repository.TeamRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -24,12 +24,11 @@ public class ChampionshipService {
     private final ChampionshipRepository championshipRepository;
     private final TeamRepository teamRepository;
 
-
-
     @Transactional
     public Championship createChampionship(ChampionshipCreateRequest request) {
         requireText(request.name(), "name");
         validatePeriod(request.startMonth(), request.startYear(), request.endMonth(), request.endYear());
+        validateExpectedMatches(request.expectedMatches());
         Championship championship = Championship.builder()
                 .name(request.name().trim())
                 .description(cleanOptionalText(request.description()))
@@ -38,6 +37,7 @@ public class ChampionshipService {
                 .startYear(request.startYear())
                 .endMonth(request.endMonth())
                 .endYear(request.endYear())
+                .expectedMatches(request.expectedMatches())
                 .build();
         return championshipRepository.save(championship);
     }
@@ -86,6 +86,10 @@ public class ChampionshipService {
         championship.setStartYear(startYear);
         championship.setEndMonth(endMonth);
         championship.setEndYear(endYear);
+        if (request.expectedMatches() != null) {
+            validateExpectedMatches(request.expectedMatches());
+            championship.setExpectedMatches(request.expectedMatches());
+        }
 
         return championshipRepository.save(championship);
     }
@@ -139,6 +143,15 @@ public class ChampionshipService {
         }
         if (endYearValue < startYearValue || (endYearValue == startYearValue && endMonthValue < startMonthValue)) {
             throw new IllegalArgumentException("Championship end period must be after the start period");
+        }
+    }
+
+    private void validateExpectedMatches(Integer expectedMatches) {
+        if (expectedMatches == null) {
+            throw new IllegalArgumentException("Expected matches is required");
+        }
+        if (expectedMatches < 0) {
+            throw new IllegalArgumentException("Expected matches cannot be negative");
         }
     }
 

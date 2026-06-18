@@ -59,6 +59,7 @@ test('admin can create a championship and see the participating team players', a
   await page.getByLabel('Start year').fill('2026')
   await page.getByLabel('End month').selectOption('6')
   await page.getByLabel('End year').fill('2026')
+  await page.getByLabel('Expected matches').fill('12')
   await page.getByRole('button', { name: 'Save championship' }).click()
 
   await expect(page.getByText('Championship created.')).toBeVisible()
@@ -69,6 +70,8 @@ test('admin can create a championship and see the participating team players', a
   await page.locator('tr').filter({ hasText: championshipName }).getByRole('link', { name: 'View' }).click()
   await expect(page.getByRole('heading', { name: championshipName })).toBeVisible()
   await expect(page.getByText(`${teamName} Masculine`)).toBeVisible()
+  await expect(page.getByText('Expected matches')).toBeVisible()
+  await expect(page.getByText('12')).toBeVisible()
   await expect(page.getByText('The complete active team participates in this championship.')).toBeVisible()
   await expect(page.getByRole('cell', { name: playerName })).toBeVisible()
   await expect(page.getByText('1 active player')).toBeVisible()

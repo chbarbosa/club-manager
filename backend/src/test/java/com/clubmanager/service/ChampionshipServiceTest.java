@@ -47,13 +47,14 @@ class ChampionshipServiceTest {
         when(championshipRepository.save(any(Championship.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Championship championship = championshipService.createChampionship(new ChampionshipCreateRequest(
-                " City Cup ", " Spring tournament ", team.getUuid(), 4, 2026, 6, 2026));
+                " City Cup ", " Spring tournament ", team.getUuid(), 4, 2026, 6, 2026, 12));
 
         assertThat(championship.getName()).isEqualTo("City Cup");
         assertThat(championship.getDescription()).isEqualTo("Spring tournament");
         assertThat(championship.getTeam()).isEqualTo(team);
         assertThat(championship.getStartMonth()).isEqualTo(4);
         assertThat(championship.getEndMonth()).isEqualTo(6);
+        assertThat(championship.getExpectedMatches()).isEqualTo(12);
         assertThat(championship.isActive()).isTrue();
     }
 
@@ -63,7 +64,7 @@ class ChampionshipServiceTest {
         when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
 
         assertThatThrownBy(() -> championshipService.createChampionship(new ChampionshipCreateRequest(
-                "City Cup", null, team.getUuid(), 4, 2026, 6, 2026)))
+                "City Cup", null, team.getUuid(), 4, 2026, 6, 2026, 12)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Championship team must be active");
     }
@@ -73,9 +74,19 @@ class ChampionshipServiceTest {
         Team team = team(true);
 
         assertThatThrownBy(() -> championshipService.createChampionship(new ChampionshipCreateRequest(
-                "City Cup", null, team.getUuid(), 9, 2026, 6, 2026)))
+                "City Cup", null, team.getUuid(), 9, 2026, 6, 2026, 12)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Championship end period must be after the start period");
+    }
+
+    @Test
+    void createChampionship_WithNegativeExpectedMatches_ThrowsValidationException() {
+        Team team = team(true);
+
+        assertThatThrownBy(() -> championshipService.createChampionship(new ChampionshipCreateRequest(
+                "City Cup", null, team.getUuid(), 4, 2026, 6, 2026, -1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Expected matches cannot be negative");
     }
 
     @Test
@@ -86,12 +97,13 @@ class ChampionshipServiceTest {
 
         Championship updated = championshipService.updateChampionship(
                 championship.getUuid(),
-                new ChampionshipUpdateRequest(" Autumn Cup ", " Fall season ", null, 8, 2026, 11, 2026));
+                new ChampionshipUpdateRequest(" Autumn Cup ", " Fall season ", null, 8, 2026, 11, 2026, 14));
 
         assertThat(updated.getName()).isEqualTo("Autumn Cup");
         assertThat(updated.getDescription()).isEqualTo("Fall season");
         assertThat(updated.getStartMonth()).isEqualTo(8);
         assertThat(updated.getEndMonth()).isEqualTo(11);
+        assertThat(updated.getExpectedMatches()).isEqualTo(14);
     }
 
     @Test
@@ -102,7 +114,7 @@ class ChampionshipServiceTest {
 
         assertThatThrownBy(() -> championshipService.updateChampionship(
                 championship.getUuid(),
-                new ChampionshipUpdateRequest("Autumn Cup", null, null, null, null, null, null)))
+                new ChampionshipUpdateRequest("Autumn Cup", null, null, null, null, null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Inactive championships cannot be changed");
     }
@@ -115,6 +127,7 @@ class ChampionshipServiceTest {
                 .startYear(2026)
                 .endMonth(6)
                 .endYear(2026)
+                .expectedMatches(12)
                 .build();
     }
 

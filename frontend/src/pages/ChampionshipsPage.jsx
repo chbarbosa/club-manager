@@ -29,6 +29,7 @@ const EMPTY_FORM = {
   startYear: String(CURRENT_YEAR),
   endMonth: '12',
   endYear: String(CURRENT_YEAR),
+  expectedMatches: '0',
 }
 
 export default function ChampionshipsPage() {
@@ -100,6 +101,7 @@ export default function ChampionshipsPage() {
         startYear: Number(form.startYear),
         endMonth: Number(form.endMonth),
         endYear: Number(form.endYear),
+        expectedMatches: Number(form.expectedMatches),
       })
       setMessage('Championship created.')
       setForm((currentForm) => ({ ...EMPTY_FORM, teamUuid: currentForm.teamUuid }))
@@ -210,6 +212,10 @@ export default function ChampionshipsPage() {
               <label className="form-label" htmlFor="championship-end-year">End year</label>
               <input className="form-control" id="championship-end-year" min="2000" name="endYear" onChange={updateForm} required type="number" value={form.endYear} />
             </div>
+            <div className="col-md-3">
+              <label className="form-label" htmlFor="championship-expected-matches">Expected matches</label>
+              <input className="form-control" id="championship-expected-matches" min="0" name="expectedMatches" onChange={updateForm} required type="number" value={form.expectedMatches} />
+            </div>
             <div className="col-12">
               <button className="btn btn-primary" disabled={submitting || teams.length === 0} type="submit">
                 {submitting ? 'Saving...' : 'Save championship'}
@@ -244,6 +250,7 @@ export default function ChampionshipsPage() {
             <th>Name</th>
             <th>Team</th>
             <th>Period</th>
+            <th>Expected matches</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -254,6 +261,7 @@ export default function ChampionshipsPage() {
               <td>{championship.name}</td>
               <td>{teamLabel(championship)}</td>
               <td>{formatPeriod(championship)}</td>
+              <td>{championship.expectedMatches}</td>
               <td><span className={`badge ${championship.active ? 'text-bg-success' : 'text-bg-secondary'}`}>{championship.active ? 'Active' : 'Inactive'}</span></td>
               <td>
                 <div className="d-flex gap-2">

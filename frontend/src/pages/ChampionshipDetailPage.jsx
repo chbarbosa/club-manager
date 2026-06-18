@@ -48,6 +48,7 @@ export default function ChampionshipDetailPage() {
         startYear: String(response.startYear),
         endMonth: String(response.endMonth),
         endYear: String(response.endYear),
+        expectedMatches: String(response.expectedMatches ?? 0),
       })
       setTeamPlayers(await getTeamRoster(response.teamUuid))
     } catch (requestError) {
@@ -71,6 +72,7 @@ export default function ChampionshipDetailPage() {
         startYear: Number(form.startYear),
         endMonth: Number(form.endMonth),
         endYear: Number(form.endYear),
+        expectedMatches: Number(form.expectedMatches),
       })
       setChampionship(updated)
       setEditing(false)
@@ -158,6 +160,10 @@ export default function ChampionshipDetailPage() {
                     <label className="form-label" htmlFor="championship-edit-end-year">End year</label>
                     <input className="form-control" id="championship-edit-end-year" min="2000" name="endYear" onChange={updateForm} required type="number" value={form.endYear} />
                   </div>
+                  <div className="col-md-3">
+                    <label className="form-label" htmlFor="championship-edit-expected-matches">Expected matches</label>
+                    <input className="form-control" id="championship-edit-expected-matches" min="0" name="expectedMatches" onChange={updateForm} required type="number" value={form.expectedMatches} />
+                  </div>
                   <div className="col-12 d-flex gap-2">
                     <button className="btn btn-primary" type="submit">Save changes</button>
                     <button className="btn btn-outline-secondary" onClick={() => setEditing(false)} type="button">Cancel</button>
@@ -171,6 +177,8 @@ export default function ChampionshipDetailPage() {
               <dd className="col-sm-9">{championship.description || '-'}</dd>
               <dt className="col-sm-3">Team trainer</dt>
               <dd className="col-sm-9">{championship.trainerName}</dd>
+              <dt className="col-sm-3">Expected matches</dt>
+              <dd className="col-sm-9">{championship.expectedMatches}</dd>
             </dl>
           )}
 

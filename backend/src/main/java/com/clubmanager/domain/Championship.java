@@ -42,6 +42,9 @@ public class Championship extends AbstractEntity {
     @Column(nullable = false)
     private int endYear;
 
+    @Column(nullable = false)
+    private int expectedMatches;
+
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;

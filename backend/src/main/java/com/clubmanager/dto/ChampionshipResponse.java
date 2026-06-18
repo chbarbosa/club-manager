@@ -17,5 +17,6 @@ public record ChampionshipResponse(
         int startYear,
         int endMonth,
         int endYear,
+        int expectedMatches,
         boolean active) {
 }

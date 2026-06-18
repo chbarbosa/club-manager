@@ -41,6 +41,7 @@ class ChampionshipControllerTest {
                 .andExpect(jsonPath("$.teamIdentification").isString())
                 .andExpect(jsonPath("$.startMonth").value(4))
                 .andExpect(jsonPath("$.endMonth").value(6))
+                .andExpect(jsonPath("$.expectedMatches").value(12))
                 .andExpect(jsonPath("$.active").value(true))
                 .andExpect(jsonPath("$.id").doesNotExist());
     }
@@ -59,11 +60,33 @@ class ChampionshipControllerTest {
                                   "startMonth": 8,
                                   "startYear": 2026,
                                   "endMonth": 6,
-                                  "endYear": 2026
+                                  "endYear": 2026,
+                                  "expectedMatches": 12
                                 }
                                 """.formatted(teamUuid)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Championship end period must be after the start period"));
+    }
+
+    @Test
+    void createChampionship_WithNegativeExpectedMatches_ReturnsBadRequest() throws Exception {
+        String teamUuid = createTeam();
+
+        mockMvc.perform(post("/api/v1/championships")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Bad Matches Cup",
+                                  "teamUuid": "%s",
+                                  "startMonth": 4,
+                                  "startYear": 2026,
+                                  "endMonth": 6,
+                                  "endYear": 2026,
+                                  "expectedMatches": -1
+                                }
+                                """.formatted(teamUuid)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -92,6 +115,7 @@ class ChampionshipControllerTest {
                 .andExpect(jsonPath("$.uuid").value(championshipUuid))
                 .andExpect(jsonPath("$.teamUuid").value(teamUuid))
                 .andExpect(jsonPath("$.trainerName").isString())
+                .andExpect(jsonPath("$.expectedMatches").value(12))
                 .andExpect(jsonPath("$.id").doesNotExist());
     }
 
@@ -162,7 +186,8 @@ class ChampionshipControllerTest {
                   "startMonth": 4,
                   "startYear": 2026,
                   "endMonth": 6,
-                  "endYear": 2026
+                  "endYear": 2026,
+                  "expectedMatches": 12
                 }
                 """.formatted(name, teamUuid);
     }

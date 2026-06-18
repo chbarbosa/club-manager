@@ -105,7 +105,7 @@ class ReportExportControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString("championships.csv")))
-                .andExpect(content().string(containsString("Name,Team,Period,Status,Description")))
+                .andExpect(content().string(containsString("Name,Team,Period,Expected Matches,Status,Description")))
                 .andExpect(content().string(containsString("CSV Championship")))
                 .andExpect(content().string(not(containsString("id"))));
     }
@@ -215,7 +215,8 @@ class ReportExportControllerTest {
                                   "startMonth": 1,
                                   "startYear": 2026,
                                   "endMonth": 12,
-                                  "endYear": 2026
+                                  "endYear": 2026,
+                                  "expectedMatches": 20
                                 }
                                 """.formatted(teamUuid)))
                 .andExpect(status().isCreated());

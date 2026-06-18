@@ -1,5 +1,6 @@
 package com.clubmanager.dto;
 
+import jakarta.validation.constraints.Min;
 import java.util.UUID;
 
 public record ChampionshipUpdateRequest(
@@ -9,5 +10,6 @@ public record ChampionshipUpdateRequest(
         Integer startMonth,
         Integer startYear,
         Integer endMonth,
-        Integer endYear) {
+        Integer endYear,
+        @Min(0) Integer expectedMatches) {
 }
