@@ -28,6 +28,21 @@ const EMPTY_MATCH_FORM = {
   notes: '',
 }
 
+const MONTHS = [
+  ['1', 'January'],
+  ['2', 'February'],
+  ['3', 'March'],
+  ['4', 'April'],
+  ['5', 'May'],
+  ['6', 'June'],
+  ['7', 'July'],
+  ['8', 'August'],
+  ['9', 'September'],
+  ['10', 'October'],
+  ['11', 'November'],
+  ['12', 'December'],
+]
+
 export default function TeamDetailPage() {
   const { uuid } = useParams()
   const location = useLocation()
@@ -241,6 +256,8 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
+          <CurrentChampionshipSummary championships={championships} teamUuid={team.uuid} />
+
           <TeamAdviceSummary advice={team.advice} />
 
           {editing ? (
@@ -420,6 +437,45 @@ export default function TeamDetailPage() {
   )
 }
 
+function CurrentChampionshipSummary({ championships, teamUuid }) {
+  if (championships.length === 0) {
+    return (
+      <section className="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <strong>No active championship associated.</strong>
+          <div>This team is not currently linked to an active championship.</div>
+        </div>
+        <Link className="btn btn-danger" to={`/championships?teamUuid=${teamUuid}`}>
+          Add championship
+        </Link>
+      </section>
+    )
+  }
+
+  return (
+    <section className="card border-success mb-4">
+      <div className="card-body">
+        <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
+          <div>
+            <h2 className="h5 mb-2">Current championship</h2>
+            {championships.map((championship) => (
+              <div className="mb-2" key={championship.uuid}>
+                <Link className="fw-semibold" to={`/championships/${championship.uuid}`}>
+                  {championship.name}
+                </Link>
+                <span className="text-muted ms-2">{formatChampionshipPeriod(championship)}</span>
+              </div>
+            ))}
+          </div>
+          <span className="badge text-bg-success">
+            {championships.length} active championship{championships.length === 1 ? '' : 's'}
+          </span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function TeamAdviceSummary({ advice }) {
   if (!advice) {
     return null
@@ -535,6 +591,14 @@ function formatDate(value) {
 
 function formatDateTime(value) {
   return value ? new Date(value).toLocaleString() : '-'
+}
+
+function formatChampionshipPeriod(championship) {
+  return `${monthName(championship.startMonth)} ${championship.startYear} - ${monthName(championship.endMonth)} ${championship.endYear}`
+}
+
+function monthName(month) {
+  return MONTHS.find(([value]) => Number(value) === Number(month))?.[1] ?? month
 }
 
 function formatScore(match) {

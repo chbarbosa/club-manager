@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { createChampionship, deactivateChampionship, getAllChampionships, reactivateChampionship } from '../api/championships.js'
 import { exportChampionshipsCsv } from '../api/reports.js'
 import { getAllTeams } from '../api/teams.js'
@@ -33,12 +33,14 @@ const EMPTY_FORM = {
 }
 
 export default function ChampionshipsPage() {
+  const location = useLocation()
+  const initialTeamFilter = new URLSearchParams(location.search).get('teamUuid') ?? ''
   const [championships, setChampionships] = useState([])
   const [teams, setTeams] = useState([])
   const [pageInfo, setPageInfo] = useState({ number: 0, totalPages: 0 })
   const [page, setPage] = useState(0)
   const [nameFilter, setNameFilter] = useState('')
-  const [teamFilter, setTeamFilter] = useState('')
+  const [teamFilter, setTeamFilter] = useState(initialTeamFilter)
   const [form, setForm] = useState(EMPTY_FORM)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')

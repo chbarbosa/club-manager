@@ -50,6 +50,8 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await expect(page.getByRole('heading', { name: `${identification} Masculine` })).toBeVisible()
   await expect(page.getByText(trainerName)).toBeVisible()
   await expect(page.getByText('0 active players').first()).toBeVisible()
+  await expect(page.getByText('No active championship associated.')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Add championship' })).toBeVisible()
 
   await page.getByLabel('Player').selectOption({ label: playerName })
   await page.getByRole('button', { name: 'Assign player' }).click()
