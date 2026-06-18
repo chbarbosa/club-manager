@@ -5,9 +5,12 @@ import static com.clubmanager.service.ServiceDataHelper.applyTextUpdate;
 import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.TrainerCreateRequest;
 import com.clubmanager.dto.TrainerUpdateRequest;
+import com.clubmanager.domain.Team;
+import com.clubmanager.repository.TeamRepository;
 import com.clubmanager.repository.TrainerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,7 @@ import org.springframework.util.StringUtils;
 public class TrainerService {
 
     private final TrainerRepository trainerRepository;
+    private final TeamRepository teamRepository;
 
     @Transactional
     public Trainer createTrainer(TrainerCreateRequest request) {
@@ -45,6 +49,12 @@ public class TrainerService {
     public Trainer getTrainerByUuid(UUID uuid) {
         return trainerRepository.findByUuid(uuid)
                 .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + uuid));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Team> getTeamHistory(UUID uuid) {
+        Trainer trainer = getTrainerByUuid(uuid);
+        return teamRepository.findByTrainerOrSubTrainerOrderByAgeGroupAsc(trainer, trainer);
     }
 
     @Transactional(readOnly = true)

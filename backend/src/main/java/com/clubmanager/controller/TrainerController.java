@@ -1,6 +1,8 @@
 package com.clubmanager.controller;
 
+import com.clubmanager.domain.Team;
 import com.clubmanager.dto.PageResponse;
+import com.clubmanager.dto.TrainerTeamHistoryResponse;
 import com.clubmanager.dto.TrainerCreateRequest;
 import com.clubmanager.dto.TrainerResponse;
 import com.clubmanager.dto.TrainerSummaryResponse;
@@ -62,6 +64,14 @@ public class TrainerController {
         return trainerMapper.toResponse(trainerService.getTrainerByUuid(uuid));
     }
 
+    @GetMapping("/{uuid}/teams")
+    public java.util.List<TrainerTeamHistoryResponse> getTrainerTeams(@PathVariable UUID uuid) {
+        var trainer = trainerService.getTrainerByUuid(uuid);
+        return trainerService.getTeamHistory(uuid).stream()
+                .map(team -> toTeamHistoryResponse(team, trainer.getUuid()))
+                .toList();
+    }
+
     @PutMapping("/{uuid}")
     public TrainerResponse updateTrainer(@PathVariable UUID uuid, @Valid @RequestBody TrainerUpdateRequest request) {
         var trainer = trainerService.updateTrainer(uuid, request);
@@ -96,5 +106,16 @@ public class TrainerController {
                 trainer.getName(),
                 "Trainer reactivated: " + trainer.getName());
         return trainerMapper.toResponse(trainer);
+    }
+
+    private TrainerTeamHistoryResponse toTeamHistoryResponse(Team team, UUID trainerUuid) {
+        String role = team.getTrainer().getUuid().equals(trainerUuid) ? "Trainer" : "Assistant trainer";
+        return new TrainerTeamHistoryResponse(
+                team.getUuid(),
+                team.getAgeGroup(),
+                team.getAgeCategory(),
+                team.getTeamCategory(),
+                role,
+                team.isActive());
     }
 }

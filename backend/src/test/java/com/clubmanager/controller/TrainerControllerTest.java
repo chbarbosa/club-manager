@@ -151,6 +151,29 @@ class TrainerControllerTest {
     }
 
     @Test
+    void getTrainerTeams_ReturnsMainAndAssistantTeamHistory() throws Exception {
+        String mainTrainerUuid = createTrainer("Main Trainer " + System.nanoTime());
+        String assistantTrainerUuid = createTrainer("Assistant Trainer " + System.nanoTime());
+        String otherTrainerUuid = createTrainer("Other Trainer " + System.nanoTime());
+        String mainTeamUuid = createTeam("Main Team " + System.nanoTime(), mainTrainerUuid, null);
+        String assistantTeamUuid = createTeam("Assistant Team " + System.nanoTime(), otherTrainerUuid, assistantTrainerUuid);
+
+        mockMvc.perform(get("/api/v1/trainers/{uuid}/teams", mainTrainerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].teamUuid", hasItem(mainTeamUuid)))
+                .andExpect(jsonPath("$[?(@.teamUuid == '%s')].role".formatted(mainTeamUuid)).value(hasItem("Trainer")))
+                .andExpect(jsonPath("$[*].teamUuid", not(hasItem(assistantTeamUuid))));
+
+        mockMvc.perform(get("/api/v1/trainers/{uuid}/teams", assistantTrainerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].teamUuid", hasItem(assistantTeamUuid)))
+                .andExpect(jsonPath("$[?(@.teamUuid == '%s')].role".formatted(assistantTeamUuid)).value(hasItem("Assistant trainer")))
+                .andExpect(jsonPath("$[0].id").doesNotExist());
+    }
+
+    @Test
     void getTrainerByUuid_WithUnknownUuid_ReturnsNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/trainers/{uuid}", "00000000-0000-0000-0000-000000000000")
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -210,6 +233,28 @@ class TrainerControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTrainerJson(name)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String createTeam(String identification, String trainerUuid, String subTrainerUuid) throws Exception {
+        String subTrainerLine = subTrainerUuid == null ? "" : """
+                  ,"subTrainerUuid": "%s"
+                """.formatted(subTrainerUuid);
+        String response = mockMvc.perform(post("/api/v1/teams")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "identification": "%s",
+                                  "ageCategory": "U13",
+                                  "teamCategory": "MASCULINE",
+                                  "trainerUuid": "%s"%s
+                                }
+                                """.formatted(identification, trainerUuid, subTrainerLine)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()

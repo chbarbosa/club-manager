@@ -2,6 +2,8 @@ package com.clubmanager.repository;
 
 import com.clubmanager.domain.Team;
 import com.clubmanager.domain.TeamCategory;
+import com.clubmanager.domain.Trainer;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -26,4 +28,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     @EntityGraph(attributePaths = {"trainer", "subTrainer", "assistantAdmin"})
     Page<Team> findByAgeGroupContainingIgnoreCaseAndTeamCategory(String ageGroup, TeamCategory teamCategory, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"trainer", "subTrainer", "assistantAdmin"})
+    List<Team> findByTrainerOrSubTrainerOrderByAgeGroupAsc(Trainer trainer, Trainer subTrainer);
 }

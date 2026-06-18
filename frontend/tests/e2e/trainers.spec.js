@@ -28,6 +28,8 @@ test('admin can create, search, view, and deactivate a trainer', async ({ page }
   await page.locator('tr').filter({ hasText: trainerName }).getByRole('link', { name: 'View' }).click()
   await expect(page.getByRole('heading', { name: trainerName })).toBeVisible()
   await expect(page.getByText(trainerEmail)).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Team history' })).toBeVisible()
+  await expect(page.getByText('No teams associated with this trainer.')).toBeVisible()
 
   await page.getByRole('button', { name: 'Deactivate' }).click()
   await expect(page.getByText('Trainer deactivated.')).toBeVisible()

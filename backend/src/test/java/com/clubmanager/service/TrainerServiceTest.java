@@ -7,8 +7,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.clubmanager.domain.Trainer;
+import com.clubmanager.domain.Team;
 import com.clubmanager.dto.TrainerCreateRequest;
 import com.clubmanager.dto.TrainerUpdateRequest;
+import com.clubmanager.repository.TeamRepository;
 import com.clubmanager.repository.TrainerRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -28,11 +30,14 @@ class TrainerServiceTest {
     @Mock
     private TrainerRepository trainerRepository;
 
+    @Mock
+    private TeamRepository teamRepository;
+
     private TrainerService trainerService;
 
     @BeforeEach
     void setUp() {
-        trainerService = new TrainerService(trainerRepository);
+        trainerService = new TrainerService(trainerRepository, teamRepository);
     }
 
     @Test
@@ -174,6 +179,21 @@ class TrainerServiceTest {
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(trainerRepository).findAllByActiveFalse(pageable);
+    }
+
+    @Test
+    void getTeamHistory_ReturnsTeamsWhereTrainerIsMainOrAssistant() {
+        Trainer trainer = trainer();
+        Team team = Team.builder()
+                .ageGroup("Under 13 A")
+                .trainer(trainer)
+                .build();
+        when(trainerRepository.findByUuid(trainer.getUuid())).thenReturn(Optional.of(trainer));
+        when(teamRepository.findByTrainerOrSubTrainerOrderByAgeGroupAsc(trainer, trainer)).thenReturn(List.of(team));
+
+        List<Team> result = trainerService.getTeamHistory(trainer.getUuid());
+
+        assertThat(result).containsExactly(team);
     }
 
     private TrainerCreateRequest createRequest(LocalDate birthdate) {

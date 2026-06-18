@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { deactivateTrainer, getTrainer, reactivateTrainer, updateTrainer } from '../api/trainers.js'
+import { deactivateTrainer, getTrainer, getTrainerTeams, reactivateTrainer, updateTrainer } from '../api/trainers.js'
 import TrainerForm from '../components/trainers/TrainerForm.jsx'
 
 export default function TrainerDetailPage() {
   const { uuid } = useParams()
   const location = useLocation()
   const [trainer, setTrainer] = useState(null)
+  const [teams, setTeams] = useState([])
   const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -18,7 +19,12 @@ export default function TrainerDetailPage() {
   async function loadTrainer() {
     setError('')
     try {
-      setTrainer(await getTrainer(uuid))
+      const [trainerResponse, teamResponse] = await Promise.all([
+        getTrainer(uuid),
+        getTrainerTeams(uuid),
+      ])
+      setTrainer(trainerResponse)
+      setTeams(teamResponse)
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load trainer.')
     }
@@ -89,28 +95,61 @@ export default function TrainerDetailPage() {
               </div>
             </div>
           ) : (
-            <dl className="row">
-              <dt className="col-sm-3">Email</dt>
-              <dd className="col-sm-9">{trainer.email || '-'}</dd>
-              <dt className="col-sm-3">Phone</dt>
-              <dd className="col-sm-9">{trainer.phone || '-'}</dd>
-              <dt className="col-sm-3">Birth country</dt>
-              <dd className="col-sm-9">{trainer.birthCountry || '-'}</dd>
-              <dt className="col-sm-3">Living country</dt>
-              <dd className="col-sm-9">{trainer.livingCountry || '-'}</dd>
-              <dt className="col-sm-3">Birthdate</dt>
-              <dd className="col-sm-9">{formatDate(trainer.birthdate)}</dd>
-              {trainer.age !== null && trainer.age !== undefined && (
-                <>
-                  <dt className="col-sm-3">Age</dt>
-                  <dd className="col-sm-9">{trainer.age}</dd>
-                </>
-              )}
-              <dt className="col-sm-3">Register date</dt>
-              <dd className="col-sm-9">{formatDate(trainer.registerDate)}</dd>
-              <dt className="col-sm-3">Member since</dt>
-              <dd className="col-sm-9">{formatDate(trainer.memberSince)}</dd>
-            </dl>
+            <>
+              <dl className="row">
+                <dt className="col-sm-3">Email</dt>
+                <dd className="col-sm-9">{trainer.email || '-'}</dd>
+                <dt className="col-sm-3">Phone</dt>
+                <dd className="col-sm-9">{trainer.phone || '-'}</dd>
+                <dt className="col-sm-3">Birth country</dt>
+                <dd className="col-sm-9">{trainer.birthCountry || '-'}</dd>
+                <dt className="col-sm-3">Living country</dt>
+                <dd className="col-sm-9">{trainer.livingCountry || '-'}</dd>
+                <dt className="col-sm-3">Birthdate</dt>
+                <dd className="col-sm-9">{formatDate(trainer.birthdate)}</dd>
+                {trainer.age !== null && trainer.age !== undefined && (
+                  <>
+                    <dt className="col-sm-3">Age</dt>
+                    <dd className="col-sm-9">{trainer.age}</dd>
+                  </>
+                )}
+                <dt className="col-sm-3">Register date</dt>
+                <dd className="col-sm-9">{formatDate(trainer.registerDate)}</dd>
+                <dt className="col-sm-3">Member since</dt>
+                <dd className="col-sm-9">{formatDate(trainer.memberSince)}</dd>
+              </dl>
+
+              <section className="mt-5">
+                <h2 className="h3">Team history</h2>
+                <table className="table table-striped align-middle">
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th>Age category</th>
+                      <th>Team category</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teams.map((team) => (
+                      <tr className={team.active ? undefined : 'text-muted'} key={`${team.teamUuid}-${team.role}`}>
+                        <td><Link to={`/teams/${team.teamUuid}`}>{team.teamIdentification}</Link></td>
+                        <td>{formatAgeCategory(team.ageCategory)}</td>
+                        <td>{formatTeamCategory(team.teamCategory)}</td>
+                        <td>{team.role}</td>
+                        <td>
+                          <span className={`badge ${team.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                            {team.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {teams.length === 0 && <p className="text-muted">No teams associated with this trainer.</p>}
+              </section>
+            </>
           )}
         </>
       )}
@@ -120,4 +159,18 @@ export default function TrainerDetailPage() {
 
 function formatDate(value) {
   return value ? new Date(`${value}T00:00:00`).toLocaleDateString() : '-'
+}
+
+function formatAgeCategory(value) {
+  if (value === 'U17_18') {
+    return '17-18'
+  }
+  if (value === 'U19_PLUS') {
+    return '19+'
+  }
+  return value?.replace('U', '') ?? '-'
+}
+
+function formatTeamCategory(value) {
+  return value === 'FEMININE' ? 'Feminine' : 'Masculine'
 }
