@@ -2,6 +2,7 @@ package com.clubmanager.controller;
 
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -91,6 +92,50 @@ class PlayerControllerTest {
                 .andExpect(jsonPath("$.content[0].uuid").isString())
                 .andExpect(jsonPath("$.content[*].uuid", hasItem(uuid)))
                 .andExpect(jsonPath("$.content[0].id").doesNotExist());
+    }
+
+    @Test
+    void getAllPlayers_WithActiveFilter_ReturnsOnlyActivePlayers() throws Exception {
+        String token = loginToken(mockMvc);
+        String suffix = String.valueOf(System.nanoTime());
+        String activeName = "Active Player " + suffix;
+        String inactiveName = "Inactive Player " + suffix;
+        createPlayer(activeName, "ACTIVE-" + suffix);
+        String inactiveUuid = createPlayer(inactiveName, "INACTIVE-" + suffix);
+
+        mockMvc.perform(patch("/api/v1/players/{uuid}/deactivate", inactiveUuid)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/players")
+                        .param("active", "true")
+                        .param("name", suffix)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].name", hasItem(activeName)))
+                .andExpect(jsonPath("$.content[*].name", not(hasItem(inactiveName))));
+    }
+
+    @Test
+    void getAllPlayers_WithInactiveFilter_ReturnsOnlyInactivePlayers() throws Exception {
+        String token = loginToken(mockMvc);
+        String suffix = String.valueOf(System.nanoTime());
+        String activeName = "Active Player " + suffix;
+        String inactiveName = "Inactive Player " + suffix;
+        createPlayer(activeName, "ACTIVE-FALSE-" + suffix);
+        String inactiveUuid = createPlayer(inactiveName, "INACTIVE-FALSE-" + suffix);
+
+        mockMvc.perform(patch("/api/v1/players/{uuid}/deactivate", inactiveUuid)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/players")
+                        .param("active", "false")
+                        .param("name", suffix)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].name", hasItem(inactiveName)))
+                .andExpect(jsonPath("$.content[*].name", not(hasItem(activeName))));
     }
 
     @Test

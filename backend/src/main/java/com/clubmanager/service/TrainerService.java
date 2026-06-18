@@ -10,20 +10,18 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.UUID;
 import java.util.function.Consumer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class TrainerService {
 
     private final TrainerRepository trainerRepository;
-
-
 
     @Transactional
     public Trainer createTrainer(TrainerCreateRequest request) {
@@ -61,14 +59,20 @@ public class TrainerService {
 
     @Transactional(readOnly = true)
     public Page<Trainer> searchTrainers(String name, Boolean active, Pageable pageable) {
-        boolean activeOnly = Boolean.TRUE.equals(active);
-        if (!StringUtils.hasText(name)) {
-            return activeOnly ? trainerRepository.findAllByActiveTrue(pageable) : getAllTrainers(pageable);
+        boolean hasName = StringUtils.hasText(name);
+        if (!hasName && active == null) {
+            return getAllTrainers(pageable);
         }
-        if (activeOnly) {
-            return trainerRepository.findByNameContainingIgnoreCaseAndActiveTrue(name.trim(), pageable);
+        if (!hasName) {
+            return active ? trainerRepository.findAllByActiveTrue(pageable) : trainerRepository.findAllByActiveFalse(pageable);
         }
-        return trainerRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
+        String cleanName = name.trim();
+        if (active == null) {
+            return trainerRepository.findByNameContainingIgnoreCase(cleanName, pageable);
+        }
+        return active
+                ? trainerRepository.findByNameContainingIgnoreCaseAndActiveTrue(cleanName, pageable)
+                : trainerRepository.findByNameContainingIgnoreCaseAndActiveFalse(cleanName, pageable);
     }
 
     @Transactional

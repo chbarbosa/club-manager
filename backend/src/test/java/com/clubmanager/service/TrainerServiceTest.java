@@ -152,6 +152,30 @@ class TrainerServiceTest {
         assertThat(result.getContent().getFirst().getName()).isEqualTo("Carlos Mendes");
     }
 
+    @Test
+    void searchTrainers_WithActiveFilter_ReturnsOnlyActiveTrainers() {
+        PageRequest pageable = PageRequest.of(0, 20);
+        Page<Trainer> page = new PageImpl<>(List.of(trainer()), pageable, 1);
+        when(trainerRepository.findByNameContainingIgnoreCaseAndActiveTrue("carlos", pageable)).thenReturn(page);
+
+        Page<Trainer> result = trainerService.searchTrainers(" carlos ", true, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(trainerRepository).findByNameContainingIgnoreCaseAndActiveTrue("carlos", pageable);
+    }
+
+    @Test
+    void searchTrainers_WithInactiveFilter_ReturnsOnlyInactiveTrainers() {
+        PageRequest pageable = PageRequest.of(0, 20);
+        Page<Trainer> page = new PageImpl<>(List.of(trainer()), pageable, 1);
+        when(trainerRepository.findAllByActiveFalse(pageable)).thenReturn(page);
+
+        Page<Trainer> result = trainerService.searchTrainers(null, false, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(trainerRepository).findAllByActiveFalse(pageable);
+    }
+
     private TrainerCreateRequest createRequest(LocalDate birthdate) {
         return new TrainerCreateRequest(
                 "Carlos Mendes",

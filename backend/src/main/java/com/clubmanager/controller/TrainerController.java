@@ -10,6 +10,7 @@ import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.TrainerService;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/trainers")
@@ -34,8 +34,6 @@ public class TrainerController {
     private final TrainerService trainerService;
     private final TrainerMapper trainerMapper;
     private final AuditEventService auditEventService;
-
-
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

@@ -195,6 +195,30 @@ class PlayerServiceTest {
     }
 
     @Test
+    void searchPlayers_WithActiveFilter_ReturnsOnlyActivePlayers() {
+        PageRequest pageable = PageRequest.of(0, 20);
+        Page<Player> page = new PageImpl<>(List.of(player()), pageable, 1);
+        when(playerRepository.findByNameContainingIgnoreCaseAndActiveTrue("joao", pageable)).thenReturn(page);
+
+        Page<Player> result = playerService.searchPlayers(" joao ", true, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(playerRepository).findByNameContainingIgnoreCaseAndActiveTrue("joao", pageable);
+    }
+
+    @Test
+    void searchPlayers_WithInactiveFilter_ReturnsOnlyInactivePlayers() {
+        PageRequest pageable = PageRequest.of(0, 20);
+        Page<Player> page = new PageImpl<>(List.of(player()), pageable, 1);
+        when(playerRepository.findAllByActiveFalse(pageable)).thenReturn(page);
+
+        Page<Player> result = playerService.searchPlayers(null, false, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(playerRepository).findAllByActiveFalse(pageable);
+    }
+
+    @Test
     void getSkillHistory_WithKnownPlayer_ReturnsHistory() {
         Player player = player();
         PlayerSkillHistory history = PlayerSkillHistory.builder()

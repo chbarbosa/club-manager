@@ -116,6 +116,28 @@ class TrainerControllerTest {
     }
 
     @Test
+    void getAllTrainers_WithInactiveFilter_ReturnsOnlyInactiveTrainers() throws Exception {
+        String token = loginToken(mockMvc);
+        String suffix = String.valueOf(System.nanoTime());
+        String activeName = "Active Trainer " + suffix;
+        String inactiveName = "Inactive Trainer " + suffix;
+        createTrainer(activeName);
+        String inactiveUuid = createTrainer(inactiveName);
+
+        mockMvc.perform(patch("/api/v1/trainers/{uuid}/deactivate", inactiveUuid)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/trainers")
+                        .param("active", "false")
+                        .param("name", suffix)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].name", hasItem(inactiveName)))
+                .andExpect(jsonPath("$.content[*].name", not(hasItem(activeName))));
+    }
+
+    @Test
     void getTrainerByUuid_WithValidToken_ReturnsFullTrainer() throws Exception {
         String uuid = createTrainer();
 

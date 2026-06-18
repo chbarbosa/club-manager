@@ -16,12 +16,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +29,6 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
     private final PlayerSkillHistoryRepository playerSkillHistoryRepository;
-
-
 
     @Transactional
     public Player createPlayer(PlayerCreateRequest request) {
@@ -66,10 +64,25 @@ public class PlayerService {
 
     @Transactional(readOnly = true)
     public Page<Player> searchPlayers(String name, Pageable pageable) {
-        if (!StringUtils.hasText(name)) {
+        return searchPlayers(name, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Player> searchPlayers(String name, Boolean active, Pageable pageable) {
+        boolean hasName = StringUtils.hasText(name);
+        if (!hasName && active == null) {
             return getAllPlayers(pageable);
         }
-        return playerRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
+        if (!hasName) {
+            return active ? playerRepository.findAllByActiveTrue(pageable) : playerRepository.findAllByActiveFalse(pageable);
+        }
+        String cleanName = name.trim();
+        if (active == null) {
+            return playerRepository.findByNameContainingIgnoreCase(cleanName, pageable);
+        }
+        return active
+                ? playerRepository.findByNameContainingIgnoreCaseAndActiveTrue(cleanName, pageable)
+                : playerRepository.findByNameContainingIgnoreCaseAndActiveFalse(cleanName, pageable);
     }
 
     @Transactional(readOnly = true)

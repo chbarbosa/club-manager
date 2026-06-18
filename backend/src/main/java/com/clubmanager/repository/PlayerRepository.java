@@ -15,9 +15,15 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     Page<Player> findAllByActiveTrue(Pageable pageable);
 
+    Page<Player> findAllByActiveFalse(Pageable pageable);
+
     Page<Player> findAllByTeamCategory(TeamCategory teamCategory, Pageable pageable);
 
     Page<Player> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    Page<Player> findByNameContainingIgnoreCaseAndActiveTrue(String name, Pageable pageable);
+
+    Page<Player> findByNameContainingIgnoreCaseAndActiveFalse(String name, Pageable pageable);
 
     @EntityGraph(attributePaths = "positions")
     java.util.List<Player> findAllByOrderByNameAsc();

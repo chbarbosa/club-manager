@@ -11,6 +11,7 @@ export default function PlayersPage() {
   const [pageInfo, setPageInfo] = useState({ number: 0, totalPages: 0 })
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
+  const [showInactive, setShowInactive] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -20,14 +21,19 @@ export default function PlayersPage() {
 
   useEffect(() => {
     loadPlayers()
-  }, [page, activeSearch])
+  }, [page, activeSearch, showInactive])
 
   async function loadPlayers() {
     const requestId = loadRequestId.current + 1
     loadRequestId.current = requestId
     setError('')
     try {
-      const response = await getAllPlayers({ page, size: PAGE_SIZE, name: activeSearch || undefined })
+      const response = await getAllPlayers({
+        page,
+        size: PAGE_SIZE,
+        name: activeSearch || undefined,
+        active: showInactive ? undefined : true,
+      })
       if (requestId !== loadRequestId.current) {
         return
       }
@@ -92,6 +98,11 @@ export default function PlayersPage() {
     setPage(0)
   }
 
+  function changeShowInactive(event) {
+    setShowInactive(event.target.checked)
+    setPage(0)
+  }
+
   const canGoPrevious = pageInfo.number > 0
   const canGoNext = pageInfo.totalPages > 0 && pageInfo.number < pageInfo.totalPages - 1
 
@@ -124,15 +135,31 @@ export default function PlayersPage() {
         </div>
       )}
 
-      <div className="mb-3">
-        <label className="form-label" htmlFor="player-search">Search players</label>
-        <input
-          className="form-control"
-          id="player-search"
-          onChange={changeSearch}
-          placeholder="Search by name"
-          value={search}
-        />
+      <div className="row g-3 align-items-end mb-3">
+        <div className="col-md-8">
+          <label className="form-label" htmlFor="player-search">Search players</label>
+          <input
+            className="form-control"
+            id="player-search"
+            onChange={changeSearch}
+            placeholder="Search by name"
+            value={search}
+          />
+        </div>
+        <div className="col-md-4">
+          <div className="form-check">
+            <input
+              checked={showInactive}
+              className="form-check-input"
+              id="show-inactive-players"
+              onChange={changeShowInactive}
+              type="checkbox"
+            />
+            <label className="form-check-label" htmlFor="show-inactive-players">
+              Show inactive players too
+            </label>
+          </div>
+        </div>
       </div>
 
       <table className="table table-striped align-middle">

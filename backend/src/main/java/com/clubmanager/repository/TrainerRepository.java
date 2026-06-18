@@ -13,7 +13,11 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
 
     Page<Trainer> findAllByActiveTrue(Pageable pageable);
 
+    Page<Trainer> findAllByActiveFalse(Pageable pageable);
+
     Page<Trainer> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     Page<Trainer> findByNameContainingIgnoreCaseAndActiveTrue(String name, Pageable pageable);
+
+    Page<Trainer> findByNameContainingIgnoreCaseAndActiveFalse(String name, Pageable pageable);
 }
