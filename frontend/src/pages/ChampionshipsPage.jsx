@@ -259,12 +259,17 @@ export default function ChampionshipsPage() {
         </thead>
         <tbody>
           {championships.map((championship) => (
-            <tr key={championship.uuid}>
+            <tr className={isNotEnded(championship) ? 'table-warning' : undefined} key={championship.uuid}>
               <td>{championship.name}</td>
               <td>{teamLabel(championship)}</td>
               <td>{formatPeriod(championship)}</td>
               <td>{championship.expectedMatches}</td>
-              <td><span className={`badge ${championship.active ? 'text-bg-success' : 'text-bg-secondary'}`}>{championship.active ? 'Active' : 'Inactive'}</span></td>
+              <td>
+                <span className={`badge ${championship.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                  {championship.active ? 'Active' : 'Inactive'}
+                </span>
+                {isNotEnded(championship) && <span className="badge text-bg-warning ms-2">Not ended</span>}
+              </td>
               <td>
                 <div className="d-flex gap-2">
                   <Link className="btn btn-sm btn-outline-primary" to={`/championships/${championship.uuid}`}>View</Link>
@@ -308,6 +313,17 @@ function formatTeamCategory(value) {
 
 function formatPeriod(championship) {
   return `${monthName(championship.startMonth)} ${championship.startYear} - ${monthName(championship.endMonth)} ${championship.endYear}`
+}
+
+function isNotEnded(championship) {
+  if (!championship.active) {
+    return false
+  }
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+  return championship.endYear > currentYear
+    || (championship.endYear === currentYear && championship.endMonth >= currentMonth)
 }
 
 function monthName(month) {

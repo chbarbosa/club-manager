@@ -66,6 +66,7 @@ test('admin can create a championship and see the participating team players', a
   await page.getByLabel('Search championships').fill(championshipName)
   await page.getByRole('button', { name: 'Search' }).click()
   await expect(page.getByRole('cell', { name: championshipName })).toBeVisible()
+  await expect(page.locator('tr').filter({ hasText: championshipName }).getByText('Not ended')).toBeVisible()
 
   await page.locator('tr').filter({ hasText: championshipName }).getByRole('link', { name: 'View' }).click()
   await expect(page.getByRole('heading', { name: championshipName })).toBeVisible()
