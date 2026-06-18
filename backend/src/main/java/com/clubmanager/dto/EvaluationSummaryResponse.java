@@ -11,5 +11,7 @@ public record EvaluationSummaryResponse(
         EvaluationStatus status,
         String ageGroup,
         TeamCategory teamCategory,
-        LocalDate createdDate) {
+        LocalDate createdDate,
+        LocalDate limitDate,
+        boolean expired) {
 }

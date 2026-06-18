@@ -47,6 +47,8 @@ class EvaluationControllerTest {
                 .andExpect(jsonPath("$.ageGroup").value("Under 13"))
                 .andExpect(jsonPath("$.teamCategory").value("MASCULINE"))
                 .andExpect(jsonPath("$.createdDate").value(LocalDate.now().toString()))
+                .andExpect(jsonPath("$.limitDate").value(LocalDate.now().plusDays(30).toString()))
+                .andExpect(jsonPath("$.expired").value(false))
                 .andExpect(jsonPath("$.id").doesNotExist());
     }
 
@@ -58,6 +60,24 @@ class EvaluationControllerTest {
                         .content(validEvaluationJson().replace("Spring Tryouts", "")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void createEvaluation_WithPastLimitDate_ReturnsExpiredEvaluation() throws Exception {
+        mockMvc.perform(post("/api/v1/evaluations")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Expired Tryouts",
+                                  "ageGroup": "Under 13",
+                                  "teamCategory": "MASCULINE",
+                                  "limitDate": "%s"
+                                }
+                                """.formatted(LocalDate.now().minusDays(1))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.limitDate").value(LocalDate.now().minusDays(1).toString()))
+                .andExpect(jsonPath("$.expired").value(true));
     }
 
     @Test
@@ -80,6 +100,7 @@ class EvaluationControllerTest {
                 .andExpect(jsonPath("$.content[0].uuid").isString())
                 .andExpect(jsonPath("$.content[0].uuid").value(evaluationUuid))
                 .andExpect(jsonPath("$.content[0].ageGroup").isString())
+                .andExpect(jsonPath("$.content[0].expired").value(false))
                 .andExpect(jsonPath("$.content[0].id").doesNotExist());
     }
 
@@ -93,6 +114,8 @@ class EvaluationControllerTest {
                 .andExpect(jsonPath("$.uuid").value(evaluationUuid))
                 .andExpect(jsonPath("$.ageGroup").value("Under 13"))
                 .andExpect(jsonPath("$.teamCategory").value("MASCULINE"))
+                .andExpect(jsonPath("$.limitDate").value(LocalDate.now().plusDays(30).toString()))
+                .andExpect(jsonPath("$.expired").value(false))
                 .andExpect(jsonPath("$.id").doesNotExist());
     }
 
@@ -107,13 +130,15 @@ class EvaluationControllerTest {
                                 {
                                   "title": "Summer Tryouts",
                                   "ageGroup": "Under 15",
-                                  "teamCategory": "FEMININE"
+                                  "teamCategory": "FEMININE",
+                                  "limitDate": "%s"
                                 }
-                                """))
+                                """.formatted(LocalDate.now().plusDays(45))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Summer Tryouts"))
                 .andExpect(jsonPath("$.ageGroup").value("Under 15"))
-                .andExpect(jsonPath("$.teamCategory").value("FEMININE"));
+                .andExpect(jsonPath("$.teamCategory").value("FEMININE"))
+                .andExpect(jsonPath("$.limitDate").value(LocalDate.now().plusDays(45).toString()));
     }
 
     @Test
@@ -418,9 +443,10 @@ class EvaluationControllerTest {
                 {
                   "title": "%s",
                   "ageGroup": "Under 13",
-                  "teamCategory": "MASCULINE"
+                  "teamCategory": "MASCULINE",
+                  "limitDate": "%s"
                 }
-                """.formatted(title);
+                """.formatted(title, LocalDate.now().plusDays(30));
     }
 
     private double count(String name) {

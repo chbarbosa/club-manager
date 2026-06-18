@@ -37,4 +37,7 @@ public class Evaluation extends AbstractEntity {
 
     @Column(nullable = false, updatable = false)
     private LocalDate createdDate;
+
+    @Column
+    private LocalDate limitDate;
 }

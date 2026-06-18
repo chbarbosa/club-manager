@@ -218,6 +218,7 @@ export default function EvaluationDetailPage() {
               <h1>{evaluation.title}</h1>
               <p className="text-muted mb-1">{groupLabel(evaluation)}</p>
               <span className={`badge ${statusClass(evaluation.status)}`}>{formatStatus(evaluation.status)}</span>
+              {evaluation.expired && <span className="badge text-bg-danger ms-2">Expired</span>}
             </div>
             <div className="d-flex gap-2">
               {evaluation.status !== 'FINALIZED' && (
@@ -238,6 +239,9 @@ export default function EvaluationDetailPage() {
           {hasScheduledEvents && evaluation.status !== 'FINALIZED' && (
             <p className="alert alert-info">Complete or cancel all scheduled events before evaluating participants and finalizing this evaluation.</p>
           )}
+          {evaluation.expired && (
+            <p className="alert alert-warning">This evaluation is past its limit date and is not finalized.</p>
+          )}
 
           {editing ? (
             <div className="card mb-4">
@@ -252,6 +256,8 @@ export default function EvaluationDetailPage() {
               <dd className="col-sm-9">{groupLabel(evaluation)}</dd>
               <dt className="col-sm-3">Created date</dt>
               <dd className="col-sm-9">{formatDate(evaluation.createdDate)}</dd>
+              <dt className="col-sm-3">Limit date</dt>
+              <dd className="col-sm-9">{formatDate(evaluation.limitDate)}</dd>
             </dl>
           )}
 

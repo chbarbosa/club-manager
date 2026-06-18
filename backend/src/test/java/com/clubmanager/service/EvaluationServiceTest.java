@@ -95,19 +95,20 @@ class EvaluationServiceTest {
         when(evaluationRepository.save(any(Evaluation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Evaluation evaluation = evaluationService.createEvaluation(
-                new EvaluationCreateRequest("Spring Tryouts", "Under 13", TeamCategory.MASCULINE));
+                new EvaluationCreateRequest("Spring Tryouts", "Under 13", TeamCategory.MASCULINE, LocalDate.now().plusDays(30)));
 
         assertThat(evaluation.getTitle()).isEqualTo("Spring Tryouts");
         assertThat(evaluation.getAgeGroup()).isEqualTo("Under 13");
         assertThat(evaluation.getTeamCategory()).isEqualTo(TeamCategory.MASCULINE);
         assertThat(evaluation.getStatus()).isEqualTo(EvaluationStatus.OPEN);
         assertThat(evaluation.getCreatedDate()).isEqualTo(LocalDate.now());
+        assertThat(evaluation.getLimitDate()).isEqualTo(LocalDate.now().plusDays(30));
     }
 
     @Test
     void createEvaluation_WithBlankTitle_ThrowsValidationException() {
         assertThatThrownBy(() -> evaluationService.createEvaluation(
-                new EvaluationCreateRequest(" ", "Under 13", TeamCategory.MASCULINE)))
+                new EvaluationCreateRequest(" ", "Under 13", TeamCategory.MASCULINE, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("title");
     }
@@ -115,7 +116,7 @@ class EvaluationServiceTest {
     @Test
     void createEvaluation_WithBlankAgeGroup_ThrowsValidationException() {
         assertThatThrownBy(() -> evaluationService.createEvaluation(
-                new EvaluationCreateRequest("Spring Tryouts", " ", TeamCategory.MASCULINE)))
+                new EvaluationCreateRequest("Spring Tryouts", " ", TeamCategory.MASCULINE, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ageGroup");
     }
@@ -128,12 +129,13 @@ class EvaluationServiceTest {
 
         Evaluation updated = evaluationService.updateEvaluation(
                 evaluation.getUuid(),
-                new EvaluationUpdateRequest("Summer Tryouts", "Under 15", TeamCategory.FEMININE));
+                new EvaluationUpdateRequest("Summer Tryouts", "Under 15", TeamCategory.FEMININE, LocalDate.now().plusDays(45)));
 
         assertThat(updated.getTitle()).isEqualTo("Summer Tryouts");
         assertThat(updated.getAgeGroup()).isEqualTo("Under 15");
         assertThat(updated.getTeamCategory()).isEqualTo(TeamCategory.FEMININE);
         assertThat(updated.getCreatedDate()).isEqualTo(evaluation.getCreatedDate());
+        assertThat(updated.getLimitDate()).isEqualTo(LocalDate.now().plusDays(45));
     }
 
     @Test
@@ -144,7 +146,7 @@ class EvaluationServiceTest {
 
         assertThatThrownBy(() -> evaluationService.updateEvaluation(
                 evaluation.getUuid(),
-                new EvaluationUpdateRequest("Summer Tryouts", null, null)))
+                new EvaluationUpdateRequest("Summer Tryouts", null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Finalized");
     }

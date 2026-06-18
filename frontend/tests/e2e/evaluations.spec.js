@@ -33,6 +33,7 @@ test('admin can create an evaluation group and complete an event after attendanc
   await page.getByLabel('Title').fill(evaluationTitle)
   await page.locator('#evaluation-age-group').fill(ageGroup)
   await page.locator('#evaluation-team-category').selectOption('MASCULINE')
+  await page.getByLabel('Limit date').fill('2026-07-31')
   await page.getByRole('button', { name: 'Save evaluation' }).click()
 
   await expect(page.getByText('Evaluation created.')).toBeVisible()
@@ -41,6 +42,7 @@ test('admin can create an evaluation group and complete an event after attendanc
   await page.locator('tr').filter({ hasText: evaluationTitle }).getByRole('link', { name: 'View' }).click()
   await expect(page.getByRole('heading', { name: evaluationTitle })).toBeVisible()
   await expect(page.getByRole('definition').filter({ hasText: `${ageGroup} Masculine` })).toBeVisible()
+  await expect(page.getByText('Limit date')).toBeVisible()
 
   await page.getByLabel('Assign player').selectOption({ label: playerName })
   await page.getByRole('button', { name: 'Assign player' }).click()

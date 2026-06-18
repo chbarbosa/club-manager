@@ -137,16 +137,21 @@ export default function EvaluationsPage() {
             <th>Group</th>
             <th>Status</th>
             <th>Created</th>
+            <th>Limit date</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {evaluations.map((evaluation) => (
-            <tr key={evaluation.uuid}>
+            <tr className={evaluation.expired ? 'table-danger' : undefined} key={evaluation.uuid}>
               <td>{evaluation.title}</td>
               <td>{groupLabel(evaluation)}</td>
-              <td><span className={`badge ${statusClass(evaluation.status)}`}>{formatStatus(evaluation.status)}</span></td>
+              <td>
+                <span className={`badge ${statusClass(evaluation.status)}`}>{formatStatus(evaluation.status)}</span>
+                {evaluation.expired && <span className="badge text-bg-danger ms-2">Expired</span>}
+              </td>
               <td>{formatDate(evaluation.createdDate)}</td>
+              <td>{formatDate(evaluation.limitDate)}</td>
               <td>
                 <div className="d-flex gap-2">
                   <Link className="btn btn-sm btn-outline-primary" to={`/evaluations/${evaluation.uuid}`}>View</Link>

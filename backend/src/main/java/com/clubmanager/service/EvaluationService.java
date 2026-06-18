@@ -33,13 +33,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -54,8 +54,6 @@ public class EvaluationService {
     private final PlayerSkillHistoryRepository playerSkillHistoryRepository;
     private final AdminRepository adminRepository;
 
-
-
     @Transactional
     public Evaluation createEvaluation(EvaluationCreateRequest request) {
         requireText(request.title(), "title");
@@ -66,6 +64,7 @@ public class EvaluationService {
                 .ageGroup(request.ageGroup().trim())
                 .teamCategory(request.teamCategory())
                 .createdDate(LocalDate.now())
+                .limitDate(request.limitDate())
                 .build();
         return evaluationRepository.save(evaluation);
     }
@@ -147,6 +146,9 @@ public class EvaluationService {
         applyTextUpdate(request.ageGroup(), "ageGroup", evaluation::setAgeGroup);
         if (request.teamCategory() != null) {
             evaluation.setTeamCategory(request.teamCategory());
+        }
+        if (request.limitDate() != null) {
+            evaluation.setLimitDate(request.limitDate());
         }
 
         return evaluationRepository.save(evaluation);

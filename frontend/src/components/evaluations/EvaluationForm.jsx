@@ -4,6 +4,7 @@ const EMPTY_FORM = {
   title: '',
   ageGroup: '',
   teamCategory: 'MASCULINE',
+  limitDate: '',
 }
 
 export default function EvaluationForm({ initialEvaluation, onCancel, onSubmit }) {
@@ -15,6 +16,7 @@ export default function EvaluationForm({ initialEvaluation, onCancel, onSubmit }
       title: initialEvaluation.title ?? '',
       ageGroup: initialEvaluation.ageGroup ?? '',
       teamCategory: initialEvaluation.teamCategory ?? 'MASCULINE',
+      limitDate: initialEvaluation.limitDate ?? '',
     } : EMPTY_FORM)
   }, [initialEvaluation])
 
@@ -30,6 +32,7 @@ export default function EvaluationForm({ initialEvaluation, onCancel, onSubmit }
         title: form.title.trim(),
         ageGroup: form.ageGroup.trim(),
         teamCategory: form.teamCategory,
+        limitDate: form.limitDate || null,
       })
     } finally {
       setSubmitting(false)
@@ -76,6 +79,17 @@ export default function EvaluationForm({ initialEvaluation, onCancel, onSubmit }
             <option value="MASCULINE">Masculine</option>
             <option value="FEMININE">Feminine</option>
           </select>
+        </div>
+        <div className="col-md-6 mb-3">
+          <label className="form-label" htmlFor="evaluation-limit-date">Limit date</label>
+          <input
+            className="form-control"
+            id="evaluation-limit-date"
+            name="limitDate"
+            onChange={updateField}
+            type="date"
+            value={form.limitDate}
+          />
         </div>
       </div>
       <div className="d-flex gap-2">
