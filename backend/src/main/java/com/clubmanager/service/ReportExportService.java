@@ -86,6 +86,7 @@ public class ReportExportService {
         StringBuilder csv = new StringBuilder();
         appendRow(csv, List.of(
                 "Team",
+                "Number",
                 "Player",
                 "Age",
                 "Team Category",
@@ -97,6 +98,7 @@ public class ReportExportService {
             Player player = assignment.getPlayer();
             appendRow(csv, List.of(
                     teamLabel(team),
+                    assignment.getJerseyNumber() == null ? "" : String.valueOf(assignment.getJerseyNumber()),
                     player.getName(),
                     String.valueOf(calculateAge(player.getBirthdate())),
                     display(player.getTeamCategory()),

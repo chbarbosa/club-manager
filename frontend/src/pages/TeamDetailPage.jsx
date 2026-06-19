@@ -55,6 +55,7 @@ export default function TeamDetailPage() {
   const [championships, setChampionships] = useState([])
   const [matchForm, setMatchForm] = useState(EMPTY_MATCH_FORM)
   const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
+  const [jerseyNumber, setJerseyNumber] = useState('')
   const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -186,14 +187,15 @@ export default function TeamDetailPage() {
 
   async function assignPlayer(event) {
     event.preventDefault()
-    if (!selectedPlayerUuid) {
+    if (!selectedPlayerUuid || !jerseyNumber) {
       return
     }
     setError('')
     setMessage('')
     try {
-      await assignPlayerToTeam(uuid, selectedPlayerUuid)
+      await assignPlayerToTeam(uuid, selectedPlayerUuid, Number(jerseyNumber))
       setSelectedPlayerUuid('')
+      setJerseyNumber('')
       await Promise.all([loadTeam(), loadRoster()])
       setMessage('Player assigned to team.')
     } catch (requestError) {
@@ -297,7 +299,7 @@ export default function TeamDetailPage() {
                 </div>
 
                 <form className="row g-2 align-items-end mb-4" onSubmit={assignPlayer}>
-                  <div className="col-md-8">
+                  <div className="col-md-7">
                     <label className="form-label" htmlFor="roster-player">Player</label>
                     <select
                       className="form-select"
@@ -311,8 +313,21 @@ export default function TeamDetailPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="col-md-4">
-                    <button className="btn btn-primary" disabled={!selectedPlayerUuid} type="submit">
+                  <div className="col-md-2">
+                    <label className="form-label" htmlFor="roster-jersey-number">Number</label>
+                    <input
+                      className="form-control"
+                      id="roster-jersey-number"
+                      max="99"
+                      min="1"
+                      onChange={(event) => setJerseyNumber(event.target.value)}
+                      required
+                      type="number"
+                      value={jerseyNumber}
+                    />
+                  </div>
+                  <div className="col-md-3">
+                    <button className="btn btn-primary" disabled={!selectedPlayerUuid || !jerseyNumber} type="submit">
                       Assign player
                     </button>
                   </div>
@@ -321,6 +336,7 @@ export default function TeamDetailPage() {
                 <table className="table table-striped align-middle">
                   <thead>
                     <tr>
+                      <th>Number</th>
                       <th>Player</th>
                       <th>Age</th>
                       <th>Team category</th>
@@ -332,6 +348,7 @@ export default function TeamDetailPage() {
                   <tbody>
                     {roster.map((assignment) => (
                       <tr key={assignment.uuid}>
+                        <td>{assignment.jerseyNumber ?? '-'}</td>
                         <td><Link to={`/players/${assignment.playerUuid}`}>{assignment.playerName}</Link></td>
                         <td>{assignment.playerAge}</td>
                         <td>{formatTeamCategory(assignment.playerTeamCategory)}</td>

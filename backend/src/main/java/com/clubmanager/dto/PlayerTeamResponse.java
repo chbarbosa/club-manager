@@ -16,6 +16,7 @@ public record PlayerTeamResponse(
         UUID teamUuid,
         String teamIdentification,
         String teamAgeGroup,
+        Integer jerseyNumber,
         LocalDate assignedDate,
         LocalDate removedDate,
         boolean active) {

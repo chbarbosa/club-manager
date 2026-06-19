@@ -168,7 +168,7 @@ class TeamMatchControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"playerUuid": "%s"}
+                                {"playerUuid": "%s", "jerseyNumber": 10}
                                 """.formatted(playerUuid)))
                 .andExpect(status().isCreated());
     }

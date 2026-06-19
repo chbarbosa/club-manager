@@ -28,8 +28,8 @@ export function getTeamRoster(teamUuid) {
   return api.get(`/teams/${teamUuid}/players`).then((response) => response.data)
 }
 
-export function assignPlayerToTeam(teamUuid, playerUuid) {
-  return api.post(`/teams/${teamUuid}/players`, { playerUuid }).then((response) => response.data)
+export function assignPlayerToTeam(teamUuid, playerUuid, jerseyNumber) {
+  return api.post(`/teams/${teamUuid}/players`, { playerUuid, jerseyNumber }).then((response) => response.data)
 }
 
 export function removePlayerFromTeam(teamUuid, assignmentUuid) {

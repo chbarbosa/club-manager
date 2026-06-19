@@ -32,10 +32,11 @@ public class PlayerTeam extends AbstractEntity {
     @Column(nullable = false, updatable = false)
     private LocalDate assignedDate;
 
+    private Integer jerseyNumber;
+
     private LocalDate removedDate;
 
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 }
-

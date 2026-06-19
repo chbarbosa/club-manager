@@ -38,11 +38,12 @@ public class PlayerTeamService {
         Team team = getTeam(teamUuid);
         Player player = getPlayer(request.playerUuid());
 
-        validateAssignment(team, player);
+        validateAssignment(team, player, request.jerseyNumber());
 
         PlayerTeam assignment = PlayerTeam.builder()
                 .team(team)
                 .player(player)
+                .jerseyNumber(request.jerseyNumber())
                 .assignedDate(LocalDate.now())
                 .build();
         return playerTeamRepository.save(assignment);
@@ -66,7 +67,7 @@ public class PlayerTeamService {
         return playerTeamRepository.save(assignment);
     }
 
-    private void validateAssignment(Team team, Player player) {
+    private void validateAssignment(Team team, Player player, Integer jerseyNumber) {
         if (!team.isActive()) {
             throw new IllegalArgumentException("Cannot assign players to an inactive team");
         }
@@ -79,6 +80,9 @@ public class PlayerTeamService {
         validateAgeLimit(team, player);
         if (playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)) {
             throw new IllegalArgumentException("Player is already assigned to this team");
+        }
+        if (playerTeamRepository.existsByTeamAndJerseyNumberAndActiveTrue(team, jerseyNumber)) {
+            throw new IllegalArgumentException("Jersey number is already assigned in this team");
         }
         playerTeamRepository.findByPlayerAndActiveTrue(player).ifPresent(existing -> {
             throw new IllegalArgumentException("Player is already assigned to an active team");

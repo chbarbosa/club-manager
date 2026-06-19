@@ -56,7 +56,8 @@ class ReportExportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "playerUuid": "%s"
+                                  "playerUuid": "%s",
+                                  "jerseyNumber": 10
                                 }
                                 """.formatted(playerUuid)))
                 .andExpect(status().isCreated());
@@ -66,8 +67,8 @@ class ReportExportControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString("team-roster.csv")))
-                .andExpect(content().string(containsString("Team,Player,Age,Team Category,Skill Level,Positions,Assigned Date")))
-                .andExpect(content().string(containsString("Under 13 A MASCULINE,Roster Player")))
+                .andExpect(content().string(containsString("Team,Number,Player,Age,Team Category,Skill Level,Positions,Assigned Date")))
+                .andExpect(content().string(containsString("Under 13 A MASCULINE,10,Roster Player")))
                 .andExpect(content().string(not(containsString("id"))));
     }
 
@@ -306,7 +307,7 @@ class ReportExportControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"playerUuid": "%s"}
+                                {"playerUuid": "%s", "jerseyNumber": 10}
                                 """.formatted(playerUuid)))
                 .andExpect(status().isCreated());
     }

@@ -52,13 +52,15 @@ class PlayerTeamServiceTest {
         when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
         when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
         when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)).thenReturn(false);
+        when(playerTeamRepository.existsByTeamAndJerseyNumberAndActiveTrue(team, 10)).thenReturn(false);
         when(playerTeamRepository.findByPlayerAndActiveTrue(player)).thenReturn(Optional.empty());
         when(playerTeamRepository.save(any(PlayerTeam.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid()));
+        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid(), 10));
 
         assertThat(assignment.getTeam()).isEqualTo(team);
         assertThat(assignment.getPlayer()).isEqualTo(player);
+        assertThat(assignment.getJerseyNumber()).isEqualTo(10);
         assertThat(assignment.getAssignedDate()).isEqualTo(LocalDate.now());
         assertThat(assignment.isActive()).isTrue();
     }
@@ -70,7 +72,7 @@ class PlayerTeamServiceTest {
         when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
         when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
 
-        assertThatThrownBy(() -> playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid())))
+        assertThatThrownBy(() -> playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid(), 10)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("category");
     }
@@ -82,10 +84,11 @@ class PlayerTeamServiceTest {
         when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
         when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
         when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)).thenReturn(false);
+        when(playerTeamRepository.existsByTeamAndJerseyNumberAndActiveTrue(team, 10)).thenReturn(false);
         when(playerTeamRepository.findByPlayerAndActiveTrue(player)).thenReturn(Optional.empty());
         when(playerTeamRepository.save(any(PlayerTeam.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid()));
+        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid(), 10));
 
         assertThat(assignment.getPlayer()).isEqualTo(player);
     }
@@ -97,9 +100,23 @@ class PlayerTeamServiceTest {
         when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
         when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
 
-        assertThatThrownBy(() -> playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid())))
+        assertThatThrownBy(() -> playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid(), 10)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Player age must be 13 or younger for this team");
+    }
+
+    @Test
+    void assignPlayer_WithDuplicateJerseyNumber_ThrowsValidationException() {
+        Team team = team(TeamCategory.MASCULINE);
+        Player player = player(TeamCategory.MASCULINE);
+        when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
+        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
+        when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)).thenReturn(false);
+        when(playerTeamRepository.existsByTeamAndJerseyNumberAndActiveTrue(team, 10)).thenReturn(true);
+
+        assertThatThrownBy(() -> playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid(), 10)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Jersey number is already assigned in this team");
     }
 
     @Test
@@ -109,10 +126,11 @@ class PlayerTeamServiceTest {
         when(teamRepository.findByUuid(team.getUuid())).thenReturn(Optional.of(team));
         when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
         when(playerTeamRepository.existsByTeamAndPlayerAndActiveTrue(team, player)).thenReturn(false);
+        when(playerTeamRepository.existsByTeamAndJerseyNumberAndActiveTrue(team, 10)).thenReturn(false);
         when(playerTeamRepository.findByPlayerAndActiveTrue(player)).thenReturn(Optional.empty());
         when(playerTeamRepository.save(any(PlayerTeam.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid()));
+        PlayerTeam assignment = playerTeamService.assignPlayer(team.getUuid(), new PlayerTeamAssignRequest(player.getUuid(), 10));
 
         assertThat(assignment.getPlayer()).isEqualTo(player);
     }

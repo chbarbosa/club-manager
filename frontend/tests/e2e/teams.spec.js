@@ -54,15 +54,17 @@ test('admin can create, search, view, and deactivate a team', async ({ page }) =
   await expect(page.getByRole('link', { name: 'Add championship' })).toBeVisible()
 
   await page.getByLabel('Player').selectOption({ label: playerName })
+  await page.getByLabel('Number').fill('10')
   await page.getByRole('button', { name: 'Assign player' }).click()
   await expect(page.getByText('Player assigned to team.')).toBeVisible()
   await expect(page.getByRole('cell', { name: playerName })).toBeVisible()
+  await expect(page.locator('tr').filter({ hasText: playerName }).getByRole('cell').nth(0)).toHaveText('10')
   await expect(page.getByText('1 active player').first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Team composition' })).toBeVisible()
   await expect(page.getByRole('columnheader', { name: 'Goalkeepers' })).toBeVisible()
   await expect(page.getByRole('columnheader', { name: 'Midfielders' })).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Midfield' })).toBeVisible()
-  await expect(page.locator('tr').filter({ hasText: playerName }).getByRole('cell').nth(1)).toHaveText('13')
+  await expect(page.locator('tr').filter({ hasText: playerName }).getByRole('cell').nth(2)).toHaveText('13')
 
   await page.locator('tr').filter({ hasText: playerName }).getByRole('link', { name: playerName }).click()
   await expect(page.getByRole('heading', { name: playerName })).toBeVisible()
@@ -88,7 +90,7 @@ test('admin sees composition advice when a team reaches 12 players', async ({ pa
 
   for (let index = 0; index < 12; index += 1) {
     const playerUuid = await createPlayer(request, token, `Advice Player ${index} ${suffix}`, `ADVICE-${suffix}-${index}`)
-    await assignPlayer(request, token, teamUuid, playerUuid)
+    await assignPlayer(request, token, teamUuid, playerUuid, index + 1)
   }
 
   await page.goto('/login')
@@ -164,10 +166,10 @@ async function createPlayer(request, token, name, registrationNumber) {
   return (await response.json()).uuid
 }
 
-async function assignPlayer(request, token, teamUuid, playerUuid) {
+async function assignPlayer(request, token, teamUuid, playerUuid, jerseyNumber = 10) {
   const response = await request.post(`/api/v1/teams/${teamUuid}/players`, {
     headers: authHeaders(token),
-    data: { playerUuid },
+    data: { playerUuid, jerseyNumber },
   })
   expect(response.ok()).toBeTruthy()
 }

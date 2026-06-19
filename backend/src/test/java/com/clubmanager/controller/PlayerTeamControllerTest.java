@@ -36,7 +36,7 @@ class PlayerTeamControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"playerUuid": "%s"}
+                                {"playerUuid": "%s", "jerseyNumber": 10}
                                 """.formatted(playerUuid)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.uuid").isString())
@@ -45,6 +45,7 @@ class PlayerTeamControllerTest {
                 .andExpect(jsonPath("$.playerAge").isNumber())
                 .andExpect(jsonPath("$.playerPositions[0]").value("MIDFIELD"))
                 .andExpect(jsonPath("$.teamUuid").value(teamUuid))
+                .andExpect(jsonPath("$.jerseyNumber").value(10))
                 .andExpect(jsonPath("$.assignedDate").value(LocalDate.now().toString()))
                 .andExpect(jsonPath("$.active").value(true))
                 .andExpect(jsonPath("$.id").doesNotExist());
@@ -60,7 +61,7 @@ class PlayerTeamControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"playerUuid": "%s"}
+                                {"playerUuid": "%s", "jerseyNumber": 10}
                                 """.formatted(playerUuid)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
@@ -76,10 +77,43 @@ class PlayerTeamControllerTest {
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"playerUuid": "%s"}
+                                {"playerUuid": "%s", "jerseyNumber": 10}
                                 """.formatted(playerUuid)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Player age must be 13 or younger for this team"));
+    }
+
+    @Test
+    void assignPlayer_WithDuplicateJerseyNumber_ReturnsBadRequest() throws Exception {
+        String trainerUuid = createTrainer();
+        String teamUuid = createTeam(trainerUuid, "MASCULINE");
+        String firstPlayerUuid = createPlayer("REG-PT-NUM-1", "MASCULINE");
+        String secondPlayerUuid = createPlayer("REG-PT-NUM-2", "MASCULINE");
+        assignPlayer(teamUuid, firstPlayerUuid, 10);
+
+        mockMvc.perform(post("/api/v1/teams/{teamUuid}/players", teamUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"playerUuid": "%s", "jerseyNumber": 10}
+                                """.formatted(secondPlayerUuid)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Jersey number is already assigned in this team"));
+    }
+
+    @Test
+    void assignPlayer_WithInvalidJerseyNumber_ReturnsBadRequest() throws Exception {
+        String trainerUuid = createTrainer();
+        String teamUuid = createTeam(trainerUuid, "MASCULINE");
+        String playerUuid = createPlayer("REG-PT-NUM-3", "MASCULINE");
+
+        mockMvc.perform(post("/api/v1/teams/{teamUuid}/players", teamUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"playerUuid": "%s", "jerseyNumber": 100}
+                                """.formatted(playerUuid)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -87,7 +121,7 @@ class PlayerTeamControllerTest {
         mockMvc.perform(post("/api/v1/teams/{teamUuid}/players", "00000000-0000-0000-0000-000000000000")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"playerUuid": "00000000-0000-0000-0000-000000000000"}
+                                {"playerUuid": "00000000-0000-0000-0000-000000000000", "jerseyNumber": 10}
                                 """))
                 .andExpect(status().isForbidden());
     }
@@ -106,6 +140,7 @@ class PlayerTeamControllerTest {
                 .andExpect(jsonPath("$[*].uuid", hasItem(assignmentUuid)))
                 .andExpect(jsonPath("$[0].playerUuid").isString())
                 .andExpect(jsonPath("$[0].playerAge").isNumber())
+                .andExpect(jsonPath("$[0].jerseyNumber").value(10))
                 .andExpect(jsonPath("$[0].id").doesNotExist());
     }
 
@@ -130,12 +165,16 @@ class PlayerTeamControllerTest {
     }
 
     private String assignPlayer(String teamUuid, String playerUuid) throws Exception {
+        return assignPlayer(teamUuid, playerUuid, 10);
+    }
+
+    private String assignPlayer(String teamUuid, String playerUuid, int jerseyNumber) throws Exception {
         String response = mockMvc.perform(post("/api/v1/teams/{teamUuid}/players", teamUuid)
                         .header("Authorization", "Bearer " + loginToken(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"playerUuid": "%s"}
-                                """.formatted(playerUuid)))
+                                {"playerUuid": "%s", "jerseyNumber": %d}
+                                """.formatted(playerUuid, jerseyNumber)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()

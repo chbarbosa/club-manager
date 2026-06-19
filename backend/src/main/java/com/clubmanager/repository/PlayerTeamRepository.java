@@ -20,4 +20,6 @@ public interface PlayerTeamRepository extends JpaRepository<PlayerTeam, Long> {
     Optional<PlayerTeam> findByPlayerAndActiveTrue(Player player);
 
     boolean existsByTeamAndPlayerAndActiveTrue(Team team, Player player);
+
+    boolean existsByTeamAndJerseyNumberAndActiveTrue(Team team, Integer jerseyNumber);
 }

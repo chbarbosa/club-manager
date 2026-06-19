@@ -117,7 +117,7 @@ async function createPlayer(request, token, name, registrationNumber) {
 async function assignPlayer(request, token, teamUuid, playerUuid) {
   const response = await request.post(`/api/v1/teams/${teamUuid}/players`, {
     headers: authHeaders(token),
-    data: { playerUuid },
+    data: { playerUuid, jerseyNumber: 10 },
   })
   expect(response.ok()).toBeTruthy()
 }
