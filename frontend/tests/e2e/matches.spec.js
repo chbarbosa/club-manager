@@ -40,6 +40,10 @@ test('admin can create a match and save player analysis', async ({ page, request
 
   await expect(page.getByRole('heading', { name: 'Match analysis' })).toBeVisible()
   await expect(page.getByRole('heading', { name: playerName })).toBeVisible()
+  await expect(page.getByText('Age: 13')).toBeVisible()
+  await expect(page.getByText('Skill: Not defined')).toBeVisible()
+  await expect(page.getByText('Championships: 0')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View player' })).toHaveCount(0)
   await page.getByLabel('Improve pass').check()
   await page.getByLabel('Good passes').check()
   await page.getByLabel('Trainer notes').fill('Needs quicker passing decisions.')

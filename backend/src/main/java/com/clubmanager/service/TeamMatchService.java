@@ -162,6 +162,11 @@ public class TeamMatchService {
                         LinkedHashMap::new));
     }
 
+    @Transactional(readOnly = true)
+    public long countChampionshipsForPlayer(UUID playerUuid) {
+        return championshipRepository.countDistinctByPlayerUuid(playerUuid);
+    }
+
     public List<String> parseTags(String jsonData) {
         try {
             return objectMapper.readValue(jsonData, STRING_LIST);

@@ -185,9 +185,13 @@ export default function TeamMatchDetailPage() {
                     <div className="d-flex justify-content-between align-items-start gap-3">
                       <div>
                         <h3 className="h5">{player.playerName}</h3>
-                        <p className="text-muted mb-0">{formatPositions(player.playerPositions)}</p>
+                        <div className="d-flex flex-wrap gap-2">
+                          <span className="badge text-bg-light border">Age: {player.playerAge}</span>
+                          <span className="badge text-bg-light border">Skill: {formatSkillLevel(player.playerCurrentSkillLevel)}</span>
+                          <span className="badge text-bg-light border">Championships: {player.playerChampionshipCount}</span>
+                          <span className="badge text-bg-light border">Positions: {formatPositions(player.playerPositions)}</span>
+                        </div>
                       </div>
-                      <Link className="btn btn-sm btn-outline-secondary" to={`/players/${player.playerUuid}`}>View player</Link>
                     </div>
 
                     <div className="row mt-3">
@@ -304,4 +308,14 @@ function formatPositions(values = []) {
     if (value === 'ATTACK') return 'Attack'
     return value
   }).join(', ')
+}
+
+function formatSkillLevel(value) {
+  if (!value) {
+    return 'Not defined'
+  }
+  if (value === 'DEBUTANT') return 'Debutant'
+  if (value === 'ADVANCED') return 'Advanced'
+  if (value === 'SKILLED') return 'Skilled'
+  return value
 }

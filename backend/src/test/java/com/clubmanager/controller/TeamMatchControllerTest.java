@@ -3,6 +3,7 @@ package com.clubmanager.controller;
 import static com.clubmanager.controller.ControllerTestAuth.loginToken;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -39,6 +40,7 @@ class TeamMatchControllerTest {
         String teamUuid = createTeam(trainerUuid);
         String playerUuid = createPlayer();
         assignPlayer(teamUuid, playerUuid);
+        createChampionship(teamUuid);
 
         String matchUuid = createMatch(teamUuid);
 
@@ -53,7 +55,11 @@ class TeamMatchControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uuid").value(matchUuid))
                 .andExpect(jsonPath("$.playerAnalyses[0].playerUuid").value(playerUuid))
+                .andExpect(jsonPath("$.playerAnalyses[0].playerAge").isNumber())
+                .andExpect(jsonPath("$.playerAnalyses[0].playerCurrentSkillLevel").value(nullValue()))
+                .andExpect(jsonPath("$.playerAnalyses[0].playerChampionshipCount").value(1))
                 .andExpect(jsonPath("$.playerAnalyses[0].improvementTags").isArray())
+                .andExpect(jsonPath("$.playerAnalyses[0].id").doesNotExist())
                 .andExpect(jsonPath("$.id").doesNotExist());
 
         mockMvc.perform(put("/api/v1/teams/{teamUuid}/matches/{matchUuid}", teamUuid, matchUuid)
@@ -86,6 +92,8 @@ class TeamMatchControllerTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.playerUuid").value(playerUuid))
+                .andExpect(jsonPath("$.playerAge").isNumber())
+                .andExpect(jsonPath("$.playerChampionshipCount").value(1))
                 .andExpect(jsonPath("$.improvementTags[0]").value("Improve pass"))
                 .andExpect(jsonPath("$.highlightTags[0]").value("Good passes"))
                 .andExpect(jsonPath("$.notes").value("Good match reading"))
@@ -125,6 +133,29 @@ class TeamMatchControllerTest {
                                   "notes": "Friendly match"
                                 }
                                 """))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String createChampionship(String teamUuid) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/championships")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Match Cup %s",
+                                  "description": "Match analysis championship context",
+                                  "teamUuid": "%s",
+                                  "startMonth": 8,
+                                  "startYear": 2026,
+                                  "endMonth": 10,
+                                  "endYear": 2026,
+                                  "expectedMatches": 8
+                                }
+                                """.formatted(System.nanoTime(), teamUuid)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()

@@ -64,8 +64,10 @@ public class TeamMatchMapper {
                 player.getUuid(),
                 player.getName(),
                 calculateAge(player.getBirthdate()),
+                player.getCurrentSkillLevel(),
                 player.getTeamCategory(),
                 player.getPositions(),
+                teamMatchService.countChampionshipsForPlayer(player.getUuid()),
                 analysis == null ? List.of() : teamMatchService.parseTags(analysis.getImprovementTags()),
                 analysis == null ? List.of() : teamMatchService.parseTags(analysis.getHighlightTags()),
                 analysis == null ? null : analysis.getNotes());
