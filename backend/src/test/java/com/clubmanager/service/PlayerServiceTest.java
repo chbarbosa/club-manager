@@ -9,12 +9,17 @@ import static org.mockito.Mockito.when;
 import com.clubmanager.domain.Player;
 import com.clubmanager.domain.PlayerPosition;
 import com.clubmanager.domain.PlayerSkillHistory;
+import com.clubmanager.domain.PlayerTeam;
 import com.clubmanager.domain.SkillLevel;
+import com.clubmanager.domain.Team;
+import com.clubmanager.domain.TeamAgeCategory;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.dto.PlayerCreateRequest;
 import com.clubmanager.dto.PlayerUpdateRequest;
+import com.clubmanager.repository.ChampionshipRepository;
 import com.clubmanager.repository.PlayerRepository;
 import com.clubmanager.repository.PlayerSkillHistoryRepository;
+import com.clubmanager.repository.PlayerTeamRepository;
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.List;
@@ -36,12 +41,20 @@ class PlayerServiceTest {
 
     @Mock
     private PlayerSkillHistoryRepository playerSkillHistoryRepository;
+    @Mock
+    private PlayerTeamRepository playerTeamRepository;
+    @Mock
+    private ChampionshipRepository championshipRepository;
 
     private PlayerService playerService;
 
     @BeforeEach
     void setUp() {
-        playerService = new PlayerService(playerRepository, playerSkillHistoryRepository);
+        playerService = new PlayerService(
+                playerRepository,
+                playerSkillHistoryRepository,
+                playerTeamRepository,
+                championshipRepository);
     }
 
     @Test
@@ -233,6 +246,39 @@ class PlayerServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getSkillLevel()).isEqualTo(SkillLevel.SKILLED);
+    }
+
+    @Test
+    void getTeamHistory_WithKnownPlayer_ReturnsAssignments() {
+        Player player = player();
+        PlayerTeam assignment = PlayerTeam.builder()
+                .player(player)
+                .team(Team.builder()
+                        .ageGroup("Under 13")
+                        .ageCategory(TeamAgeCategory.U13)
+                        .teamCategory(TeamCategory.MASCULINE)
+                        .build())
+                .jerseyNumber(10)
+                .assignedDate(LocalDate.now())
+                .build();
+        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
+        when(playerTeamRepository.findByPlayerOrderByAssignedDateDesc(player)).thenReturn(List.of(assignment));
+
+        List<PlayerTeam> result = playerService.getTeamHistory(player.getUuid());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getJerseyNumber()).isEqualTo(10);
+    }
+
+    @Test
+    void countChampionships_WithKnownPlayer_ReturnsRepositoryCount() {
+        Player player = player();
+        when(playerRepository.findByUuid(player.getUuid())).thenReturn(Optional.of(player));
+        when(championshipRepository.countDistinctByPlayerUuid(player.getUuid())).thenReturn(2L);
+
+        long result = playerService.countChampionships(player.getUuid());
+
+        assertThat(result).isEqualTo(2L);
     }
 
     private PlayerCreateRequest createRequest(String registrationNumber) {

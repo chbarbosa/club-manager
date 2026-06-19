@@ -5,6 +5,8 @@ import com.clubmanager.dto.PageResponse;
 import com.clubmanager.dto.PlayerResponse;
 import com.clubmanager.dto.PlayerSkillHistoryResponse;
 import com.clubmanager.dto.PlayerSummaryResponse;
+import com.clubmanager.dto.PlayerTeamHistoryEntryResponse;
+import com.clubmanager.dto.PlayerTeamHistoryResponse;
 import com.clubmanager.dto.PlayerUpdateRequest;
 import com.clubmanager.mapper.PlayerMapper;
 import com.clubmanager.mapper.PlayerSkillHistoryMapper;
@@ -70,6 +72,24 @@ public class PlayerController {
         return playerService.getSkillHistory(uuid).stream()
                 .map(playerSkillHistoryMapper::toResponse)
                 .toList();
+    }
+
+    @GetMapping("/{uuid}/teams")
+    public PlayerTeamHistoryResponse getPlayerTeamHistory(@PathVariable UUID uuid) {
+        return new PlayerTeamHistoryResponse(
+                playerService.countChampionships(uuid),
+                playerService.getTeamHistory(uuid).stream()
+                        .map(assignment -> new PlayerTeamHistoryEntryResponse(
+                                assignment.getUuid(),
+                                assignment.getTeam().getUuid(),
+                                assignment.getTeam().getAgeGroup(),
+                                assignment.getTeam().getAgeCategory(),
+                                assignment.getTeam().getTeamCategory(),
+                                assignment.getJerseyNumber(),
+                                assignment.getAssignedDate(),
+                                assignment.getRemovedDate(),
+                                assignment.isActive()))
+                        .toList());
     }
 
     @PutMapping("/{uuid}")

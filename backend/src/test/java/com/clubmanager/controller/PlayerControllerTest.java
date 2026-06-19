@@ -163,6 +163,27 @@ class PlayerControllerTest {
     }
 
     @Test
+    void getPlayerTeamHistory_WithAssignments_ReturnsTeamsAndChampionshipCount() throws Exception {
+        String trainerUuid = createTrainer();
+        String teamUuid = createTeam(trainerUuid);
+        String playerUuid = createPlayer("REG-112");
+        String assignmentUuid = assignTeamPlayer(teamUuid, playerUuid);
+        createChampionship(teamUuid);
+
+        mockMvc.perform(get("/api/v1/players/{uuid}/teams", playerUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.championshipCount").value(1))
+                .andExpect(jsonPath("$.teams[0].assignmentUuid").value(assignmentUuid))
+                .andExpect(jsonPath("$.teams[0].teamUuid").value(teamUuid))
+                .andExpect(jsonPath("$.teams[0].teamIdentification").value("Player History Team"))
+                .andExpect(jsonPath("$.teams[0].jerseyNumber").value(10))
+                .andExpect(jsonPath("$.teams[0].active").value(true))
+                .andExpect(jsonPath("$.teams[0].id").doesNotExist())
+                .andExpect(jsonPath("$.id").doesNotExist());
+    }
+
+    @Test
     void getPlayerByUuid_WithUnknownUuid_ReturnsNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/players/{uuid}", "00000000-0000-0000-0000-000000000000")
                         .header("Authorization", "Bearer " + loginToken(mockMvc)))
@@ -227,6 +248,81 @@ class PlayerControllerTest {
                 .getResponse()
                 .getContentAsString();
         return JsonPath.read(response, "$.uuid");
+    }
+
+    private String createTrainer() throws Exception {
+        String suffix = String.valueOf(System.nanoTime());
+        String response = mockMvc.perform(post("/api/v1/trainers")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Player History Trainer %s",
+                                  "birthCountry": "Brazil",
+                                  "livingCountry": "Brazil",
+                                  "birthdate": "1988-04-20",
+                                  "email": "player-history-trainer-%s@club.com",
+                                  "phone": "555-0100",
+                                  "memberSince": "%s"
+                                }
+                                """.formatted(suffix, suffix, LocalDate.now().minusYears(5))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String createTeam(String trainerUuid) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/teams")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "identification": "Player History Team",
+                                  "ageCategory": "U19_PLUS",
+                                  "teamCategory": "MASCULINE",
+                                  "trainerUuid": "%s"
+                                }
+                                """.formatted(trainerUuid)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private String assignTeamPlayer(String teamUuid, String playerUuid) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/teams/{teamUuid}/players", teamUuid)
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"playerUuid": "%s", "jerseyNumber": 10}
+                                """.formatted(playerUuid)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.uuid");
+    }
+
+    private void createChampionship(String teamUuid) throws Exception {
+        mockMvc.perform(post("/api/v1/championships")
+                        .header("Authorization", "Bearer " + loginToken(mockMvc))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Player History Cup %s",
+                                  "description": "Player history championship",
+                                  "teamUuid": "%s",
+                                  "startMonth": 4,
+                                  "startYear": 2026,
+                                  "endMonth": 6,
+                                  "endYear": 2026,
+                                  "expectedMatches": 8
+                                }
+                                """.formatted(System.nanoTime(), teamUuid)))
+                .andExpect(status().isCreated());
     }
 
     private String validPlayerJson(String registrationNumber) {

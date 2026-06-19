@@ -5,11 +5,14 @@ import static com.clubmanager.service.ServiceDataHelper.applyTextUpdate;
 import com.clubmanager.domain.Player;
 import com.clubmanager.domain.PlayerPosition;
 import com.clubmanager.domain.PlayerSkillHistory;
+import com.clubmanager.domain.PlayerTeam;
 import com.clubmanager.domain.TeamCategory;
 import com.clubmanager.dto.PlayerCreateRequest;
 import com.clubmanager.dto.PlayerUpdateRequest;
+import com.clubmanager.repository.ChampionshipRepository;
 import com.clubmanager.repository.PlayerRepository;
 import com.clubmanager.repository.PlayerSkillHistoryRepository;
+import com.clubmanager.repository.PlayerTeamRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
@@ -29,6 +32,8 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
     private final PlayerSkillHistoryRepository playerSkillHistoryRepository;
+    private final PlayerTeamRepository playerTeamRepository;
+    private final ChampionshipRepository championshipRepository;
 
     @Transactional
     public Player createPlayer(PlayerCreateRequest request) {
@@ -88,6 +93,17 @@ public class PlayerService {
     @Transactional(readOnly = true)
     public java.util.List<PlayerSkillHistory> getSkillHistory(UUID uuid) {
         return playerSkillHistoryRepository.findByPlayerOrderByChangedAtDesc(getPlayerByUuid(uuid));
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<PlayerTeam> getTeamHistory(UUID uuid) {
+        return playerTeamRepository.findByPlayerOrderByAssignedDateDesc(getPlayerByUuid(uuid));
+    }
+
+    @Transactional(readOnly = true)
+    public long countChampionships(UUID uuid) {
+        getPlayerByUuid(uuid);
+        return championshipRepository.countDistinctByPlayerUuid(uuid);
     }
 
     @Transactional

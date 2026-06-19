@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { deactivatePlayer, getPlayer, getPlayerSkillHistory, reactivatePlayer, updatePlayer } from '../api/players.js'
+import { deactivatePlayer, getPlayer, getPlayerSkillHistory, getPlayerTeamHistory, reactivatePlayer, updatePlayer } from '../api/players.js'
 import PlayerForm from '../components/players/PlayerForm.jsx'
 
 export default function PlayerDetailPage() {
@@ -8,6 +8,7 @@ export default function PlayerDetailPage() {
   const location = useLocation()
   const [player, setPlayer] = useState(null)
   const [skillHistory, setSkillHistory] = useState([])
+  const [teamHistory, setTeamHistory] = useState({ championshipCount: 0, teams: [] })
   const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -19,12 +20,14 @@ export default function PlayerDetailPage() {
   async function loadPlayer() {
     setError('')
     try {
-      const [playerResponse, skillHistoryResponse] = await Promise.all([
+      const [playerResponse, skillHistoryResponse, teamHistoryResponse] = await Promise.all([
         getPlayer(uuid),
         getPlayerSkillHistory(uuid),
+        getPlayerTeamHistory(uuid),
       ])
       setPlayer(playerResponse)
       setSkillHistory(skillHistoryResponse)
+      setTeamHistory(teamHistoryResponse)
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load player.')
     }
@@ -119,6 +122,52 @@ export default function PlayerDetailPage() {
                 <dt className="col-sm-3">Member since</dt>
                 <dd className="col-sm-9">{formatDate(player.memberSince)}</dd>
               </dl>
+
+              <section className="card mt-4">
+                <div className="card-body">
+                  <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                    <div>
+                      <h2 className="h4">Team history</h2>
+                      <p className="text-muted mb-0">Teams where this player has been assigned.</p>
+                    </div>
+                    <span className="badge text-bg-primary">
+                      {teamHistory.championshipCount} championship{teamHistory.championshipCount === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <table className="table table-sm align-middle mt-3">
+                    <thead>
+                      <tr>
+                        <th>Team</th>
+                        <th>Age category</th>
+                        <th>Team category</th>
+                        <th>Number</th>
+                        <th>Assigned</th>
+                        <th>Removed</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teamHistory.teams.map((assignment) => (
+                        <tr className={assignment.active ? undefined : 'text-muted'} key={assignment.assignmentUuid}>
+                          <td><Link to={`/teams/${assignment.teamUuid}`}>{assignment.teamIdentification}</Link></td>
+                          <td>{formatAgeCategory(assignment.ageCategory)}</td>
+                          <td>{formatTeamCategory(assignment.teamCategory)}</td>
+                          <td>{assignment.jerseyNumber ?? '-'}</td>
+                          <td>{formatDate(assignment.assignedDate)}</td>
+                          <td>{formatDate(assignment.removedDate)}</td>
+                          <td>
+                            <span className={`badge ${assignment.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                              {assignment.active ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {teamHistory.teams.length === 0 && <p className="text-muted mb-0">No team assignments yet.</p>}
+                </div>
+              </section>
+
               <section className="card mt-4">
                 <div className="card-body">
                   <h2 className="h4">Skill history</h2>
@@ -165,6 +214,16 @@ function formatTeamCategory(value) {
     return 'Feminine'
   }
   return value ?? '-'
+}
+
+function formatAgeCategory(value) {
+  if (value === 'U17_18') {
+    return '17-18'
+  }
+  if (value === 'U19_PLUS') {
+    return '19+'
+  }
+  return value?.replace('U', '') ?? '-'
 }
 
 function formatSkillLevel(value) {

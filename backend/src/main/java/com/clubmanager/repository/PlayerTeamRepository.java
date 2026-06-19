@@ -17,6 +17,9 @@ public interface PlayerTeamRepository extends JpaRepository<PlayerTeam, Long> {
     @EntityGraph(attributePaths = {"player", "player.positions", "team"})
     List<PlayerTeam> findByTeamAndActiveTrueOrderByPlayer_NameAsc(Team team);
 
+    @EntityGraph(attributePaths = {"player", "team"})
+    List<PlayerTeam> findByPlayerOrderByAssignedDateDesc(Player player);
+
     Optional<PlayerTeam> findByPlayerAndActiveTrue(Player player);
 
     boolean existsByTeamAndPlayerAndActiveTrue(Team team, Player player);

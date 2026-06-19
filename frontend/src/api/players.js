@@ -16,6 +16,10 @@ export function getPlayerSkillHistory(uuid) {
   return api.get(`/players/${uuid}/skill-history`).then((response) => response.data)
 }
 
+export function getPlayerTeamHistory(uuid) {
+  return api.get(`/players/${uuid}/teams`).then((response) => response.data)
+}
+
 export function updatePlayer(uuid, data) {
   return api.put(`/players/${uuid}`, data).then((response) => response.data)
 }
