@@ -3,6 +3,8 @@ import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import AdminsPage from '../pages/AdminsPage.jsx'
 import ChampionshipDetailPage from '../pages/ChampionshipDetailPage.jsx'
 import ChampionshipsPage from '../pages/ChampionshipsPage.jsx'
+import ClubAnalysisDetailPage from '../pages/ClubAnalysisDetailPage.jsx'
+import ClubAnalysisPage from '../pages/ClubAnalysisPage.jsx'
 import ClubSettingsPage from '../pages/ClubSettingsPage.jsx'
 import DashboardPage from '../pages/DashboardPage.jsx'
 import EvaluationDetailPage from '../pages/EvaluationDetailPage.jsx'
@@ -38,6 +40,8 @@ export default function AppRoutes() {
       <Route path="/schedules" element={protectedElement(<SchedulesPage />)} />
       <Route path="/championships" element={protectedElement(<ChampionshipsPage />)} />
       <Route path="/championships/:uuid" element={protectedElement(<ChampionshipDetailPage />)} />
+      <Route path="/club-analysis" element={protectedElement(<ClubAnalysisPage />)} />
+      <Route path="/club-analysis/:uuid" element={protectedElement(<ClubAnalysisDetailPage />)} />
       <Route path="/evaluations" element={protectedElement(<EvaluationsPage />)} />
       <Route path="/evaluations/:uuid" element={protectedElement(<EvaluationDetailPage />)} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

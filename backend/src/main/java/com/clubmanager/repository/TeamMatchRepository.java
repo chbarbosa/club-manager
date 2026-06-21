@@ -15,4 +15,6 @@ public interface TeamMatchRepository extends JpaRepository<TeamMatch, Long> {
 
     @EntityGraph(attributePaths = {"team", "championship"})
     List<TeamMatch> findByTeamOrderByMatchDateTimeDesc(Team team);
+
+    long countByChampionship(com.clubmanager.domain.Championship championship);
 }

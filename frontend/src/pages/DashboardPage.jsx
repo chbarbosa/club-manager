@@ -45,6 +45,13 @@ const FEATURES = [
     action: 'Manage championships',
   },
   {
+    title: 'Club Analysis',
+    description: 'Review the daily health snapshot with operational findings for players, teams, and competitions.',
+    icon: 'analysis',
+    path: '/club-analysis',
+    action: 'Open analysis',
+  },
+  {
     title: 'Club settings',
     description: 'Adjust club identity, colours, and setup values used across the workspace.',
     icon: 'settings',
@@ -159,6 +166,17 @@ function DashboardIcon({ name }) {
         <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
         <path d="M5 21a7 7 0 0 1 14 0" />
         <path d="M17 4l2 2 3-3" />
+      </>
+    ),
+    analysis: (
+      <>
+        <path d="M4 19V5" />
+        <path d="M4 19h16" />
+        <path d="M8 15v-4" />
+        <path d="M12 15V8" />
+        <path d="M16 15v-6" />
+        <path d="M7 5h10" />
+        <path d="M17 5l3 3-3 3" />
       </>
     ),
   }

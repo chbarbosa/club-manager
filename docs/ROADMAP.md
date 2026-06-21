@@ -17,7 +17,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Club Analysis
 
-- Planned as a daily club health snapshot generated from current backend data.
+- Implemented as a daily club health snapshot generated from current backend data.
 - The feature name in the UI should remain "Club Analysis".
 - When an admin opens the Club Analysis page, the backend checks whether an
   analysis already exists for the current day. If it exists, return it. If not,
@@ -68,6 +68,51 @@ each item should become a focused implementation plan before coding starts.
   tackles and interceptions, and good physical condition.
 - Seed the first set of tags, then consider making them configurable through
   club setup.
+
+## Access Features
+
+### Trainer Access
+
+- Planned.
+- Add real trainer login separate from admin login.
+- Admins must register trainers with an email address. The email becomes the
+  trainer username.
+- When an active trainer is registered for access, send an email explaining the
+  access flow.
+- Trainer passwords must be encrypted in the database.
+- Trainer login is allowed only while the trainer is active.
+- First password confirmation and password reset must require a five-digit
+  random code sent by email.
+- Trainers must be able to reset their own password from the authenticated user
+  session, available from the navbar.
+- Trainers should eventually access trainer-ready workflows for their assigned
+  teams, such as rosters, schedules, evaluations, matches, and match player
+  analysis. The exact trainer feature list is deferred.
+- Trainers should not manage club setup, admins, internal audit, support
+  access, or global administrative records.
+- Authorization must be enforced in the backend from trainer-team assignments,
+  not only by hiding frontend links.
+- Keep shared player credentials separate and deferred.
+
+### Support Access
+
+- Planned as temporary read-only access for the club support responsible to
+  inspect data while investigating a reported bug.
+- Support users must not create, update, delete, activate, deactivate, cancel,
+  or finalize any data.
+- Any admin can open the Support Access area and create a support access window
+  for a specific email address.
+- Each support access window should last five hours by default.
+- The support email receives a notification with instructions to log in using a
+  generated 10-character password.
+- All support access windows must be easy for admins to list from the Support
+  Access area, including active, expired, and revoked accesses.
+- Only admins can create, list, revoke, or inspect support access records.
+- Support activity must be audited with the feature accessed and the data
+  viewed by the support user.
+- Support users should use a separate `SUPPORT` role or credential model, not
+  club admin accounts.
+- Do not expose write actions through the support UI or API.
 
 ## Hardening Phase
 
