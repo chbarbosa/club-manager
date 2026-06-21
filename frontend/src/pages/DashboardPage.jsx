@@ -69,15 +69,25 @@ const FEATURES = [
 ]
 
 export default function DashboardPage() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, role } = useAuth()
+  const visibleFeatures = role === 'ADMIN' ? FEATURES : []
 
   return (
     <main className="container py-5">
       <h1>Dashboard</h1>
       <p className="text-muted">Your club management workspace is ready.</p>
-      {isAuthenticated() ? (
+      {!isAuthenticated() && <Link className="btn btn-primary" to="/login">Admin login</Link>}
+      {isAuthenticated() && role === 'TRAINER' && (
+        <div className="card mt-4">
+          <div className="card-body">
+            <h2 className="h4">Trainer access ready</h2>
+            <p className="mb-0 text-muted">Your trainer workspace features will be enabled in a future step.</p>
+          </div>
+        </div>
+      )}
+      {isAuthenticated() && role === 'ADMIN' && (
         <div className="row g-4 mt-2">
-          {FEATURES.map((feature) => (
+          {visibleFeatures.map((feature) => (
             <div className="col-md-6 col-xl-4" key={feature.title}>
               <section className="card dashboard-card h-100">
                 <div className="card-body d-flex flex-column text-center">
@@ -94,8 +104,6 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      ) : (
-        <Link className="btn btn-primary" to="/login">Admin login</Link>
       )}
     </main>
   )

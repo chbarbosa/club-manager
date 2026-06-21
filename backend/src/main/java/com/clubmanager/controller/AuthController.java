@@ -4,12 +4,14 @@ import com.clubmanager.config.JwtService;
 import com.clubmanager.domain.Admin;
 import com.clubmanager.dto.AdminRegisterRequest;
 import com.clubmanager.dto.AdminResponse;
+import com.clubmanager.dto.AuthenticatedUser;
 import com.clubmanager.dto.LoginRequest;
 import com.clubmanager.dto.LoginResponse;
 import com.clubmanager.mapper.AdminMapper;
 import com.clubmanager.service.AdminService;
 import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
+import com.clubmanager.service.UserLoginService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -35,15 +37,21 @@ public class AuthController {
     private final JwtService jwtService;
     private final AuditEventService auditEventService;
     private final AppMetricsService appMetricsService;
+    private final UserLoginService userLoginService;
 
 
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
-        Admin admin = adminService.authenticate(request, clientAddress(httpRequest));
+        AuthenticatedUser user = userLoginService.authenticate(request, clientAddress(httpRequest));
         appMetricsService.recordLoginSuccess();
-        LOGGER.info("Admin login succeeded for username={}", admin.getUsername());
-        return new LoginResponse(jwtService.generateToken(admin), admin.getUuid(), admin.getName());
+        LOGGER.info("Login succeeded username={} role={}", user.username(), user.role());
+        return new LoginResponse(
+                jwtService.generateToken(user),
+                UserLoginService.ROLE_ADMIN.equals(user.role()) ? user.uuid() : null,
+                user.uuid(),
+                user.name(),
+                user.role());
     }
 
     @PostMapping("/register")

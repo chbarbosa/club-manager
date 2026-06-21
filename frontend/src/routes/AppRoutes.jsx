@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import AdminsPage from '../pages/AdminsPage.jsx'
+import AccountPasswordPage from '../pages/AccountPasswordPage.jsx'
 import ChampionshipDetailPage from '../pages/ChampionshipDetailPage.jsx'
 import ChampionshipsPage from '../pages/ChampionshipsPage.jsx'
 import ClubAnalysisDetailPage from '../pages/ClubAnalysisDetailPage.jsx'
@@ -17,6 +18,7 @@ import TeamDetailPage from '../pages/TeamDetailPage.jsx'
 import TeamMatchDetailPage from '../pages/TeamMatchDetailPage.jsx'
 import TeamsPage from '../pages/TeamsPage.jsx'
 import TrainerDetailPage from '../pages/TrainerDetailPage.jsx'
+import TrainerPasswordConfirmPage from '../pages/TrainerPasswordConfirmPage.jsx'
 import TrainersPage from '../pages/TrainersPage.jsx'
 
 function protectedElement(page) {
@@ -27,6 +29,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/trainer-password/confirm" element={<TrainerPasswordConfirmPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/settings/club" element={protectedElement(<ClubSettingsPage />)} />
       <Route path="/admins" element={protectedElement(<AdminsPage />)} />
@@ -44,6 +47,7 @@ export default function AppRoutes() {
       <Route path="/club-analysis/:uuid" element={protectedElement(<ClubAnalysisDetailPage />)} />
       <Route path="/evaluations" element={protectedElement(<EvaluationsPage />)} />
       <Route path="/evaluations/:uuid" element={protectedElement(<EvaluationDetailPage />)} />
+      <Route path="/account/password" element={protectedElement(<AccountPasswordPage />)} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )

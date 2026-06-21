@@ -52,6 +52,8 @@ public class SecurityConfig {
                         }))
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/trainer-access/confirm-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/trainer-access/password-reset/**").hasRole("TRAINER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/club").permitAll()
                         .requestMatchers("/h2-console/**", "/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().hasRole("ADMIN")

@@ -3,6 +3,7 @@ package com.clubmanager.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,21 @@ public class Trainer extends AbstractEntity {
 
     @Column(length = 150)
     private String email;
+
+    @Column(length = 255)
+    private String passwordHash;
+
+    @Column(length = 255)
+    private String passwordSetupCodeHash;
+
+    private LocalDateTime passwordSetupCodeExpiresAt;
+
+    @Column(length = 255)
+    private String passwordResetCodeHash;
+
+    private LocalDateTime passwordResetCodeExpiresAt;
+
+    private LocalDateTime accessInvitedAt;
 
     @Column(length = 30)
     private String phone;

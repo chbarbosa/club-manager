@@ -31,7 +31,7 @@ export default function LoginPage() {
         <form className="card mt-4" onSubmit={submit}>
           <div className="card-body">
             <div className="mb-3">
-              <label className="form-label" htmlFor="username">Username</label>
+              <label className="form-label" htmlFor="username">Username or email</label>
               <input
                 autoComplete="username"
                 className="form-control"
@@ -55,6 +55,9 @@ export default function LoginPage() {
             </div>
             {error && <p className="text-danger">{error}</p>}
             <button className="btn btn-primary" type="submit">Login</button>
+            <p className="mt-3 mb-0">
+              <a href="/trainer-password/confirm">First trainer access?</a>
+            </p>
           </div>
         </form>
       </div>

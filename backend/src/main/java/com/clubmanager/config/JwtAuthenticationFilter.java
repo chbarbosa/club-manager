@@ -1,6 +1,8 @@
 package com.clubmanager.config;
 
 import com.clubmanager.repository.AdminRepository;
+import com.clubmanager.repository.TrainerRepository;
+import com.clubmanager.service.UserLoginService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final AdminRepository adminRepository;
+    private final TrainerRepository trainerRepository;
 
 
 
@@ -40,14 +43,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = jwtService.extractUsername(token);
             String role = jwtService.extractRole(token);
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                adminRepository.findByUsername(username).ifPresent(admin -> {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            admin.getUsername(),
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                });
+                if (UserLoginService.ROLE_ADMIN.equals(role)) {
+                    adminRepository.findByUsername(username)
+                            .filter(admin -> admin.isActive())
+                            .ifPresent(admin -> authenticate(admin.getUsername(), role));
+                } else if (UserLoginService.ROLE_TRAINER.equals(role)) {
+                    trainerRepository.findByEmailIgnoreCase(username)
+                            .filter(trainer -> trainer.isActive())
+                            .ifPresent(trainer -> authenticate(trainer.getEmail(), role));
+                }
             }
         } catch (RuntimeException ignored) {
             SecurityContextHolder.clearContext();
@@ -55,5 +59,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-}
 
+    private void authenticate(String principal, String role) {
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + role))
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+}

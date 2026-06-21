@@ -73,7 +73,7 @@ each item should become a focused implementation plan before coding starts.
 
 ### Trainer Access
 
-- Planned.
+- Partially implemented for the first credential and login slice.
 - Add real trainer login separate from admin login.
 - Admins must register trainers with an email address. The email becomes the
   trainer username.
@@ -85,6 +85,8 @@ each item should become a focused implementation plan before coding starts.
   random code sent by email.
 - Trainers must be able to reset their own password from the authenticated user
   session, available from the navbar.
+- Real SMTP or provider-backed email delivery still needs to be configured
+  after the local notification abstraction.
 - Trainers should eventually access trainer-ready workflows for their assigned
   teams, such as rosters, schedules, evaluations, matches, and match player
   analysis. The exact trainer feature list is deferred.

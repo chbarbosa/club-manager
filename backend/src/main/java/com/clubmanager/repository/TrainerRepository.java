@@ -11,6 +11,10 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
 
     Optional<Trainer> findByUuid(UUID uuid);
 
+    Optional<Trainer> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
+
     Page<Trainer> findAllByActiveTrue(Pageable pageable);
 
     Page<Trainer> findAllByActiveFalse(Pageable pageable);

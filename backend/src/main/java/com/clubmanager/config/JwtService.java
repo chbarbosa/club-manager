@@ -1,6 +1,7 @@
 package com.clubmanager.config;
 
 import com.clubmanager.domain.Admin;
+import com.clubmanager.dto.AuthenticatedUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -21,11 +22,15 @@ public class JwtService {
 
 
     public String generateToken(Admin admin) {
+        return generateToken(new AuthenticatedUser(admin.getUsername(), admin.getUuid(), admin.getName(), "ADMIN"));
+    }
+
+    public String generateToken(AuthenticatedUser user) {
         Instant now = Instant.now();
         return Jwts.builder()
-                .setSubject(admin.getUsername())
-                .claim("uuid", admin.getUuid().toString())
-                .claim("role", "ADMIN")
+                .setSubject(user.username())
+                .claim("uuid", user.uuid().toString())
+                .claim("role", user.role())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusMillis(jwtConfig.expirationMs())))
                 .signWith(signingKey(), SignatureAlgorithm.HS256)
@@ -58,4 +63,3 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { inviteTrainerAccess } from '../api/auth.js'
 import { deactivateTrainer, getTrainer, getTrainerTeams, reactivateTrainer, updateTrainer } from '../api/trainers.js'
 import TrainerForm from '../components/trainers/TrainerForm.jsx'
 
@@ -58,6 +59,25 @@ export default function TrainerDetailPage() {
     }
   }
 
+  async function sendAccessInvite() {
+    if (!trainer.email) {
+      setError('Trainer email is required for access.')
+      return
+    }
+    if (!trainer.active) {
+      setError('Trainer must be active to receive access.')
+      return
+    }
+    setError('')
+    setMessage('')
+    try {
+      await inviteTrainerAccess(trainer.uuid)
+      setMessage('Trainer access email sent.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to send trainer access.')
+    }
+  }
+
   return (
     <main className="container py-5">
       <Link to="/trainers">&larr; Back to trainers</Link>
@@ -76,6 +96,7 @@ export default function TrainerDetailPage() {
               </span>
             </div>
             <div className="d-flex gap-2">
+              <button className="btn btn-outline-secondary" onClick={sendAccessInvite} type="button">Send access</button>
               <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
               <button
                 className={`btn ${trainer.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
