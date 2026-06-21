@@ -1,6 +1,7 @@
 package com.clubmanager.config;
 
 import com.clubmanager.repository.AdminRepository;
+import com.clubmanager.repository.SupportAccessRepository;
 import com.clubmanager.repository.TrainerRepository;
 import com.clubmanager.service.UserLoginService;
 import jakarta.servlet.FilterChain;
@@ -8,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final AdminRepository adminRepository;
     private final TrainerRepository trainerRepository;
+    private final SupportAccessRepository supportAccessRepository;
 
 
 
@@ -51,6 +54,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     trainerRepository.findByEmailIgnoreCase(username)
                             .filter(trainer -> trainer.isActive())
                             .ifPresent(trainer -> authenticate(trainer.getEmail(), role));
+                } else if (UserLoginService.ROLE_SUPPORT.equals(role)) {
+                    supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(username)
+                            .filter(access -> access.isActive(LocalDateTime.now()))
+                            .ifPresent(access -> authenticate(access.getEmail(), role));
                 }
             }
         } catch (RuntimeException ignored) {

@@ -14,6 +14,7 @@ import LoginPage from '../pages/LoginPage.jsx'
 import PlayerDetailPage from '../pages/PlayerDetailPage.jsx'
 import PlayersPage from '../pages/PlayersPage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
+import SupportAccessPage from '../pages/SupportAccessPage.jsx'
 import TeamDetailPage from '../pages/TeamDetailPage.jsx'
 import TeamMatchDetailPage from '../pages/TeamMatchDetailPage.jsx'
 import TeamsPage from '../pages/TeamsPage.jsx'
@@ -33,6 +34,7 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/settings/club" element={protectedElement(<ClubSettingsPage />)} />
       <Route path="/admins" element={protectedElement(<AdminsPage />)} />
+      <Route path="/support-access" element={protectedElement(<SupportAccessPage />)} />
       <Route path="/players" element={protectedElement(<PlayersPage />)} />
       <Route path="/players/:uuid" element={protectedElement(<PlayerDetailPage />)} />
       <Route path="/trainers" element={protectedElement(<TrainersPage />)} />

@@ -5,7 +5,9 @@ import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.AuthenticatedUser;
 import com.clubmanager.dto.LoginRequest;
 import com.clubmanager.repository.AdminRepository;
+import com.clubmanager.repository.SupportAccessRepository;
 import com.clubmanager.repository.TrainerRepository;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,9 +20,11 @@ public class UserLoginService {
 
     public static final String ROLE_ADMIN = "ADMIN";
     public static final String ROLE_TRAINER = "TRAINER";
+    public static final String ROLE_SUPPORT = "SUPPORT";
 
     private final AdminRepository adminRepository;
     private final TrainerRepository trainerRepository;
+    private final SupportAccessRepository supportAccessRepository;
     private final PasswordEncoder passwordEncoder;
     private final LoginRateLimiter loginRateLimiter;
 
@@ -38,6 +42,18 @@ public class UserLoginService {
         if (trainer.isPresent() && isValidTrainer(trainer.get(), request.password())) {
             loginRateLimiter.recordSuccess(request.username(), clientAddress);
             return new AuthenticatedUser(trainer.get().getEmail(), trainer.get().getUuid(), trainer.get().getName(), ROLE_TRAINER);
+        }
+
+        var supportAccess = supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(request.username());
+        if (supportAccess.isPresent()
+                && supportAccess.get().isActive(LocalDateTime.now())
+                && passwordEncoder.matches(request.password(), supportAccess.get().getPasswordHash())) {
+            loginRateLimiter.recordSuccess(request.username(), clientAddress);
+            return new AuthenticatedUser(
+                    supportAccess.get().getEmail(),
+                    supportAccess.get().getUuid(),
+                    "Support",
+                    ROLE_SUPPORT);
         }
 
         loginRateLimiter.recordFailure(request.username(), clientAddress);

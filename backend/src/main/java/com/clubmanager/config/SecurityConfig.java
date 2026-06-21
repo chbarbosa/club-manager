@@ -28,6 +28,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final InternalAuditAccessFilter internalAuditAccessFilter;
+    private final SupportAccessAuditFilter supportAccessAuditFilter;
     private final AppMetricsService appMetricsService;
 
 
@@ -54,11 +55,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/trainer-access/confirm-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/trainer-access/password-reset/**").hasRole("TRAINER")
+                        .requestMatchers("/api/v1/admins/**", "/api/v1/support-access/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/club").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/**").hasAnyRole("ADMIN", "SUPPORT")
                         .requestMatchers("/h2-console/**", "/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().hasRole("ADMIN")
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(supportAccessAuditFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(internalAuditAccessFilter, JwtAuthenticationFilter.class);
         return http.build();
     }

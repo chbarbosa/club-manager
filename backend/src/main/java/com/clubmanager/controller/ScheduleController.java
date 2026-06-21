@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/schedules")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class ScheduleController {
 
@@ -46,6 +46,7 @@ public class ScheduleController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public ScheduleResponse createSchedule(@Valid @RequestBody ScheduleCreateRequest request) {
         var schedule = scheduleService.createSchedule(request);
         auditEventService.record(
@@ -74,6 +75,7 @@ public class ScheduleController {
     }
 
     @PutMapping("/{uuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ScheduleResponse updateSchedule(@PathVariable UUID uuid, @Valid @RequestBody ScheduleUpdateRequest request) {
         var schedule = scheduleService.updateSchedule(uuid, request);
         auditEventService.record(
@@ -86,6 +88,7 @@ public class ScheduleController {
     }
 
     @PatchMapping("/{uuid}/cancel")
+    @PreAuthorize("hasRole('ADMIN')")
     public ScheduleResponse cancelSchedule(
             @PathVariable UUID uuid,
             @RequestBody(required = false) ScheduleCancelRequest request) {

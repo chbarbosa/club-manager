@@ -66,11 +66,31 @@ const FEATURES = [
     action: 'Manage admins',
     secondary: true,
   },
+  {
+    title: 'Support access',
+    description: 'Create temporary read-only support windows and review viewed data.',
+    icon: 'admins',
+    path: '/support-access',
+    action: 'Manage support',
+    secondary: true,
+  },
 ]
+
+const SUPPORT_FEATURES = FEATURES.filter((feature) => [
+  'Players',
+  'Trainers',
+  'Teams',
+  'Evaluations',
+  'Schedules',
+  'Championships',
+].includes(feature.title)).map((feature) => ({
+  ...feature,
+  action: `View ${feature.title.toLowerCase()}`,
+}))
 
 export default function DashboardPage() {
   const { isAuthenticated, role } = useAuth()
-  const visibleFeatures = role === 'ADMIN' ? FEATURES : []
+  const visibleFeatures = role === 'ADMIN' ? FEATURES : SUPPORT_FEATURES
 
   return (
     <main className="container py-5">
@@ -85,7 +105,8 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      {isAuthenticated() && role === 'ADMIN' && (
+      {isAuthenticated() && role === 'SUPPORT' && <p className="alert alert-info mt-4">Support access is read-only and all viewed data is recorded.</p>}
+      {isAuthenticated() && ['ADMIN', 'SUPPORT'].includes(role) && (
         <div className="row g-4 mt-2">
           {visibleFeatures.map((feature) => (
             <div className="col-md-6 col-xl-4" key={feature.title}>

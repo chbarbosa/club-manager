@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/players")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class PlayerController {
 
@@ -42,6 +42,7 @@ public class PlayerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public PlayerResponse createPlayer(@Valid @RequestBody PlayerCreateRequest request) {
         var player = playerService.createPlayer(request);
         auditEventService.record(
@@ -93,6 +94,7 @@ public class PlayerController {
     }
 
     @PutMapping("/{uuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public PlayerResponse updatePlayer(@PathVariable UUID uuid, @Valid @RequestBody PlayerUpdateRequest request) {
         var player = playerService.updatePlayer(uuid, request);
         auditEventService.record(
@@ -105,6 +107,7 @@ public class PlayerController {
     }
 
     @PatchMapping("/{uuid}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public PlayerResponse deactivatePlayer(@PathVariable UUID uuid) {
         var player = playerService.deactivatePlayer(uuid);
         auditEventService.record(
@@ -117,6 +120,7 @@ public class PlayerController {
     }
 
     @PatchMapping("/{uuid}/reactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public PlayerResponse reactivatePlayer(@PathVariable UUID uuid) {
         var player = playerService.reactivatePlayer(uuid);
         auditEventService.record(

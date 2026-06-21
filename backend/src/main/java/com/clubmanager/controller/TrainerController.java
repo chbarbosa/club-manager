@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/trainers")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class TrainerController {
 
@@ -39,6 +39,7 @@ public class TrainerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public TrainerResponse createTrainer(@Valid @RequestBody TrainerCreateRequest request) {
         var trainer = trainerService.createTrainer(request);
         auditEventService.record(
@@ -73,6 +74,7 @@ public class TrainerController {
     }
 
     @PutMapping("/{uuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public TrainerResponse updateTrainer(@PathVariable UUID uuid, @Valid @RequestBody TrainerUpdateRequest request) {
         var trainer = trainerService.updateTrainer(uuid, request);
         auditEventService.record(
@@ -85,6 +87,7 @@ public class TrainerController {
     }
 
     @PatchMapping("/{uuid}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public TrainerResponse deactivateTrainer(@PathVariable UUID uuid) {
         var trainer = trainerService.deactivateTrainer(uuid);
         auditEventService.record(
@@ -97,6 +100,7 @@ public class TrainerController {
     }
 
     @PatchMapping("/{uuid}/reactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public TrainerResponse reactivateTrainer(@PathVariable UUID uuid) {
         var trainer = trainerService.reactivateTrainer(uuid);
         auditEventService.record(

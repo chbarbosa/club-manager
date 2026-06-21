@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class EvaluationEventController {
 
@@ -51,6 +51,7 @@ public class EvaluationEventController {
 
     @PostMapping("/api/v1/evaluations/{evaluationUuid}/events")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationEventResponse createEvent(
             @PathVariable UUID evaluationUuid,
             @Valid @RequestBody EvaluationEventCreateRequest request) {
@@ -72,6 +73,7 @@ public class EvaluationEventController {
     }
 
     @PutMapping("/api/v1/evaluation-events/{eventUuid}/attendance/{playerUuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationEventAttendanceResponse updateAttendance(
             @PathVariable UUID eventUuid,
             @PathVariable UUID playerUuid,
@@ -87,6 +89,7 @@ public class EvaluationEventController {
     }
 
     @PatchMapping("/api/v1/evaluation-events/{eventUuid}/complete")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationEventResponse completeEvent(@PathVariable UUID eventUuid) {
         var event = evaluationEventService.completeEvent(eventUuid);
         auditEventService.record(
@@ -101,6 +104,7 @@ public class EvaluationEventController {
     }
 
     @PatchMapping("/api/v1/evaluation-events/{eventUuid}/cancel")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationEventResponse cancelEvent(
             @PathVariable UUID eventUuid,
             @RequestBody(required = false) EvaluationEventCancelRequest request) {

@@ -98,8 +98,8 @@ each item should become a focused implementation plan before coding starts.
 
 ### Support Access
 
-- Planned as temporary read-only access for the club support responsible to
-  inspect data while investigating a reported bug.
+- Implemented as a first temporary read-only access slice for the club support
+  responsible to inspect data while investigating a reported bug.
 - Support users must not create, update, delete, activate, deactivate, cancel,
   or finalize any data.
 - Any admin can open the Support Access area and create a support access window
@@ -115,6 +115,8 @@ each item should become a focused implementation plan before coding starts.
 - Support users should use a separate `SUPPORT` role or credential model, not
   club admin accounts.
 - Do not expose write actions through the support UI or API.
+- Real SMTP or provider-backed email delivery still needs to be configured
+  after the local notification abstraction.
 
 ## Hardening Phase
 

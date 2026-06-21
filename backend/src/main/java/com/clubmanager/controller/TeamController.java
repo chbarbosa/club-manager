@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/teams")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class TeamController {
 
@@ -45,6 +45,7 @@ public class TeamController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public TeamResponse createTeam(@Valid @RequestBody TeamCreateRequest request) {
         Team team = teamService.createTeam(request);
         auditEventService.record(
@@ -74,6 +75,7 @@ public class TeamController {
     }
 
     @PutMapping("/{uuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public TeamResponse updateTeam(@PathVariable UUID uuid, @Valid @RequestBody TeamUpdateRequest request) {
         Team team = teamService.updateTeam(uuid, request);
         auditEventService.record(
@@ -86,6 +88,7 @@ public class TeamController {
     }
 
     @PatchMapping("/{uuid}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public TeamResponse deactivateTeam(@PathVariable UUID uuid) {
         Team team = teamService.deactivateTeam(uuid);
         auditEventService.record(
@@ -98,6 +101,7 @@ public class TeamController {
     }
 
     @PatchMapping("/{uuid}/reactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public TeamResponse reactivateTeam(@PathVariable UUID uuid) {
         Team team = teamService.reactivateTeam(uuid);
         auditEventService.record(

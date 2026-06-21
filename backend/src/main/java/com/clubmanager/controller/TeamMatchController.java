@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/teams/{teamUuid}/matches")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class TeamMatchController {
 
@@ -44,6 +44,7 @@ public class TeamMatchController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public TeamMatchResponse createMatch(
             @PathVariable UUID teamUuid,
             @Valid @RequestBody TeamMatchCreateRequest request) {
@@ -74,6 +75,7 @@ public class TeamMatchController {
     }
 
     @PutMapping("/{matchUuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public TeamMatchResponse updateMatch(
             @PathVariable UUID teamUuid,
             @PathVariable UUID matchUuid,
@@ -89,6 +91,7 @@ public class TeamMatchController {
     }
 
     @PutMapping("/{matchUuid}/players/{playerUuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public MatchPlayerAnalysisResponse savePlayerAnalysis(
             @PathVariable UUID teamUuid,
             @PathVariable UUID matchUuid,

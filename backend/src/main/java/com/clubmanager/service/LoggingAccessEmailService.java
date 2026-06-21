@@ -19,4 +19,9 @@ public class LoggingAccessEmailService implements AccessEmailService {
     public void sendTrainerPasswordResetCode(Trainer trainer, String code) {
         LOGGER.info("Trainer password reset email prepared email={}", trainer.getEmail());
     }
+
+    @Override
+    public void sendSupportAccessPassword(String email, String password) {
+        LOGGER.info("Support access email prepared email={}", email);
+    }
 }

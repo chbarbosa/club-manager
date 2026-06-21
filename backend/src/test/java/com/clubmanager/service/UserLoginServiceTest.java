@@ -6,11 +6,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.clubmanager.domain.Admin;
+import com.clubmanager.domain.SupportAccess;
 import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.LoginRequest;
 import com.clubmanager.repository.AdminRepository;
+import com.clubmanager.repository.SupportAccessRepository;
 import com.clubmanager.repository.TrainerRepository;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,9 @@ class UserLoginServiceTest {
     private TrainerRepository trainerRepository;
 
     @Mock
+    private SupportAccessRepository supportAccessRepository;
+
+    @Mock
     private LoginRateLimiter loginRateLimiter;
 
     private PasswordEncoder passwordEncoder;
@@ -39,7 +45,7 @@ class UserLoginServiceTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userLoginService = new UserLoginService(adminRepository, trainerRepository, passwordEncoder, loginRateLimiter);
+        userLoginService = new UserLoginService(adminRepository, trainerRepository, supportAccessRepository, passwordEncoder, loginRateLimiter);
     }
 
     @Test
@@ -80,6 +86,26 @@ class UserLoginServiceTest {
         var user = userLoginService.authenticate(new LoginRequest("admin", "admin123"), "127.0.0.1");
 
         assertThat(user.role()).isEqualTo(UserLoginService.ROLE_ADMIN);
+    }
+
+    @Test
+    void authenticate_WithActiveSupportAccess_ReturnsSupportUser() {
+        SupportAccess supportAccess = SupportAccess.builder()
+                .email("support@example.com")
+                .passwordHash(passwordEncoder.encode("Support123"))
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusHours(5))
+                .createdByAdmin(new Admin())
+                .build();
+        when(adminRepository.findByUsername("support@example.com")).thenReturn(Optional.empty());
+        when(trainerRepository.findByEmailIgnoreCase("support@example.com")).thenReturn(Optional.empty());
+        when(supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc("support@example.com"))
+                .thenReturn(Optional.of(supportAccess));
+
+        var user = userLoginService.authenticate(new LoginRequest("support@example.com", "Support123"), "127.0.0.1");
+
+        assertThat(user.role()).isEqualTo(UserLoginService.ROLE_SUPPORT);
+        assertThat(user.username()).isEqualTo("support@example.com");
     }
 
     private Trainer trainer() {

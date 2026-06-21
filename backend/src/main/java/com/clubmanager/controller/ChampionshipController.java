@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/championships")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class ChampionshipController {
 
@@ -36,6 +36,7 @@ public class ChampionshipController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public ChampionshipResponse createChampionship(@Valid @RequestBody ChampionshipCreateRequest request) {
         var championship = championshipService.createChampionship(request);
         auditEventService.record(
@@ -62,6 +63,7 @@ public class ChampionshipController {
     }
 
     @PutMapping("/{uuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ChampionshipResponse updateChampionship(
             @PathVariable UUID uuid,
             @Valid @RequestBody ChampionshipUpdateRequest request) {
@@ -76,6 +78,7 @@ public class ChampionshipController {
     }
 
     @PatchMapping("/{uuid}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ChampionshipResponse deactivateChampionship(@PathVariable UUID uuid) {
         var championship = championshipService.deactivateChampionship(uuid);
         auditEventService.record(
@@ -88,6 +91,7 @@ public class ChampionshipController {
     }
 
     @PatchMapping("/{uuid}/reactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ChampionshipResponse reactivateChampionship(@PathVariable UUID uuid) {
         var championship = championshipService.reactivateChampionship(uuid);
         auditEventService.record(

@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/evaluations")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class EvaluationController {
 
@@ -52,6 +52,7 @@ public class EvaluationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationResponse createEvaluation(@Valid @RequestBody EvaluationCreateRequest request) {
         var evaluation = evaluationService.createEvaluation(request);
         auditEventService.record(
@@ -80,6 +81,7 @@ public class EvaluationController {
     }
 
     @PutMapping("/{uuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationResponse updateEvaluation(@PathVariable UUID uuid, @Valid @RequestBody EvaluationUpdateRequest request) {
         var evaluation = evaluationService.updateEvaluation(uuid, request);
         auditEventService.record(
@@ -92,6 +94,7 @@ public class EvaluationController {
     }
 
     @PatchMapping("/{uuid}/start")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationResponse startEvaluation(@PathVariable UUID uuid) {
         var evaluation = evaluationService.startEvaluation(uuid);
         auditEventService.record(
@@ -106,6 +109,7 @@ public class EvaluationController {
     }
 
     @PatchMapping("/{uuid}/finalize")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationResponse finalizeEvaluation(@PathVariable UUID uuid) {
         var evaluation = evaluationService.finalizeEvaluation(uuid);
         auditEventService.record(
@@ -127,6 +131,7 @@ public class EvaluationController {
     }
 
     @PutMapping("/{uuid}/results/{playerUuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationResultResponse updateResult(
             @PathVariable UUID uuid,
             @PathVariable UUID playerUuid,
