@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/club_manager}
+    driver-class-name: org.postgresql.Driver
+    username: ${DATABASE_USERNAME:club_manager}
+    password: ${DATABASE_PASSWORD:club_manager}
+  h2:
+    console:
+      enabled: false
+
+app:
+  database:
+    # Keep fail-closed until the vendor-specific Flyway migration pass is complete.
+    allow-non-h2: ${DATABASE_ALLOW_NON_H2:false}

@@ -155,6 +155,9 @@ each item should become a focused implementation plan before coding starts.
 - Dockerfiles exist for backend and frontend.
 - Docker Compose starts the frontend, backend, Redis-backed login throttling,
   and persistent H2 file data.
+- PostgreSQL readiness has a fail-closed first slice: the backend includes a
+  `postgres` profile and PostgreSQL/Flyway driver dependencies, but blocks
+  non-H2 datasources until vendor-specific migrations are completed.
 - PostgreSQL deployment remains the next deployment subtask because existing
   Flyway migrations need a portability or vendor-specific migration pass.
 - Future work should document production profiles, reverse proxy/firewall

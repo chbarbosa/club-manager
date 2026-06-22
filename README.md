@@ -138,10 +138,20 @@ The backend container stores H2 files in `/app/data`, mounted from the
 repository `data/` directory. Redis is used for login rate limiting in Compose
 with `LOGIN_RATE_LIMIT_STORAGE=redis`.
 
-PostgreSQL deployment is intentionally deferred. Current Flyway migrations
-contain H2-specific SQL such as `RANDOM_UUID()`, `AUTO_INCREMENT`, and
-`IF NOT EXISTS` constraint clauses, so PostgreSQL needs a dedicated migration
-portability or vendor-specific migration slice.
+PostgreSQL deployment is intentionally fail-closed. A `postgres` Spring profile
+and PostgreSQL/Flyway driver dependencies exist, but startup blocks non-H2
+datasources unless `DATABASE_ALLOW_NON_H2=true` is explicitly set. Current
+Flyway migrations contain H2-specific SQL such as `RANDOM_UUID()`,
+`AUTO_INCREMENT`, and `IF NOT EXISTS` constraint clauses, so PostgreSQL still
+needs a dedicated vendor-specific migration slice before real use.
+
+PostgreSQL profile variables reserved for that later slice:
+
+- `SPRING_PROFILES_ACTIVE=postgres`
+- `DATABASE_URL`
+- `DATABASE_USERNAME`
+- `DATABASE_PASSWORD`
+- `DATABASE_ALLOW_NON_H2=false` by default
 
 ## Test
 

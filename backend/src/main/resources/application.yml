@@ -33,6 +33,8 @@ spring:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:false}
 
 app:
+  database:
+    allow-non-h2: ${DATABASE_ALLOW_NON_H2:false}
   jwt:
     secret: ${JWT_SECRET:Y2x1Yi1tYW5hZ2VyLWRldmVsb3BtZW50LXNlY3JldC1tdXN0LWNoYW5nZQ==}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
@@ -58,6 +60,8 @@ app:
 
 management:
   health:
+    mail:
+      enabled: ${MAIL_HEALTH_ENABLED:false}
     redis:
       enabled: ${REDIS_HEALTH_ENABLED:false}
   prometheus:
