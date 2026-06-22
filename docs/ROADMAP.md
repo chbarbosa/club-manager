@@ -115,6 +115,9 @@ each item should become a focused implementation plan before coding starts.
 - Support users should use a separate `SUPPORT` role or credential model, not
   club admin accounts.
 - Do not expose write actions through the support UI or API.
+- The public SPA is role-aware for support access: support can navigate
+  read-only operational pages, while admin-only routes and mutation controls are
+  hidden or blocked with an access-denied page.
 - SMTP-backed email delivery is available through configuration. A future
   deployment slice can add provider-specific templates and delivery monitoring.
 

@@ -4,10 +4,12 @@ import { getAllAdmins } from '../api/admins.js'
 import { getAllTrainers } from '../api/trainers.js'
 import { createTeam, deactivateTeam, getAllTeams, reactivateTeam } from '../api/teams.js'
 import TeamForm from '../components/teams/TeamForm.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const PAGE_SIZE = 20
 
 export default function TeamsPage() {
+  const { role } = useAuth()
   const [teams, setTeams] = useState([])
   const [trainers, setTrainers] = useState([])
   const [admins, setAdmins] = useState([])
@@ -110,6 +112,7 @@ export default function TeamsPage() {
 
   const canGoPrevious = pageInfo.number > 0
   const canGoNext = pageInfo.totalPages > 0 && pageInfo.number < pageInfo.totalPages - 1
+  const canManage = role === 'ADMIN'
 
   return (
     <main className="container py-5">
@@ -118,15 +121,19 @@ export default function TeamsPage() {
           <h1>Teams</h1>
           <p className="text-muted mb-0">Create and manage club teams by age group and category.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)} type="button">
-          Add Team
-        </button>
+        {canManage && (
+          <button className="btn btn-primary" onClick={() => setShowForm(true)} type="button">
+            Add Team
+          </button>
+        )}
       </div>
+
+      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}
 
-      {showForm && (
+      {canManage && showForm && (
         <div aria-modal="true" className="card mb-4" role="dialog">
           <div className="card-body">
             <h2 className="h4">Add Team</h2>
@@ -187,14 +194,18 @@ export default function TeamsPage() {
               <td>
                 <div className="d-flex gap-2">
                   <Link className="btn btn-sm btn-outline-primary" to={`/teams/${team.uuid}`}>View</Link>
-                  <Link className="btn btn-sm btn-outline-secondary" to={`/teams/${team.uuid}?edit=1`}>Edit</Link>
-                  <button
-                    className={`btn btn-sm ${team.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                    onClick={() => toggleStatus(team)}
-                    type="button"
-                  >
-                    {team.active ? 'Deactivate' : 'Reactivate'}
-                  </button>
+                  {canManage && (
+                    <>
+                      <Link className="btn btn-sm btn-outline-secondary" to={`/teams/${team.uuid}?edit=1`}>Edit</Link>
+                      <button
+                        className={`btn btn-sm ${team.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                        onClick={() => toggleStatus(team)}
+                        type="button"
+                      >
+                        {team.active ? 'Deactivate' : 'Reactivate'}
+                      </button>
+                    </>
+                  )}
                 </div>
               </td>
             </tr>

@@ -20,6 +20,7 @@ import {
 import { getAllPlayers } from '../api/players.js'
 import { exportEvaluationResultsCsv } from '../api/reports.js'
 import EvaluationForm from '../components/evaluations/EvaluationForm.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const EMPTY_EVENT = {
   place: '',
@@ -31,6 +32,8 @@ const EMPTY_EVENT = {
 export default function EvaluationDetailPage() {
   const { uuid } = useParams()
   const location = useLocation()
+  const { role } = useAuth()
+  const canManage = role === 'ADMIN'
   const [evaluation, setEvaluation] = useState(null)
   const [evaluationPlayers, setEvaluationPlayers] = useState([])
   const [evaluationResults, setEvaluationResults] = useState([])
@@ -39,7 +42,7 @@ export default function EvaluationDetailPage() {
   const [events, setEvents] = useState([])
   const [attendanceByEvent, setAttendanceByEvent] = useState({})
   const [eventForm, setEventForm] = useState(EMPTY_EVENT)
-  const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
+  const [editing, setEditing] = useState(canManage && new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -220,18 +223,22 @@ export default function EvaluationDetailPage() {
               <span className={`badge ${statusClass(evaluation.status)}`}>{formatStatus(evaluation.status)}</span>
               {evaluation.expired && <span className="badge text-bg-danger ms-2">Expired</span>}
             </div>
-            <div className="d-flex gap-2">
-              {evaluation.status !== 'FINALIZED' && (
-                <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
-              )}
-              {evaluation.status === 'OPEN' && (
-                <button className="btn btn-outline-success" disabled={!canStartEvaluation} onClick={() => changeStatus('start')} type="button">Start</button>
-              )}
-              {evaluation.status !== 'FINALIZED' && (
-                <button className="btn btn-outline-danger" disabled={!canFinalizeEvaluation} onClick={() => changeStatus('finalize')} type="button">Finalize</button>
-              )}
-            </div>
+            {canManage && (
+              <div className="d-flex gap-2">
+                {evaluation.status !== 'FINALIZED' && (
+                  <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
+                )}
+                {evaluation.status === 'OPEN' && (
+                  <button className="btn btn-outline-success" disabled={!canStartEvaluation} onClick={() => changeStatus('start')} type="button">Start</button>
+                )}
+                {evaluation.status !== 'FINALIZED' && (
+                  <button className="btn btn-outline-danger" disabled={!canFinalizeEvaluation} onClick={() => changeStatus('finalize')} type="button">Finalize</button>
+                )}
+              </div>
+            )}
           </div>
+
+          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
 
           {!hasEvents && evaluation.status !== 'FINALIZED' && (
             <p className="alert alert-info">Schedule at least one event before starting or finalizing this evaluation.</p>
@@ -243,7 +250,7 @@ export default function EvaluationDetailPage() {
             <p className="alert alert-warning">This evaluation is past its limit date and is not finalized.</p>
           )}
 
-          {editing ? (
+          {canManage && editing ? (
             <div className="card mb-4">
               <div className="card-body">
                 <h2 className="h4">Edit evaluation</h2>
@@ -264,7 +271,9 @@ export default function EvaluationDetailPage() {
           <section className="card mb-4">
             <div className="card-body">
               <h2 className="h4">Players</h2>
-              {evaluationLocked ? (
+              {!canManage ? (
+                <p className="text-muted">Support access can view player assignments only.</p>
+              ) : evaluationLocked ? (
                 <p className="text-muted">This evaluation is finalized. Player assignments are locked.</p>
               ) : (
                 <form className="row g-2 align-items-end mb-3" onSubmit={assignPlayer}>
@@ -292,7 +301,9 @@ export default function EvaluationDetailPage() {
                       <td>{assignment.playerName}</td>
                       <td>{formatDate(assignment.assignedDate)}</td>
                       <td>
-                        {evaluationLocked ? (
+                        {!canManage ? (
+                          <span className="text-muted">Read-only</span>
+                        ) : evaluationLocked ? (
                           <span className="text-muted">Locked</span>
                         ) : (
                           <button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment.uuid)} type="button">Remove</button>
@@ -309,7 +320,9 @@ export default function EvaluationDetailPage() {
           <section className="card">
             <div className="card-body">
               <h2 className="h4">Events</h2>
-              {evaluationLocked ? (
+              {!canManage ? (
+                <p className="text-muted">Support access can view events only.</p>
+              ) : evaluationLocked ? (
                 <p className="text-muted">This evaluation is finalized. Events are locked.</p>
               ) : eventPhaseClosed ? (
                 <p className="alert alert-info mb-4">All events are closed. Evaluate all participants before finalizing this evaluation.</p>
@@ -351,6 +364,7 @@ export default function EvaluationDetailPage() {
                   onCancel={() => cancelEvent(event.uuid)}
                   onComplete={() => completeEvent(event.uuid)}
                   onSaveAttendance={saveAttendance}
+                  readOnly={!canManage}
                   players={evaluationPlayers}
                 />
               ))}
@@ -379,7 +393,7 @@ export default function EvaluationDetailPage() {
                       return (
                         <ParticipantEvaluationRow
                           assignment={assignment}
-                          disabled={evaluation.status === 'FINALIZED'}
+                          disabled={!canManage || evaluation.status === 'FINALIZED'}
                           key={assignment.playerUuid}
                           onSave={saveParticipantEvaluation}
                           result={result}
@@ -437,7 +451,7 @@ export default function EvaluationDetailPage() {
   )
 }
 
-function EvaluationEventCard({ attendance, evaluationInProgress, evaluationLocked, event, onCancel, onComplete, onSaveAttendance, players }) {
+function EvaluationEventCard({ attendance, evaluationInProgress, evaluationLocked, event, onCancel, onComplete, onSaveAttendance, players, readOnly }) {
   const attendanceByPlayer = new Map(attendance.map((entry) => [entry.playerUuid, entry]))
 
   return (
@@ -450,7 +464,7 @@ function EvaluationEventCard({ attendance, evaluationInProgress, evaluationLocke
             {event.status}
           </span>
         </div>
-        {!evaluationLocked && event.status === 'SCHEDULED' && (
+        {!readOnly && !evaluationLocked && event.status === 'SCHEDULED' && (
           <div className="d-flex gap-2">
             {evaluationInProgress && (
               <button className="btn btn-sm btn-outline-success" onClick={onComplete} type="button">Complete event</button>
@@ -470,7 +484,7 @@ function EvaluationEventCard({ attendance, evaluationInProgress, evaluationLocke
               <AttendanceRow
                 assignment={assignment}
                 current={current}
-                disabled={evaluationLocked || !evaluationInProgress || event.status !== 'SCHEDULED'}
+                disabled={readOnly || evaluationLocked || !evaluationInProgress || event.status !== 'SCHEDULED'}
                 eventUuid={event.uuid}
                 key={assignment.playerUuid}
                 onSave={onSaveAttendance}

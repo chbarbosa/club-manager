@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createEvaluation, getAllEvaluations } from '../api/evaluations.js'
 import EvaluationForm from '../components/evaluations/EvaluationForm.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const PAGE_SIZE = 20
 
 export default function EvaluationsPage() {
+  const { role } = useAuth()
   const [evaluations, setEvaluations] = useState([])
   const [pageInfo, setPageInfo] = useState({ number: 0, totalPages: 0 })
   const [page, setPage] = useState(0)
@@ -81,6 +83,7 @@ export default function EvaluationsPage() {
 
   const canGoPrevious = pageInfo.number > 0
   const canGoNext = pageInfo.totalPages > 0 && pageInfo.number < pageInfo.totalPages - 1
+  const canManage = role === 'ADMIN'
 
   return (
     <main className="container py-5">
@@ -89,15 +92,18 @@ export default function EvaluationsPage() {
           <h1>Evaluations</h1>
           <p className="text-muted mb-0">Create evaluation groups by age and team category.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)} type="button">
-          Add Evaluation
-        </button>
+        {canManage && (
+          <button className="btn btn-primary" onClick={() => setShowForm(true)} type="button">
+            Add Evaluation
+          </button>
+        )}
       </div>
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}
+      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
 
-      {showForm && (
+      {canManage && showForm && (
         <div aria-modal="true" className="card mb-4" role="dialog">
           <div className="card-body">
             <h2 className="h4">Add Evaluation</h2>
@@ -155,7 +161,7 @@ export default function EvaluationsPage() {
               <td>
                 <div className="d-flex gap-2">
                   <Link className="btn btn-sm btn-outline-primary" to={`/evaluations/${evaluation.uuid}`}>View</Link>
-                  <Link className="btn btn-sm btn-outline-secondary" to={`/evaluations/${evaluation.uuid}?edit=1`}>Edit</Link>
+                  {canManage && <Link className="btn btn-sm btn-outline-secondary" to={`/evaluations/${evaluation.uuid}?edit=1`}>Edit</Link>}
                 </div>
               </td>
             </tr>

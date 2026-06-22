@@ -16,6 +16,7 @@ import {
   updateTeam,
 } from '../api/teams.js'
 import TeamForm from '../components/teams/TeamForm.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const EMPTY_MATCH_FORM = {
   championshipUuid: '',
@@ -46,6 +47,8 @@ const MONTHS = [
 export default function TeamDetailPage() {
   const { uuid } = useParams()
   const location = useLocation()
+  const { role } = useAuth()
+  const canManage = role === 'ADMIN'
   const [team, setTeam] = useState(null)
   const [trainers, setTrainers] = useState([])
   const [admins, setAdmins] = useState([])
@@ -56,7 +59,7 @@ export default function TeamDetailPage() {
   const [matchForm, setMatchForm] = useState(EMPTY_MATCH_FORM)
   const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
   const [jerseyNumber, setJerseyNumber] = useState('')
-  const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
+  const [editing, setEditing] = useState(canManage && new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -246,23 +249,27 @@ export default function TeamDetailPage() {
                 {team.active ? 'Active' : 'Inactive'}
               </span>
             </div>
-            <div className="d-flex gap-2">
-              <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
-              <button
-                className={`btn ${team.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                onClick={toggleStatus}
-                type="button"
-              >
-                {team.active ? 'Deactivate' : 'Reactivate'}
-              </button>
-            </div>
+            {canManage && (
+              <div className="d-flex gap-2">
+                <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
+                <button
+                  className={`btn ${team.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                  onClick={toggleStatus}
+                  type="button"
+                >
+                  {team.active ? 'Deactivate' : 'Reactivate'}
+                </button>
+              </div>
+            )}
           </div>
 
-          <CurrentChampionshipSummary championships={championships} teamUuid={team.uuid} />
+          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+
+          <CurrentChampionshipSummary canManage={canManage} championships={championships} teamUuid={team.uuid} />
 
           <TeamAdviceSummary advice={team.advice} />
 
-          {editing ? (
+          {canManage && editing ? (
             <div className="card">
               <div className="card-body">
                 <h2 className="h4">Edit team</h2>
@@ -298,6 +305,7 @@ export default function TeamDetailPage() {
                   </button>
                 </div>
 
+                {canManage && (
                 <form className="row g-2 align-items-end mb-4" onSubmit={assignPlayer}>
                   <div className="col-md-7">
                     <label className="form-label" htmlFor="roster-player">Player</label>
@@ -332,6 +340,7 @@ export default function TeamDetailPage() {
                     </button>
                   </div>
                 </form>
+                )}
 
                 <table className="table table-striped align-middle">
                   <thead>
@@ -355,9 +364,11 @@ export default function TeamDetailPage() {
                         <td>{formatPositions(assignment.playerPositions)}</td>
                         <td>{formatDate(assignment.assignedDate)}</td>
                         <td>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment)} type="button">
-                            Remove
-                          </button>
+                          {canManage ? (
+                            <button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment)} type="button">
+                              Remove
+                            </button>
+                          ) : '-'}
                         </td>
                       </tr>
                     ))}
@@ -371,6 +382,7 @@ export default function TeamDetailPage() {
                 <h2 className="h3">Matches</h2>
                 <p className="text-muted">Create standalone matches and register trainer analysis for players.</p>
 
+                {canManage && (
                 <form className="card mb-4" onSubmit={submitMatch}>
                   <div className="card-body">
                     <div className="row g-3">
@@ -417,6 +429,7 @@ export default function TeamDetailPage() {
                     </div>
                   </div>
                 </form>
+                )}
 
                 <table className="table table-striped align-middle">
                   <thead>
@@ -454,7 +467,7 @@ export default function TeamDetailPage() {
   )
 }
 
-function CurrentChampionshipSummary({ championships, teamUuid }) {
+function CurrentChampionshipSummary({ canManage, championships, teamUuid }) {
   if (championships.length === 0) {
     return (
       <section className="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -462,9 +475,11 @@ function CurrentChampionshipSummary({ championships, teamUuid }) {
           <strong>No active championship associated.</strong>
           <div>This team is not currently linked to an active championship.</div>
         </div>
-        <Link className="btn btn-danger" to={`/championships?teamUuid=${teamUuid}`}>
-          Add championship
-        </Link>
+        {canManage && (
+          <Link className="btn btn-danger" to={`/championships?teamUuid=${teamUuid}`}>
+            Add championship
+          </Link>
+        )}
       </section>
     )
   }

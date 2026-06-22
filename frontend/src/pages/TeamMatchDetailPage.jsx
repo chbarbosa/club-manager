@@ -3,12 +3,15 @@ import { Link, useParams } from 'react-router-dom'
 import { getAllSetup } from '../api/club.js'
 import { getTeamMatch, saveMatchPlayerAnalysis, updateTeamMatch } from '../api/matches.js'
 import { exportMatchAnalysisCsv } from '../api/reports.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const IMPROVEMENT_TYPE = 'MATCH_IMPROVEMENT_OPPORTUNITY'
 const HIGHLIGHT_TYPE = 'MATCH_HIGHLIGHT'
 
 export default function TeamMatchDetailPage() {
   const { teamUuid, matchUuid } = useParams()
+  const { role } = useAuth()
+  const canManage = role === 'ADMIN'
   const [match, setMatch] = useState(null)
   const [setup, setSetup] = useState({ improvements: [], highlights: [] })
   const [form, setForm] = useState(null)
@@ -134,6 +137,9 @@ export default function TeamMatchDetailPage() {
             </button>
           </div>
 
+          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+
+          {canManage && (
           <form className="card mb-4" onSubmit={submitMatch}>
             <div className="card-body">
               <h2 className="h4">Match details</h2>
@@ -172,6 +178,7 @@ export default function TeamMatchDetailPage() {
               </div>
             </div>
           </form>
+          )}
 
           <section>
             <h2 className="h3">Player analysis</h2>
@@ -198,6 +205,7 @@ export default function TeamMatchDetailPage() {
                       <div className="col-md-6">
                         <h4 className="h6">Improvement opportunities</h4>
                         <TagCheckboxes
+                          disabled={!canManage}
                           field="improvementTags"
                           playerUuid={player.playerUuid}
                           selected={playerForm.improvementTags}
@@ -208,6 +216,7 @@ export default function TeamMatchDetailPage() {
                       <div className="col-md-6">
                         <h4 className="h6">Highlights</h4>
                         <TagCheckboxes
+                          disabled={!canManage}
                           field="highlightTags"
                           playerUuid={player.playerUuid}
                           selected={playerForm.highlightTags}
@@ -221,6 +230,7 @@ export default function TeamMatchDetailPage() {
                       <label className="form-label" htmlFor={`notes-${player.playerUuid}`}>Trainer notes</label>
                       <textarea
                         className="form-control"
+                        disabled={!canManage}
                         id={`notes-${player.playerUuid}`}
                         onChange={(event) => updateAnalysis(player.playerUuid, (current) => ({ ...current, notes: event.target.value }))}
                         rows="2"
@@ -228,9 +238,11 @@ export default function TeamMatchDetailPage() {
                       />
                     </div>
 
-                    <button className="btn btn-primary mt-3" onClick={() => saveAnalysis(player)} type="button">
-                      Save analysis
-                    </button>
+                    {canManage && (
+                      <button className="btn btn-primary mt-3" onClick={() => saveAnalysis(player)} type="button">
+                        Save analysis
+                      </button>
+                    )}
                   </div>
                 </div>
               )
@@ -244,7 +256,7 @@ export default function TeamMatchDetailPage() {
   )
 }
 
-function TagCheckboxes({ field, playerUuid, selected, tags, toggleTag }) {
+function TagCheckboxes({ disabled = false, field, playerUuid, selected, tags, toggleTag }) {
   return (
     <div className="d-flex flex-column gap-1">
       {tags.map((tag) => (
@@ -252,6 +264,7 @@ function TagCheckboxes({ field, playerUuid, selected, tags, toggleTag }) {
           <input
             checked={selected.includes(tag)}
             className="form-check-input"
+            disabled={disabled}
             onChange={() => toggleTag(playerUuid, field, tag)}
             type="checkbox"
           />

@@ -22,8 +22,13 @@ import TrainerDetailPage from '../pages/TrainerDetailPage.jsx'
 import TrainerPasswordConfirmPage from '../pages/TrainerPasswordConfirmPage.jsx'
 import TrainersPage from '../pages/TrainersPage.jsx'
 
-function protectedElement(page) {
-  return <ProtectedRoute>{page}</ProtectedRoute>
+const ADMIN = ['ADMIN']
+const TRAINER = ['TRAINER']
+const ADMIN_OR_SUPPORT = ['ADMIN', 'SUPPORT']
+const AUTHENTICATED = ['ADMIN', 'TRAINER', 'SUPPORT']
+
+function protectedElement(page, roles = AUTHENTICATED) {
+  return <ProtectedRoute roles={roles}>{page}</ProtectedRoute>
 }
 
 export default function AppRoutes() {
@@ -31,25 +36,25 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/trainer-password/confirm" element={<TrainerPasswordConfirmPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/settings/club" element={protectedElement(<ClubSettingsPage />)} />
-      <Route path="/admins" element={protectedElement(<AdminsPage />)} />
-      <Route path="/support-access" element={protectedElement(<SupportAccessPage />)} />
-      <Route path="/players" element={protectedElement(<PlayersPage />)} />
-      <Route path="/players/:uuid" element={protectedElement(<PlayerDetailPage />)} />
-      <Route path="/trainers" element={protectedElement(<TrainersPage />)} />
-      <Route path="/trainers/:uuid" element={protectedElement(<TrainerDetailPage />)} />
-      <Route path="/teams" element={protectedElement(<TeamsPage />)} />
-      <Route path="/teams/:uuid" element={protectedElement(<TeamDetailPage />)} />
-      <Route path="/teams/:teamUuid/matches/:matchUuid" element={protectedElement(<TeamMatchDetailPage />)} />
-      <Route path="/schedules" element={protectedElement(<SchedulesPage />)} />
-      <Route path="/championships" element={protectedElement(<ChampionshipsPage />)} />
-      <Route path="/championships/:uuid" element={protectedElement(<ChampionshipDetailPage />)} />
-      <Route path="/club-analysis" element={protectedElement(<ClubAnalysisPage />)} />
-      <Route path="/club-analysis/:uuid" element={protectedElement(<ClubAnalysisDetailPage />)} />
-      <Route path="/evaluations" element={protectedElement(<EvaluationsPage />)} />
-      <Route path="/evaluations/:uuid" element={protectedElement(<EvaluationDetailPage />)} />
-      <Route path="/account/password" element={protectedElement(<AccountPasswordPage />)} />
+      <Route path="/dashboard" element={protectedElement(<DashboardPage />)} />
+      <Route path="/settings/club" element={protectedElement(<ClubSettingsPage />, ADMIN)} />
+      <Route path="/admins" element={protectedElement(<AdminsPage />, ADMIN)} />
+      <Route path="/support-access" element={protectedElement(<SupportAccessPage />, ADMIN)} />
+      <Route path="/players" element={protectedElement(<PlayersPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/players/:uuid" element={protectedElement(<PlayerDetailPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/trainers" element={protectedElement(<TrainersPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/trainers/:uuid" element={protectedElement(<TrainerDetailPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/teams" element={protectedElement(<TeamsPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/teams/:uuid" element={protectedElement(<TeamDetailPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/teams/:teamUuid/matches/:matchUuid" element={protectedElement(<TeamMatchDetailPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/schedules" element={protectedElement(<SchedulesPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/championships" element={protectedElement(<ChampionshipsPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/championships/:uuid" element={protectedElement(<ChampionshipDetailPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/club-analysis" element={protectedElement(<ClubAnalysisPage />, ADMIN)} />
+      <Route path="/club-analysis/:uuid" element={protectedElement(<ClubAnalysisDetailPage />, ADMIN)} />
+      <Route path="/evaluations" element={protectedElement(<EvaluationsPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/evaluations/:uuid" element={protectedElement(<EvaluationDetailPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/account/password" element={protectedElement(<AccountPasswordPage />, TRAINER)} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )

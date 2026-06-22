@@ -3,13 +3,16 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { inviteTrainerAccess } from '../api/auth.js'
 import { deactivateTrainer, getTrainer, getTrainerTeams, reactivateTrainer, updateTrainer } from '../api/trainers.js'
 import TrainerForm from '../components/trainers/TrainerForm.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function TrainerDetailPage() {
   const { uuid } = useParams()
   const location = useLocation()
+  const { role } = useAuth()
+  const canManage = role === 'ADMIN'
   const [trainer, setTrainer] = useState(null)
   const [teams, setTeams] = useState([])
-  const [editing, setEditing] = useState(new URLSearchParams(location.search).get('edit') === '1')
+  const [editing, setEditing] = useState(canManage && new URLSearchParams(location.search).get('edit') === '1')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -95,20 +98,24 @@ export default function TrainerDetailPage() {
                 {trainer.active ? 'Active' : 'Inactive'}
               </span>
             </div>
-            <div className="d-flex gap-2">
-              <button className="btn btn-outline-secondary" onClick={sendAccessInvite} type="button">Send access</button>
-              <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
-              <button
-                className={`btn ${trainer.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                onClick={toggleStatus}
-                type="button"
-              >
-                {trainer.active ? 'Deactivate' : 'Reactivate'}
-              </button>
-            </div>
+            {canManage && (
+              <div className="d-flex gap-2">
+                <button className="btn btn-outline-secondary" onClick={sendAccessInvite} type="button">Send access</button>
+                <button className="btn btn-outline-primary" onClick={() => setEditing(true)} type="button">Edit</button>
+                <button
+                  className={`btn ${trainer.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                  onClick={toggleStatus}
+                  type="button"
+                >
+                  {trainer.active ? 'Deactivate' : 'Reactivate'}
+                </button>
+              </div>
+            )}
           </div>
 
-          {editing ? (
+          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+
+          {canManage && editing ? (
             <div className="card">
               <div className="card-body">
                 <h2 className="h4">Edit trainer</h2>

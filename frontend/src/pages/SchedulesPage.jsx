@@ -3,6 +3,7 @@ import { getFields } from '../api/fields.js'
 import { exportSchedulesCsv } from '../api/reports.js'
 import { createSchedule, cancelSchedule, getAllSchedules } from '../api/schedules.js'
 import { getAllTeams } from '../api/teams.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const PAGE_SIZE = 20
 
@@ -17,6 +18,7 @@ const EMPTY_FORM = {
 }
 
 export default function SchedulesPage() {
+  const { role } = useAuth()
   const [schedules, setSchedules] = useState([])
   const [teams, setTeams] = useState([])
   const [fields, setFields] = useState([])
@@ -140,6 +142,7 @@ export default function SchedulesPage() {
 
   const canGoPrevious = pageInfo.number > 0
   const canGoNext = pageInfo.totalPages > 0 && pageInfo.number < pageInfo.totalPages - 1
+  const canManage = role === 'ADMIN'
 
   return (
     <main className="container py-5">
@@ -155,7 +158,9 @@ export default function SchedulesPage() {
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}
+      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
 
+      {canManage && (
       <section className="card mb-4">
         <div className="card-body">
           <h2 className="h4">Add schedule</h2>
@@ -216,6 +221,7 @@ export default function SchedulesPage() {
           </form>
         </div>
       </section>
+      )}
 
       <div className="row mb-3">
         <div className="col-md-6">
@@ -261,7 +267,7 @@ export default function SchedulesPage() {
               <td><span className={`badge ${schedule.status === 'CANCELED' ? 'text-bg-secondary' : 'text-bg-success'}`}>{formatStatus(schedule.status)}</span></td>
               <td>{schedule.cancelReason ? `Canceled: ${schedule.cancelReason}` : schedule.notes ?? '-'}</td>
               <td>
-                {schedule.status === 'SCHEDULED' ? (
+                {canManage && schedule.status === 'SCHEDULED' ? (
                   <button className="btn btn-sm btn-outline-danger" onClick={() => cancelEntry(schedule)} type="button">
                     Cancel
                   </button>

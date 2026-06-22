@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { createChampionship, deactivateChampionship, getAllChampionships, reactivateChampionship } from '../api/championships.js'
 import { exportChampionshipsCsv } from '../api/reports.js'
 import { getAllTeams } from '../api/teams.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const PAGE_SIZE = 20
 const MONTHS = [
@@ -34,6 +35,8 @@ const EMPTY_FORM = {
 
 export default function ChampionshipsPage() {
   const location = useLocation()
+  const { role } = useAuth()
+  const canManage = role === 'ADMIN'
   const initialTeamFilter = new URLSearchParams(location.search).get('teamUuid') ?? ''
   const [championships, setChampionships] = useState([])
   const [teams, setTeams] = useState([])
@@ -171,7 +174,9 @@ export default function ChampionshipsPage() {
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}
+      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
 
+      {canManage && (
       <section className="card mb-4">
         <div className="card-body">
           <h2 className="h4">Add championship</h2>
@@ -226,6 +231,7 @@ export default function ChampionshipsPage() {
           </form>
         </div>
       </section>
+      )}
 
       <form className="row g-3 align-items-end mb-3" onSubmit={submitSearch}>
         <div className="col-md-5">
@@ -273,13 +279,15 @@ export default function ChampionshipsPage() {
               <td>
                 <div className="d-flex gap-2">
                   <Link className="btn btn-sm btn-outline-primary" to={`/championships/${championship.uuid}`}>View</Link>
-                  <button
-                    className={`btn btn-sm ${championship.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                    onClick={() => toggleStatus(championship)}
-                    type="button"
-                  >
-                    {championship.active ? 'Deactivate' : 'Reactivate'}
-                  </button>
+                  {canManage && (
+                    <button
+                      className={`btn btn-sm ${championship.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                      onClick={() => toggleStatus(championship)}
+                      type="button"
+                    >
+                      {championship.active ? 'Deactivate' : 'Reactivate'}
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

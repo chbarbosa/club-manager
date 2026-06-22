@@ -7,6 +7,7 @@ import {
   updateChampionship,
 } from '../api/championships.js'
 import { getTeamRoster } from '../api/teams.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const MONTHS = [
   ['1', 'January'],
@@ -25,6 +26,8 @@ const MONTHS = [
 
 export default function ChampionshipDetailPage() {
   const { uuid } = useParams()
+  const { role } = useAuth()
+  const canManage = role === 'ADMIN'
   const [championship, setChampionship] = useState(null)
   const [teamPlayers, setTeamPlayers] = useState([])
   const [editing, setEditing] = useState(false)
@@ -115,19 +118,22 @@ export default function ChampionshipDetailPage() {
                 {championship.active ? 'Active' : 'Inactive'}
               </span>
             </div>
-            <div className="d-flex gap-2">
-              <button className="btn btn-outline-primary" disabled={!championship.active} onClick={() => setEditing(true)} type="button">Edit</button>
-              <button
-                className={`btn ${championship.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                onClick={toggleStatus}
-                type="button"
-              >
-                {championship.active ? 'Deactivate' : 'Reactivate'}
-              </button>
-            </div>
+            {canManage && (
+              <div className="d-flex gap-2">
+                <button className="btn btn-outline-primary" disabled={!championship.active} onClick={() => setEditing(true)} type="button">Edit</button>
+                <button
+                  className={`btn ${championship.active ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                  onClick={toggleStatus}
+                  type="button"
+                >
+                  {championship.active ? 'Deactivate' : 'Reactivate'}
+                </button>
+              </div>
+            )}
           </div>
+          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
 
-          {editing && form ? (
+          {canManage && editing && form ? (
             <section className="card mb-4">
               <div className="card-body">
                 <h2 className="h4">Edit championship</h2>
