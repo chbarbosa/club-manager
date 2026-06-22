@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties({JwtConfig.class, AuditInternalApiConfig.class, AppSecurityConfig.class, CorsConfigProperties.class})
+@EnableConfigurationProperties({JwtConfig.class, AuditInternalApiConfig.class, AppSecurityConfig.class, CorsConfigProperties.class, MailConfigProperties.class})
 @RequiredArgsConstructor
 public class SecurityConfig {
 

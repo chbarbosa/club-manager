@@ -85,8 +85,8 @@ each item should become a focused implementation plan before coding starts.
   random code sent by email.
 - Trainers must be able to reset their own password from the authenticated user
   session, available from the navbar.
-- Real SMTP or provider-backed email delivery still needs to be configured
-  after the local notification abstraction.
+- SMTP-backed email delivery is available through configuration. A future
+  deployment slice can add provider-specific templates and delivery monitoring.
 - Trainers should eventually access trainer-ready workflows for their assigned
   teams, such as rosters, schedules, evaluations, matches, and match player
   analysis. The exact trainer feature list is deferred.
@@ -115,8 +115,8 @@ each item should become a focused implementation plan before coding starts.
 - Support users should use a separate `SUPPORT` role or credential model, not
   club admin accounts.
 - Do not expose write actions through the support UI or API.
-- Real SMTP or provider-backed email delivery still needs to be configured
-  after the local notification abstraction.
+- SMTP-backed email delivery is available through configuration. A future
+  deployment slice can add provider-specific templates and delivery monitoring.
 
 ## Hardening Phase
 

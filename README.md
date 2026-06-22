@@ -75,6 +75,27 @@ Security configuration:
   elastic/cloud deployments where multiple backend instances must share
   throttling counters.
 
+## Backend Email Delivery
+
+Trainer access, trainer password reset, and support access notifications use
+the backend `AccessEmailService`.
+
+By default, `MAIL_ENABLED=false`, so the app logs that a notification was
+prepared without logging codes or temporary passwords. To send real email,
+configure SMTP:
+
+- `MAIL_ENABLED=true`
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+- `MAIL_FROM`
+- `MAIL_SMTP_AUTH=true`
+- `MAIL_SMTP_STARTTLS_ENABLE=true`
+- `APP_URL`, for links in emails, defaults to `http://localhost:5173`
+
+Never send passwords, JWTs, or confirmation codes to application logs.
+
 ## Reports And Exports
 
 Admin CSV exports are available from the UI and API:

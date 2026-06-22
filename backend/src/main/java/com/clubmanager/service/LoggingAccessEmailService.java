@@ -3,9 +3,11 @@ package com.clubmanager.service;
 import com.clubmanager.domain.Trainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(prefix = "app.mail", name = "enabled", havingValue = "false", matchIfMissing = true)
 public class LoggingAccessEmailService implements AccessEmailService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingAccessEmailService.class);
