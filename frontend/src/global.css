@@ -59,3 +59,19 @@ body {
   top: 4.25rem;
   z-index: 1080;
 }
+
+.unavailable-icon {
+  align-items: center;
+  border: 2px solid var(--club-primary);
+  border-radius: 50%;
+  color: var(--club-primary);
+  display: flex;
+  height: 64px;
+  justify-content: center;
+  width: 64px;
+}
+
+.unavailable-icon svg {
+  height: 34px;
+  width: 34px;
+}

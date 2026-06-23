@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import AdminsPage from '../pages/AdminsPage.jsx'
 import AccountPasswordPage from '../pages/AccountPasswordPage.jsx'
@@ -22,6 +22,7 @@ import TrainerDetailPage from '../pages/TrainerDetailPage.jsx'
 import TrainerPasswordConfirmPage from '../pages/TrainerPasswordConfirmPage.jsx'
 import TrainerProfilePage from '../pages/TrainerProfilePage.jsx'
 import TrainersPage from '../pages/TrainersPage.jsx'
+import UnavailablePage from '../pages/UnavailablePage.jsx'
 
 const ADMIN = ['ADMIN']
 const TRAINER = ['TRAINER']
@@ -38,6 +39,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/trainer-password/confirm" element={<TrainerPasswordConfirmPage />} />
+      <Route path="/unavailable" element={<UnavailablePage />} />
       <Route path="/dashboard" element={protectedElement(<DashboardPage />)} />
       <Route path="/settings/club" element={protectedElement(<ClubSettingsPage />, ADMIN)} />
       <Route path="/admins" element={protectedElement(<AdminsPage />, ADMIN)} />
@@ -58,7 +60,7 @@ export default function AppRoutes() {
       <Route path="/evaluations" element={protectedElement(<EvaluationsPage />, OPERATIONAL_READ)} />
       <Route path="/evaluations/:uuid" element={protectedElement(<EvaluationDetailPage />, OPERATIONAL_READ)} />
       <Route path="/account/password" element={protectedElement(<AccountPasswordPage />, TRAINER)} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<UnavailablePage />} />
     </Routes>
   )
 }
