@@ -155,7 +155,9 @@ and PostgreSQL/Flyway driver dependencies exist, but startup blocks non-H2
 datasources unless `DATABASE_ALLOW_NON_H2=true` is explicitly set. Current
 Flyway migrations contain H2-specific SQL such as `RANDOM_UUID()`,
 `AUTO_INCREMENT`, and `IF NOT EXISTS` constraint clauses, so PostgreSQL still
-needs a dedicated vendor-specific migration slice before real use.
+needs a dedicated vendor-specific migration slice before real use. The current
+audit and migration strategy are documented in
+`docs/POSTGRESQL_MIGRATION_AUDIT.md`.
 
 PostgreSQL profile variables reserved for that later slice:
 

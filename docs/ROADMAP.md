@@ -160,6 +160,8 @@ each item should become a focused implementation plan before coding starts.
 - PostgreSQL readiness has a fail-closed first slice: the backend includes a
   `postgres` profile and PostgreSQL/Flyway driver dependencies, but blocks
   non-H2 datasources until vendor-specific migrations are completed.
+- A PostgreSQL migration audit document identifies the current H2-specific SQL
+  patterns and the recommended vendor-specific migration strategy.
 - PostgreSQL deployment remains the next deployment subtask because existing
   Flyway migrations need a portability or vendor-specific migration pass.
 - Future work should document production profiles, reverse proxy/firewall
