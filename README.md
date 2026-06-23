@@ -184,6 +184,12 @@ requests:
 - backend Maven tests with Java 21;
 - frontend install, production build, and Playwright test discovery with Node 20;
 - Docker Compose configuration validation.
+- backend and frontend Docker image builds without publishing.
+
+The current automation is CI plus deployment readiness. It does not publish
+images or deploy to a cloud provider. A future CD slice can publish versioned
+images to a private registry and deploy them after registry, environment, and
+secret-management decisions are made.
 
 Authentication is available for club admins. Player, trainer, team
 registration, current team roster assignment, evaluation groups, evaluation
