@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class DevTrainerSeedRunner implements ApplicationRunner {
 
     static final String DEV_TRAINER_EMAIL = "trainer@clubmanager.com";
-    static final String DEV_TRAINER_PASSWORD = "admin123";
+    static final String DEV_TRAINER_PASSWORD = "pass123";
 
     private final TrainerRepository trainerRepository;
     private final PasswordEncoder passwordEncoder;

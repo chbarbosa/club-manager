@@ -60,7 +60,7 @@ When the backend is started with the `dev` Spring profile, it also creates a
 trainer login if one does not already exist:
 
 - Username: `trainer@clubmanager.com`
-- Password: `admin123`
+- Password: `pass123`
 
 Example:
 
