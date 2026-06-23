@@ -176,6 +176,15 @@ npm.cmd run build
 npm.cmd run test:e2e:list
 ```
 
+## CI
+
+GitHub Actions runs a quality gate on pushes to `main`/`master` and on pull
+requests:
+
+- backend Maven tests with Java 21;
+- frontend install, production build, and Playwright test discovery with Node 20;
+- Docker Compose configuration validation.
+
 Authentication is available for club admins. Player, trainer, team
 registration, current team roster assignment, evaluation groups, evaluation
 events, attendance, event skill-level recording, player skill history, final
