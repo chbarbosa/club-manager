@@ -10,6 +10,7 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +23,12 @@ public class JwtService {
 
 
     public String generateToken(Admin admin) {
-        return generateToken(new AuthenticatedUser(admin.getUsername(), admin.getUuid(), admin.getName(), "ADMIN"));
+        return generateToken(new AuthenticatedUser(
+                admin.getUsername(),
+                admin.getUuid(),
+                admin.getName(),
+                "ADMIN",
+                List.of("ADMIN")));
     }
 
     public String generateToken(AuthenticatedUser user) {

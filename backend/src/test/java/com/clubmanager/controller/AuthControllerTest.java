@@ -42,7 +42,10 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.token").isString())
                 .andExpect(jsonPath("$.token", not("")))
                 .andExpect(jsonPath("$.adminUuid").isString())
-                .andExpect(jsonPath("$.name").value("Admin"));
+                .andExpect(jsonPath("$.name").value("Admin"))
+                .andExpect(jsonPath("$.role").value("ADMIN"))
+                .andExpect(jsonPath("$.availableRoles[0]").value("ADMIN"))
+                .andExpect(jsonPath("$.multipleRoles").value(false));
     }
 
     @Test

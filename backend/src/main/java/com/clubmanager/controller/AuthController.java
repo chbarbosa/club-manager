@@ -51,7 +51,9 @@ public class AuthController {
                 UserLoginService.ROLE_ADMIN.equals(user.role()) ? user.uuid() : null,
                 user.uuid(),
                 user.name(),
-                user.role());
+                user.role(),
+                user.availableRoles(),
+                user.multipleRoles());
     }
 
     @PostMapping("/register")

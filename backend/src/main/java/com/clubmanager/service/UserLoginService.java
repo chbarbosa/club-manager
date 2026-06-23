@@ -8,6 +8,9 @@ import com.clubmanager.repository.AdminRepository;
 import com.clubmanager.repository.SupportAccessRepository;
 import com.clubmanager.repository.TrainerRepository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,28 +35,42 @@ public class UserLoginService {
     public AuthenticatedUser authenticate(LoginRequest request, String clientAddress) {
         loginRateLimiter.ensureAllowed(request.username(), clientAddress);
 
-        var admin = adminRepository.findByUsername(request.username());
-        if (admin.isPresent() && isValidAdmin(admin.get(), request.password())) {
-            loginRateLimiter.recordSuccess(request.username(), clientAddress);
-            return new AuthenticatedUser(admin.get().getUsername(), admin.get().getUuid(), admin.get().getName(), ROLE_ADMIN);
-        }
+        List<LoginCandidate> candidates = new ArrayList<>();
 
-        var trainer = trainerRepository.findByEmailIgnoreCase(request.username());
-        if (trainer.isPresent() && isValidTrainer(trainer.get(), request.password())) {
-            loginRateLimiter.recordSuccess(request.username(), clientAddress);
-            return new AuthenticatedUser(trainer.get().getEmail(), trainer.get().getUuid(), trainer.get().getName(), ROLE_TRAINER);
-        }
+        adminRepository.findByUsername(request.username())
+                .filter(admin -> isValidAdmin(admin, request.password()))
+                .ifPresent(admin -> candidates.add(new LoginCandidate(
+                        admin.getUsername(),
+                        admin.getUuid(),
+                        admin.getName(),
+                        ROLE_ADMIN)));
 
-        var supportAccess = supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(request.username());
-        if (supportAccess.isPresent()
-                && supportAccess.get().isActive(LocalDateTime.now())
-                && passwordEncoder.matches(request.password(), supportAccess.get().getPasswordHash())) {
+        trainerRepository.findByEmailIgnoreCase(request.username())
+                .filter(trainer -> isValidTrainer(trainer, request.password()))
+                .ifPresent(trainer -> candidates.add(new LoginCandidate(
+                        trainer.getEmail(),
+                        trainer.getUuid(),
+                        trainer.getName(),
+                        ROLE_TRAINER)));
+
+        supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(request.username())
+                .filter(supportAccess -> supportAccess.isActive(LocalDateTime.now()))
+                .filter(supportAccess -> passwordEncoder.matches(request.password(), supportAccess.getPasswordHash()))
+                .ifPresent(supportAccess -> candidates.add(new LoginCandidate(
+                        supportAccess.getEmail(),
+                        supportAccess.getUuid(),
+                        "Support",
+                        ROLE_SUPPORT)));
+
+        if (!candidates.isEmpty()) {
             loginRateLimiter.recordSuccess(request.username(), clientAddress);
+            LoginCandidate effectiveUser = candidates.get(0);
             return new AuthenticatedUser(
-                    supportAccess.get().getEmail(),
-                    supportAccess.get().getUuid(),
-                    "Support",
-                    ROLE_SUPPORT);
+                    effectiveUser.username(),
+                    effectiveUser.uuid(),
+                    effectiveUser.name(),
+                    effectiveUser.role(),
+                    candidates.stream().map(LoginCandidate::role).toList());
         }
 
         loginRateLimiter.recordFailure(request.username(), clientAddress);
@@ -68,5 +85,8 @@ public class UserLoginService {
         return trainer.isActive()
                 && trainer.getPasswordHash() != null
                 && passwordEncoder.matches(password, trainer.getPasswordHash());
+    }
+
+    private record LoginCandidate(String username, UUID uuid, String name, String role) {
     }
 }

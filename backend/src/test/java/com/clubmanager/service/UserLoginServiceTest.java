@@ -89,6 +89,26 @@ class UserLoginServiceTest {
     }
 
     @Test
+    void authenticate_WithAdminAndTrainerCredentials_UsesAdminPriorityAndReportsBothRoles() {
+        Admin admin = new Admin();
+        admin.setUsername("carlos@club.com");
+        admin.setName("Carlos Admin");
+        admin.setPasswordHash(passwordEncoder.encode("StrongPass1"));
+
+        Trainer trainer = trainer();
+        trainer.setPasswordHash(passwordEncoder.encode("StrongPass1"));
+
+        when(adminRepository.findByUsername("carlos@club.com")).thenReturn(Optional.of(admin));
+        when(trainerRepository.findByEmailIgnoreCase("carlos@club.com")).thenReturn(Optional.of(trainer));
+
+        var user = userLoginService.authenticate(new LoginRequest("carlos@club.com", "StrongPass1"), "127.0.0.1");
+
+        assertThat(user.role()).isEqualTo(UserLoginService.ROLE_ADMIN);
+        assertThat(user.availableRoles()).containsExactly(UserLoginService.ROLE_ADMIN, UserLoginService.ROLE_TRAINER);
+        assertThat(user.multipleRoles()).isTrue();
+    }
+
+    @Test
     void authenticate_WithActiveSupportAccess_ReturnsSupportUser() {
         SupportAccess supportAccess = SupportAccess.builder()
                 .email("support@example.com")
@@ -106,6 +126,31 @@ class UserLoginServiceTest {
 
         assertThat(user.role()).isEqualTo(UserLoginService.ROLE_SUPPORT);
         assertThat(user.username()).isEqualTo("support@example.com");
+    }
+
+    @Test
+    void authenticate_WithTrainerAndSupportCredentials_UsesTrainerPriorityAndReportsBothRoles() {
+        Trainer trainer = trainer();
+        trainer.setPasswordHash(passwordEncoder.encode("StrongPass1"));
+
+        SupportAccess supportAccess = SupportAccess.builder()
+                .email(trainer.getEmail())
+                .passwordHash(passwordEncoder.encode("StrongPass1"))
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusHours(5))
+                .createdByAdmin(new Admin())
+                .build();
+
+        when(adminRepository.findByUsername(trainer.getEmail())).thenReturn(Optional.empty());
+        when(trainerRepository.findByEmailIgnoreCase(trainer.getEmail())).thenReturn(Optional.of(trainer));
+        when(supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(trainer.getEmail()))
+                .thenReturn(Optional.of(supportAccess));
+
+        var user = userLoginService.authenticate(new LoginRequest(trainer.getEmail(), "StrongPass1"), "127.0.0.1");
+
+        assertThat(user.role()).isEqualTo(UserLoginService.ROLE_TRAINER);
+        assertThat(user.availableRoles()).containsExactly(UserLoginService.ROLE_TRAINER, UserLoginService.ROLE_SUPPORT);
+        assertThat(user.multipleRoles()).isTrue();
     }
 
     private Trainer trainer() {

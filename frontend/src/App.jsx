@@ -1,4 +1,5 @@
 import { BrowserRouter } from 'react-router-dom'
+import MultipleRolesAlert from './components/MultipleRolesAlert.jsx'
 import Navbar from './components/Navbar.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ClubProvider } from './context/ClubContext.jsx'
@@ -10,6 +11,7 @@ export default function App() {
       <AuthProvider>
         <ClubProvider>
           <Navbar />
+          <MultipleRolesAlert />
           <AppRoutes />
         </ClubProvider>
       </AuthProvider>

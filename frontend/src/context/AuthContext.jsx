@@ -10,6 +10,8 @@ export function AuthProvider({ children }) {
   const [userUuid, setUserUuid] = useState(null)
   const [name, setName] = useState(null)
   const [role, setRole] = useState(null)
+  const [availableRoles, setAvailableRoles] = useState([])
+  const [multipleRoles, setMultipleRoles] = useState(false)
 
   const login = useCallback(async (username, password) => {
     const response = await loginRequest(username, password)
@@ -18,6 +20,8 @@ export function AuthProvider({ children }) {
     setUserUuid(response.userUuid)
     setName(response.name)
     setRole(response.role)
+    setAvailableRoles(response.availableRoles ?? (response.role ? [response.role] : []))
+    setMultipleRoles(Boolean(response.multipleRoles))
     return response
   }, [])
 
@@ -27,6 +31,8 @@ export function AuthProvider({ children }) {
     setUserUuid(null)
     setName(null)
     setRole(null)
+    setAvailableRoles([])
+    setMultipleRoles(false)
   }, [])
 
   const getToken = useCallback(() => token, [token])
@@ -37,8 +43,19 @@ export function AuthProvider({ children }) {
   }, [getToken, logout])
 
   const value = useMemo(
-    () => ({ login, logout, getToken, isAuthenticated, adminUuid, userUuid, name, role }),
-    [login, logout, getToken, isAuthenticated, adminUuid, userUuid, name, role],
+    () => ({
+      login,
+      logout,
+      getToken,
+      isAuthenticated,
+      adminUuid,
+      userUuid,
+      name,
+      role,
+      availableRoles,
+      multipleRoles,
+    }),
+    [login, logout, getToken, isAuthenticated, adminUuid, userUuid, name, role, availableRoles, multipleRoles],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
