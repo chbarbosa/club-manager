@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/evaluations/{evaluationUuid}/players")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class EvaluationPlayerController {
 
@@ -40,6 +41,7 @@ public class EvaluationPlayerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationPlayerResponse assignPlayer(
             @PathVariable UUID evaluationUuid,
             @Valid @RequestBody EvaluationPlayerAssignRequest request) {
@@ -54,6 +56,7 @@ public class EvaluationPlayerController {
     }
 
     @DeleteMapping("/{assignmentUuid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public EvaluationPlayerResponse removePlayer(@PathVariable UUID evaluationUuid, @PathVariable UUID assignmentUuid) {
         var assignment = evaluationPlayerService.removePlayer(evaluationUuid, assignmentUuid);
         auditEventService.record(

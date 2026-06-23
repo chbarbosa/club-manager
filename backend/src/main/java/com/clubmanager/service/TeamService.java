@@ -69,6 +69,16 @@ public class TeamService {
         return teamRepository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Team> searchTeamsForTrainer(
+            Trainer trainer,
+            String identification,
+            TeamCategory teamCategory,
+            Pageable pageable) {
+        String cleanIdentification = StringUtils.hasText(identification) ? identification.trim() : null;
+        return teamRepository.findAssignedToTrainer(trainer, cleanIdentification, teamCategory, pageable);
+    }
+
     @Transactional
     public Team updateTeam(UUID uuid, TeamUpdateRequest request) {
         Team team = getTeamByUuid(uuid);

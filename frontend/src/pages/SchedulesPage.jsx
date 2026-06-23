@@ -30,10 +30,12 @@ export default function SchedulesPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const canManage = role === 'ADMIN'
+  const canExport = role !== 'TRAINER'
 
   useEffect(() => {
     loadReferenceData()
-  }, [])
+  }, [canManage])
 
   useEffect(() => {
     loadSchedules()
@@ -44,7 +46,7 @@ export default function SchedulesPage() {
     try {
       const [teamResponse, fieldResponse] = await Promise.all([
         getAllTeams({ page: 0, size: 100 }),
-        getFields(),
+        canManage ? getFields() : Promise.resolve([]),
       ])
       const activeTeams = (teamResponse.content ?? []).filter((team) => team.active)
       setTeams(activeTeams)
@@ -142,8 +144,6 @@ export default function SchedulesPage() {
 
   const canGoPrevious = pageInfo.number > 0
   const canGoNext = pageInfo.totalPages > 0 && pageInfo.number < pageInfo.totalPages - 1
-  const canManage = role === 'ADMIN'
-
   return (
     <main className="container py-5">
       <div className="d-flex justify-content-between align-items-start gap-3 mb-4">
@@ -151,14 +151,16 @@ export default function SchedulesPage() {
           <h1>Schedules</h1>
           <p className="text-muted mb-0">Plan club sessions for teams and fields.</p>
         </div>
-        <button className="btn btn-outline-primary" onClick={exportCsv} type="button">
-          Export CSV
-        </button>
+        {canExport && (
+          <button className="btn btn-outline-primary" onClick={exportCsv} type="button">
+            Export CSV
+          </button>
+        )}
       </div>
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}
-      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+      {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
       {canManage && (
       <section className="card mb-4">

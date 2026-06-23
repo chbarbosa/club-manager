@@ -49,6 +49,7 @@ export default function TeamDetailPage() {
   const location = useLocation()
   const { role } = useAuth()
   const canManage = role === 'ADMIN'
+  const canExport = role !== 'TRAINER'
   const [team, setTeam] = useState(null)
   const [trainers, setTrainers] = useState([])
   const [admins, setAdmins] = useState([])
@@ -65,12 +66,14 @@ export default function TeamDetailPage() {
 
   useEffect(() => {
     loadTeam()
-    loadTrainers()
-    loadAdmins()
-    loadPlayers()
+    if (canManage) {
+      loadTrainers()
+      loadAdmins()
+      loadPlayers()
+    }
     loadRoster()
     loadMatches()
-  }, [uuid])
+  }, [uuid, canManage])
 
   async function loadTeam() {
     setError('')
@@ -263,7 +266,7 @@ export default function TeamDetailPage() {
             )}
           </div>
 
-          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+          {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
           <CurrentChampionshipSummary canManage={canManage} championships={championships} teamUuid={team.uuid} />
 
@@ -300,9 +303,11 @@ export default function TeamDetailPage() {
                     <p className="mb-1"><strong>{roster.length}</strong> active player{roster.length === 1 ? '' : 's'}</p>
                     <p className="text-muted mb-0">Assign active players with the same team category and age limit.</p>
                   </div>
-                  <button className="btn btn-outline-secondary" onClick={exportRoster} type="button">
-                    Export roster CSV
-                  </button>
+                  {canExport && (
+                    <button className="btn btn-outline-secondary" onClick={exportRoster} type="button">
+                      Export roster CSV
+                    </button>
+                  )}
                 </div>
 
                 {canManage && (
@@ -450,7 +455,7 @@ export default function TeamDetailPage() {
                         <td>{match.championshipName ?? '-'}</td>
                         <td>
                           <Link className="btn btn-sm btn-outline-primary" to={`/teams/${uuid}/matches/${match.uuid}`}>
-                            Analyze
+                            {canManage ? 'Analyze' : 'View analysis'}
                           </Link>
                         </td>
                       </tr>

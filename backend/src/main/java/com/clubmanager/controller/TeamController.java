@@ -12,6 +12,7 @@ import com.clubmanager.domain.Team;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.TeamAdviceService;
 import com.clubmanager.service.TeamService;
+import com.clubmanager.service.TrainerAuthorizationService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/teams")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class TeamController {
 
@@ -40,6 +41,7 @@ public class TeamController {
     private final TeamAdviceService teamAdviceService;
     private final TeamAdviceMapper teamAdviceMapper;
     private final AuditEventService auditEventService;
+    private final TrainerAuthorizationService trainerAuthorizationService;
 
 
 
@@ -64,11 +66,17 @@ public class TeamController {
             @RequestParam(required = false) TeamCategory teamCategory,
             Pageable pageable) {
         String effectiveIdentification = identification != null ? identification : ageGroup;
+        if (trainerAuthorizationService.getCurrentTrainer().isPresent()) {
+            var trainer = trainerAuthorizationService.requireCurrentTrainer();
+            return PageResponse.from(teamService.searchTeamsForTrainer(trainer, effectiveIdentification, teamCategory, pageable)
+                    .map(teamMapper::toSummaryResponse));
+        }
         return PageResponse.from(teamService.searchTeams(effectiveIdentification, teamCategory, pageable)
                 .map(teamMapper::toSummaryResponse));
     }
 
     @GetMapping("/{uuid}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT') or @trainerAuthorizationService.canAccessTeam(#uuid)")
     public TeamResponse getTeamByUuid(@PathVariable UUID uuid) {
         Team team = teamService.getTeamByUuid(uuid);
         return teamMapper.toResponse(team, teamAdviceMapper.toResponse(teamAdviceService.analyze(team)));

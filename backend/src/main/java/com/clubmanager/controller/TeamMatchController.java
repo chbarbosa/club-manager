@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/teams/{teamUuid}/matches")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class TeamMatchController {
 
@@ -59,6 +59,7 @@ public class TeamMatchController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public List<TeamMatchResponse> getTeamMatches(@PathVariable UUID teamUuid) {
         return teamMatchService.getTeamMatches(teamUuid).stream()
                 .map(teamMatchMapper::toSummaryResponse)
@@ -66,6 +67,7 @@ public class TeamMatchController {
     }
 
     @GetMapping("/{matchUuid}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public TeamMatchResponse getTeamMatch(@PathVariable UUID teamUuid, @PathVariable UUID matchUuid) {
         TeamMatch match = teamMatchService.getTeamMatch(teamUuid, matchUuid);
         return teamMatchMapper.toDetailResponse(

@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class EvaluationEventController {
 

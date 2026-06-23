@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/evaluations")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class EvaluationController {
 

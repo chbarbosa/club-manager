@@ -174,7 +174,7 @@ export default function ChampionshipsPage() {
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}
-      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+      {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
       {canManage && (
       <section className="card mb-4">

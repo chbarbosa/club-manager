@@ -39,7 +39,16 @@ export default function Navbar() {
               <Link className="nav-link" to="/evaluations">Evaluations</Link>
             </>
           )}
-          {isTrainer && <Link className="nav-link" to="/account/password">Password</Link>}
+          {isTrainer && (
+            <>
+              <Link className="nav-link" to="/players">Players</Link>
+              <Link className="nav-link" to="/teams">My teams</Link>
+              <Link className="nav-link" to="/schedules">Training schedules</Link>
+              <Link className="nav-link" to="/evaluations">Evaluations</Link>
+              <Link className="nav-link" to="/trainers/me">My profile</Link>
+              <Link className="nav-link" to="/account/password">Password</Link>
+            </>
+          )}
           <span className="navbar-text text-white">{name}</span>
           <button className="btn btn-outline-light btn-sm" onClick={logout} type="button">
             Logout

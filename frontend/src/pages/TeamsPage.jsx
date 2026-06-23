@@ -22,15 +22,18 @@ export default function TeamsPage() {
   const [error, setError] = useState('')
 
   const activeSearch = useDebouncedValue(search, 300)
+  const canManage = role === 'ADMIN'
 
   useEffect(() => {
     loadTeams()
   }, [page, activeSearch, teamCategory])
 
   useEffect(() => {
-    loadTrainers()
-    loadAdmins()
-  }, [])
+    if (canManage) {
+      loadTrainers()
+      loadAdmins()
+    }
+  }, [canManage])
 
   async function loadTeams() {
     setError('')
@@ -112,8 +115,6 @@ export default function TeamsPage() {
 
   const canGoPrevious = pageInfo.number > 0
   const canGoNext = pageInfo.totalPages > 0 && pageInfo.number < pageInfo.totalPages - 1
-  const canManage = role === 'ADMIN'
-
   return (
     <main className="container py-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -128,7 +129,7 @@ export default function TeamsPage() {
         )}
       </div>
 
-      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+      {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}

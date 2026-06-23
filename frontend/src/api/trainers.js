@@ -16,6 +16,10 @@ export function getTrainerTeams(uuid) {
   return api.get(`/trainers/${uuid}/teams`).then((response) => response.data)
 }
 
+export function getCurrentTrainerProfile() {
+  return api.get('/trainers/me').then((response) => response.data)
+}
+
 export function updateTrainer(uuid, data) {
   return api.put(`/trainers/${uuid}`, data).then((response) => response.data)
 }

@@ -34,6 +34,7 @@ export default function EvaluationDetailPage() {
   const location = useLocation()
   const { role } = useAuth()
   const canManage = role === 'ADMIN'
+  const canExport = role !== 'TRAINER'
   const [evaluation, setEvaluation] = useState(null)
   const [evaluationPlayers, setEvaluationPlayers] = useState([])
   const [evaluationResults, setEvaluationResults] = useState([])
@@ -238,7 +239,7 @@ export default function EvaluationDetailPage() {
             )}
           </div>
 
-          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+          {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
           {!hasEvents && evaluation.status !== 'FINALIZED' && (
             <p className="alert alert-info">Schedule at least one event before starting or finalizing this evaluation.</p>
@@ -272,7 +273,7 @@ export default function EvaluationDetailPage() {
             <div className="card-body">
               <h2 className="h4">Players</h2>
               {!canManage ? (
-                <p className="text-muted">Support access can view player assignments only.</p>
+                <p className="text-muted">This role can view player assignments only.</p>
               ) : evaluationLocked ? (
                 <p className="text-muted">This evaluation is finalized. Player assignments are locked.</p>
               ) : (
@@ -321,7 +322,7 @@ export default function EvaluationDetailPage() {
             <div className="card-body">
               <h2 className="h4">Events</h2>
               {!canManage ? (
-                <p className="text-muted">Support access can view events only.</p>
+                <p className="text-muted">This role can view events only.</p>
               ) : evaluationLocked ? (
                 <p className="text-muted">This evaluation is finalized. Events are locked.</p>
               ) : eventPhaseClosed ? (
@@ -414,9 +415,11 @@ export default function EvaluationDetailPage() {
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
                   <h2 className="h4 mb-0">Results</h2>
-                  <button className="btn btn-outline-primary btn-sm" onClick={exportResultsCsv} type="button">
-                    Export CSV
-                  </button>
+                  {canExport && (
+                    <button className="btn btn-outline-primary btn-sm" onClick={exportResultsCsv} type="button">
+                      Export CSV
+                    </button>
+                  )}
                 </div>
                 {evaluationResults.length > 0 ? (
                   <table className="table table-sm align-middle">

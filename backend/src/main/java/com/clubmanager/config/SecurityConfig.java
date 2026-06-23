@@ -57,6 +57,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/trainer-access/password-reset/**").hasRole("TRAINER")
                         .requestMatchers("/api/v1/admins/**", "/api/v1/support-access/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/club").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/players/**",
+                                "/api/v1/evaluations/**",
+                                "/api/v1/evaluation-events/**",
+                                "/api/v1/teams/**",
+                                "/api/v1/schedules/**",
+                                "/api/v1/championships/**",
+                                "/api/v1/trainers/me").hasAnyRole("ADMIN", "SUPPORT", "TRAINER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/**").hasAnyRole("ADMIN", "SUPPORT")
                         .requestMatchers("/h2-console/**", "/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().hasRole("ADMIN")

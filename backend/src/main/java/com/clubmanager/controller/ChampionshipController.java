@@ -7,6 +7,7 @@ import com.clubmanager.dto.PageResponse;
 import com.clubmanager.mapper.ChampionshipMapper;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.ChampionshipService;
+import com.clubmanager.service.TrainerAuthorizationService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,13 +27,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/championships")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class ChampionshipController {
 
     private final ChampionshipService championshipService;
     private final ChampionshipMapper championshipMapper;
     private final AuditEventService auditEventService;
+    private final TrainerAuthorizationService trainerAuthorizationService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -53,11 +55,16 @@ public class ChampionshipController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) UUID teamUuid,
             Pageable pageable) {
+        if (trainerAuthorizationService.getCurrentTrainer().isPresent()
+                && (teamUuid == null || !trainerAuthorizationService.canAccessTeam(teamUuid))) {
+            throw new org.springframework.security.access.AccessDeniedException("Trainer can only view championships for assigned teams");
+        }
         return PageResponse.from(championshipService.searchChampionships(name, teamUuid, pageable)
                 .map(championshipMapper::toResponse));
     }
 
     @GetMapping("/{uuid}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT') or @trainerAuthorizationService.canAccessChampionship(#uuid)")
     public ChampionshipResponse getChampionshipByUuid(@PathVariable UUID uuid) {
         return championshipMapper.toResponse(championshipService.getChampionshipByUuid(uuid));
     }

@@ -4,11 +4,13 @@ import com.clubmanager.domain.Team;
 import com.clubmanager.dto.PageResponse;
 import com.clubmanager.dto.TrainerTeamHistoryResponse;
 import com.clubmanager.dto.TrainerCreateRequest;
+import com.clubmanager.dto.TrainerProfileResponse;
 import com.clubmanager.dto.TrainerResponse;
 import com.clubmanager.dto.TrainerSummaryResponse;
 import com.clubmanager.dto.TrainerUpdateRequest;
 import com.clubmanager.mapper.TrainerMapper;
 import com.clubmanager.service.AuditEventService;
+import com.clubmanager.service.TrainerAuthorizationService;
 import com.clubmanager.service.TrainerService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -29,13 +31,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/trainers")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class TrainerController {
 
     private final TrainerService trainerService;
     private final TrainerMapper trainerMapper;
     private final AuditEventService auditEventService;
+    private final TrainerAuthorizationService trainerAuthorizationService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -52,6 +55,7 @@ public class TrainerController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
     public PageResponse<TrainerSummaryResponse> getAllTrainers(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean active,
@@ -61,11 +65,24 @@ public class TrainerController {
     }
 
     @GetMapping("/{uuid}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
     public TrainerResponse getTrainerByUuid(@PathVariable UUID uuid) {
         return trainerMapper.toResponse(trainerService.getTrainerByUuid(uuid));
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('TRAINER')")
+    public TrainerProfileResponse getCurrentTrainer() {
+        var trainer = trainerAuthorizationService.requireCurrentTrainer();
+        return new TrainerProfileResponse(
+                trainerMapper.toResponse(trainer),
+                trainerService.getTeamHistory(trainer.getUuid()).stream()
+                        .map(team -> toTeamHistoryResponse(team, trainer.getUuid()))
+                        .toList());
+    }
+
     @GetMapping("/{uuid}/teams")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
     public java.util.List<TrainerTeamHistoryResponse> getTrainerTeams(@PathVariable UUID uuid) {
         var trainer = trainerService.getTrainerByUuid(uuid);
         return trainerService.getTeamHistory(uuid).stream()

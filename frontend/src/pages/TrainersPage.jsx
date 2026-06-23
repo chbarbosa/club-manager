@@ -102,7 +102,7 @@ export default function TrainersPage() {
         )}
       </div>
 
-      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+      {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}

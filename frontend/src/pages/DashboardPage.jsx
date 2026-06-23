@@ -88,25 +88,62 @@ const SUPPORT_FEATURES = FEATURES.filter((feature) => [
   action: `View ${feature.title.toLowerCase()}`,
 }))
 
+const TRAINER_FEATURES = [
+  {
+    title: 'Players',
+    description: 'View club players and player detail information for training context.',
+    icon: 'players',
+    path: '/players',
+    action: 'View players',
+  },
+  {
+    title: 'My teams',
+    description: 'Open the teams where you are the trainer or assistant trainer.',
+    icon: 'teams',
+    path: '/teams',
+    action: 'View my teams',
+  },
+  {
+    title: 'Evaluations',
+    description: 'Read evaluation groups, events, participation, and finalized skill levels.',
+    icon: 'evaluations',
+    path: '/evaluations',
+    action: 'View evaluations',
+  },
+  {
+    title: 'Training schedules',
+    description: 'See training sessions planned for your assigned teams.',
+    icon: 'schedules',
+    path: '/schedules',
+    action: 'View schedules',
+  },
+  {
+    title: 'My trainer profile',
+    description: 'Review your trainer details and team history.',
+    icon: 'trainers',
+    path: '/trainers/me',
+    action: 'Open profile',
+  },
+  {
+    title: 'Password reset',
+    description: 'Change your trainer password with email confirmation.',
+    icon: 'settings',
+    path: '/account/password',
+    action: 'Reset password',
+  },
+]
+
 export default function DashboardPage() {
   const { isAuthenticated, role } = useAuth()
-  const visibleFeatures = role === 'ADMIN' ? FEATURES : SUPPORT_FEATURES
+  const visibleFeatures = role === 'ADMIN' ? FEATURES : role === 'TRAINER' ? TRAINER_FEATURES : SUPPORT_FEATURES
 
   return (
     <main className="container py-5">
       <h1>Dashboard</h1>
       <p className="text-muted">Your club management workspace is ready.</p>
       {!isAuthenticated() && <Link className="btn btn-primary" to="/login">Admin login</Link>}
-      {isAuthenticated() && role === 'TRAINER' && (
-        <div className="card mt-4">
-          <div className="card-body">
-            <h2 className="h4">Trainer access ready</h2>
-            <p className="mb-0 text-muted">Your trainer workspace features will be enabled in a future step.</p>
-          </div>
-        </div>
-      )}
       {isAuthenticated() && role === 'SUPPORT' && <p className="alert alert-info mt-4">Support access is read-only and all viewed data is recorded.</p>}
-      {isAuthenticated() && ['ADMIN', 'SUPPORT'].includes(role) && (
+      {isAuthenticated() && ['ADMIN', 'SUPPORT', 'TRAINER'].includes(role) && (
         <div className="row g-4 mt-2">
           {visibleFeatures.map((feature) => (
             <div className="col-md-6 col-xl-4" key={feature.title}>

@@ -12,6 +12,7 @@ export default function TeamMatchDetailPage() {
   const { teamUuid, matchUuid } = useParams()
   const { role } = useAuth()
   const canManage = role === 'ADMIN'
+  const canExport = role !== 'TRAINER'
   const [match, setMatch] = useState(null)
   const [setup, setSetup] = useState({ improvements: [], highlights: [] })
   const [form, setForm] = useState(null)
@@ -26,17 +27,17 @@ export default function TeamMatchDetailPage() {
   async function loadData() {
     setError('')
     try {
-      const [matchResponse, setupResponse] = await Promise.all([
-        getTeamMatch(teamUuid, matchUuid),
-        getAllSetup(),
-      ])
+      const matchResponse = await getTeamMatch(teamUuid, matchUuid)
       setMatch(matchResponse)
       setForm(toMatchForm(matchResponse))
       setAnalysisForms(toAnalysisForms(matchResponse.playerAnalyses ?? []))
-      setSetup({
-        improvements: setupValues(setupResponse, IMPROVEMENT_TYPE),
-        highlights: setupValues(setupResponse, HIGHLIGHT_TYPE),
-      })
+      if (canManage) {
+        const setupResponse = await getAllSetup()
+        setSetup({
+          improvements: setupValues(setupResponse, IMPROVEMENT_TYPE),
+          highlights: setupValues(setupResponse, HIGHLIGHT_TYPE),
+        })
+      }
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load match analysis.')
     }
@@ -132,12 +133,14 @@ export default function TeamMatchDetailPage() {
                 {match.championshipName ? ` · ${match.championshipName}` : ''}
               </p>
             </div>
-            <button className="btn btn-outline-primary" onClick={exportCsv} type="button">
-              Export CSV
-            </button>
+            {canExport && (
+              <button className="btn btn-outline-primary" onClick={exportCsv} type="button">
+                Export CSV
+              </button>
+            )}
           </div>
 
-          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+          {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
           {canManage && (
           <form className="card mb-4" onSubmit={submitMatch}>
@@ -204,25 +207,31 @@ export default function TeamMatchDetailPage() {
                     <div className="row mt-3">
                       <div className="col-md-6">
                         <h4 className="h6">Improvement opportunities</h4>
-                        <TagCheckboxes
-                          disabled={!canManage}
-                          field="improvementTags"
-                          playerUuid={player.playerUuid}
-                          selected={playerForm.improvementTags}
-                          tags={setup.improvements}
-                          toggleTag={toggleTag}
-                        />
+                        {canManage ? (
+                          <TagCheckboxes
+                            field="improvementTags"
+                            playerUuid={player.playerUuid}
+                            selected={playerForm.improvementTags}
+                            tags={setup.improvements}
+                            toggleTag={toggleTag}
+                          />
+                        ) : (
+                          <TagBadges values={playerForm.improvementTags} />
+                        )}
                       </div>
                       <div className="col-md-6">
                         <h4 className="h6">Highlights</h4>
-                        <TagCheckboxes
-                          disabled={!canManage}
-                          field="highlightTags"
-                          playerUuid={player.playerUuid}
-                          selected={playerForm.highlightTags}
-                          tags={setup.highlights}
-                          toggleTag={toggleTag}
-                        />
+                        {canManage ? (
+                          <TagCheckboxes
+                            field="highlightTags"
+                            playerUuid={player.playerUuid}
+                            selected={playerForm.highlightTags}
+                            tags={setup.highlights}
+                            toggleTag={toggleTag}
+                          />
+                        ) : (
+                          <TagBadges values={playerForm.highlightTags} />
+                        )}
                       </div>
                     </div>
 
@@ -272,6 +281,19 @@ function TagCheckboxes({ disabled = false, field, playerUuid, selected, tags, to
         </label>
       ))}
       {tags.length === 0 && <p className="text-muted mb-0">No tags configured.</p>}
+    </div>
+  )
+}
+
+function TagBadges({ values = [] }) {
+  if (!values.length) {
+    return <p className="text-muted mb-0">No tags recorded.</p>
+  }
+  return (
+    <div className="d-flex flex-wrap gap-2">
+      {values.map((value) => (
+        <span className="badge text-bg-light border" key={value}>{value}</span>
+      ))}
     </div>
   )
 }

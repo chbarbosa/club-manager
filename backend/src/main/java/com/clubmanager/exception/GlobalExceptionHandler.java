@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -60,6 +61,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthorizationDeniedException.class)
     ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException exception) {
+        appMetricsService.recordAccessDenied();
+        LOGGER.warn("Access denied");
+        return response(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Access denied");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException exception) {
         appMetricsService.recordAccessDenied();
         LOGGER.warn("Access denied");
         return response(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Access denied");

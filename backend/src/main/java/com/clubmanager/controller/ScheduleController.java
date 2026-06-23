@@ -10,6 +10,7 @@ import com.clubmanager.mapper.ScheduleMapper;
 import com.clubmanager.service.AppMetricsService;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.ScheduleService;
+import com.clubmanager.service.TrainerAuthorizationService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -31,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/schedules")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class ScheduleController {
 
@@ -41,6 +42,7 @@ public class ScheduleController {
     private final ScheduleMapper scheduleMapper;
     private final AuditEventService auditEventService;
     private final AppMetricsService appMetricsService;
+    private final TrainerAuthorizationService trainerAuthorizationService;
 
 
 
@@ -65,11 +67,17 @@ public class ScheduleController {
             @RequestParam(required = false) UUID teamUuid,
             @RequestParam(required = false) ScheduleStatus status,
             Pageable pageable) {
+        if (trainerAuthorizationService.getCurrentTrainer().isPresent()) {
+            var trainer = trainerAuthorizationService.requireCurrentTrainer();
+            return PageResponse.from(scheduleService.searchTrainingSchedulesForTrainer(trainer, teamUuid, status, pageable)
+                    .map(scheduleMapper::toResponse));
+        }
         return PageResponse.from(scheduleService.searchSchedules(teamUuid, status, pageable)
                 .map(scheduleMapper::toResponse));
     }
 
     @GetMapping("/{uuid}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT') or @trainerAuthorizationService.canAccessSchedule(#uuid)")
     public ScheduleResponse getScheduleByUuid(@PathVariable UUID uuid) {
         return scheduleMapper.toResponse(scheduleService.getScheduleByUuid(uuid));
     }

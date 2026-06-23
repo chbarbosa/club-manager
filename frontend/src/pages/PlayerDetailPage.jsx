@@ -96,7 +96,7 @@ export default function PlayerDetailPage() {
             )}
           </div>
 
-          {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+          {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
           {canManage && editing ? (
             <div className="card">

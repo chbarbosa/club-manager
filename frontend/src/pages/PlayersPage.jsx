@@ -108,6 +108,7 @@ export default function PlayersPage() {
   const canGoPrevious = pageInfo.number > 0
   const canGoNext = pageInfo.totalPages > 0 && pageInfo.number < pageInfo.totalPages - 1
   const canManage = role === 'ADMIN'
+  const canExport = role !== 'TRAINER'
 
   return (
     <main className="container py-5">
@@ -117,9 +118,11 @@ export default function PlayersPage() {
           <p className="text-muted mb-0">Register and manage young athletes for this club.</p>
         </div>
         <div className="d-flex gap-2">
-          <button className="btn btn-outline-secondary" onClick={exportPlayers} type="button">
-            Export CSV
-          </button>
+          {canExport && (
+            <button className="btn btn-outline-secondary" onClick={exportPlayers} type="button">
+              Export CSV
+            </button>
+          )}
           {canManage && (
             <button className="btn btn-primary" onClick={() => setShowForm(true)} type="button">
               Add Player
@@ -128,7 +131,7 @@ export default function PlayersPage() {
         </div>
       </div>
 
-      {!canManage && <p className="alert alert-info">Support access is read-only.</p>}
+      {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
 
       {error && <p className="alert alert-danger">{error}</p>}
       {message && <p className="alert alert-success">{message}</p>}

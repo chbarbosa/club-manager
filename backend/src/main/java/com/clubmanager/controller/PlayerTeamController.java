@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/teams/{teamUuid}/players")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
 @RequiredArgsConstructor
 public class PlayerTeamController {
 
@@ -33,6 +33,7 @@ public class PlayerTeamController {
 
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public List<PlayerTeamResponse> getActiveRoster(@PathVariable UUID teamUuid) {
         return playerTeamService.getActiveRoster(teamUuid).stream()
                 .map(playerTeamMapper::toResponse)

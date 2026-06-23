@@ -3,7 +3,9 @@ package com.clubmanager.service;
 import com.clubmanager.domain.ClubField;
 import com.clubmanager.domain.Schedule;
 import com.clubmanager.domain.ScheduleStatus;
+import com.clubmanager.domain.ScheduleType;
 import com.clubmanager.domain.Team;
+import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.ScheduleCancelRequest;
 import com.clubmanager.dto.ScheduleCreateRequest;
 import com.clubmanager.dto.ScheduleUpdateRequest;
@@ -62,6 +64,28 @@ public class ScheduleService {
             return scheduleRepository.findByStatus(status, pageable);
         }
         return scheduleRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Schedule> searchTrainingSchedulesForTrainer(
+            Trainer trainer,
+            UUID teamUuid,
+            ScheduleStatus status,
+            Pageable pageable) {
+        if (teamUuid != null) {
+            Team team = getTeam(teamUuid);
+            if (!isTrainerAssignedToTeam(trainer, team)) {
+                throw new org.springframework.security.access.AccessDeniedException("Trainer is not assigned to this team");
+            }
+            if (status != null) {
+                return scheduleRepository.findByTeamAndTypeAndStatus(team, ScheduleType.TRAINING, status, pageable);
+            }
+            return scheduleRepository.findByTeamAndType(team, ScheduleType.TRAINING, pageable);
+        }
+        if (status != null) {
+            return scheduleRepository.findTrainingForTrainerAndStatus(trainer, ScheduleType.TRAINING, status, pageable);
+        }
+        return scheduleRepository.findTrainingForTrainer(trainer, ScheduleType.TRAINING, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -150,5 +174,13 @@ public class ScheduleService {
 
     private String cleanOptionalText(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private boolean isTrainerAssignedToTeam(Trainer trainer, Team team) {
+        return sameTrainer(trainer, team.getTrainer()) || sameTrainer(trainer, team.getSubTrainer());
+    }
+
+    private boolean sameTrainer(Trainer currentTrainer, Trainer teamTrainer) {
+        return teamTrainer != null && teamTrainer.getUuid().equals(currentTrainer.getUuid());
     }
 }

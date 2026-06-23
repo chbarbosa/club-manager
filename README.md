@@ -56,6 +56,18 @@ Local development keeps the seeded admin login available:
 - Username: `admin`
 - Password: `admin123`
 
+When the backend is started with the `dev` Spring profile, it also creates a
+trainer login if one does not already exist:
+
+- Username: `trainer@clubmanager.com`
+- Password: `admin123`
+
+Example:
+
+```powershell
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
 New admin passwords must be 10-128 characters and include uppercase,
 lowercase, and a digit, with no whitespace. Login rate limiting is enabled by
 default with 5 failed attempts per username and client IP over 15 minutes.
