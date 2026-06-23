@@ -1,8 +1,6 @@
 package com.clubmanager.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,12 +41,22 @@ class DevTrainerSeedRunnerTest {
     }
 
     @Test
-    void run_WhenDevTrainerExists_DoesNotOverwriteIt() {
+    void run_WhenDevTrainerExists_RefreshesPasswordAndActiveFlag() {
+        Trainer existingTrainer = Trainer.builder()
+                .name("Existing")
+                .active(false)
+                .passwordHash("old-password")
+                .build();
         when(trainerRepository.findByEmailIgnoreCase(DevTrainerSeedRunner.DEV_TRAINER_EMAIL))
-                .thenReturn(Optional.of(Trainer.builder().name("Existing").build()));
+                .thenReturn(Optional.of(existingTrainer));
+        when(passwordEncoder.encode(DevTrainerSeedRunner.DEV_TRAINER_PASSWORD)).thenReturn("new-encoded-password");
 
         runner.run(null);
 
-        verify(trainerRepository, never()).save(any());
+        ArgumentCaptor<Trainer> trainer = ArgumentCaptor.forClass(Trainer.class);
+        verify(trainerRepository).save(trainer.capture());
+        assertThat(trainer.getValue().getName()).isEqualTo("Existing");
+        assertThat(trainer.getValue().getPasswordHash()).isEqualTo("new-encoded-password");
+        assertThat(trainer.getValue().isActive()).isTrue();
     }
 }

@@ -1,6 +1,8 @@
 spring:
   application:
     name: club-manager
+  profiles:
+    default: dev
   datasource:
     url: jdbc:h2:file:../data/club-manager;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver

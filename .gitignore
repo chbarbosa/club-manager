@@ -6,6 +6,7 @@ frontend/test-results/
 data/
 *.mv.db
 *.trace.db
+*.log
 .idea/
 .vscode/
 *.iml

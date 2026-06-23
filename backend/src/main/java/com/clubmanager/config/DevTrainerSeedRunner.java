@@ -23,7 +23,12 @@ public class DevTrainerSeedRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (trainerRepository.findByEmailIgnoreCase(DEV_TRAINER_EMAIL).isPresent()) {
+        var existingTrainer = trainerRepository.findByEmailIgnoreCase(DEV_TRAINER_EMAIL);
+        if (existingTrainer.isPresent()) {
+            Trainer trainer = existingTrainer.get();
+            trainer.setActive(true);
+            trainer.setPasswordHash(passwordEncoder.encode(DEV_TRAINER_PASSWORD));
+            trainerRepository.save(trainer);
             return;
         }
 

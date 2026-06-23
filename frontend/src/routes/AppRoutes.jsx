@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import AdminsPage from '../pages/AdminsPage.jsx'
 import AccountPasswordPage from '../pages/AccountPasswordPage.jsx'
@@ -37,6 +37,7 @@ function protectedElement(page, roles = AUTHENTICATED) {
 export default function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/trainer-password/confirm" element={<TrainerPasswordConfirmPage />} />
       <Route path="/unavailable" element={<UnavailablePage />} />
