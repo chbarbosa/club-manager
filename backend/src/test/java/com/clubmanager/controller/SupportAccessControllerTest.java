@@ -14,7 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:support-access-controller-test;DB_CLOSE_DELAY=-1")
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:support-access-controller-test;DB_CLOSE_DELAY=-1",
+        "app.support-access.enabled=true"
+})
 @AutoConfigureMockMvc
 class SupportAccessControllerTest {
 

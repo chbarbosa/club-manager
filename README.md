@@ -89,11 +89,15 @@ Security configuration:
 - `LOGIN_RATE_LIMIT_STORAGE`: defaults to `in-memory`; use `redis` for
   elastic/cloud deployments where multiple backend instances must share
   throttling counters.
+- `SUPPORT_ACCESS_ENABLED`: defaults to `false`. Support access is implemented
+  but disabled for this version; set it to `true` only when the feature should
+  be exposed again.
 
 ## Backend Email Delivery
 
-Trainer access, trainer password reset, and support access notifications use
-the backend `AccessEmailService`.
+Trainer access and trainer password reset notifications use the backend
+`AccessEmailService`. Support access email delivery is also implemented, but
+support access is disabled for this version unless `SUPPORT_ACCESS_ENABLED=true`.
 
 By default, `MAIL_ENABLED=false`, so the app logs that a notification was
 prepared without logging codes or temporary passwords. To send real email,

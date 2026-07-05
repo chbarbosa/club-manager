@@ -2,9 +2,11 @@ package com.clubmanager.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.clubmanager.config.SupportAccessConfig;
 import com.clubmanager.domain.Admin;
 import com.clubmanager.domain.SupportAccess;
 import com.clubmanager.domain.Trainer;
@@ -45,7 +47,13 @@ class UserLoginServiceTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        userLoginService = new UserLoginService(adminRepository, trainerRepository, supportAccessRepository, passwordEncoder, loginRateLimiter);
+        userLoginService = new UserLoginService(
+                adminRepository,
+                trainerRepository,
+                supportAccessRepository,
+                passwordEncoder,
+                loginRateLimiter,
+                new SupportAccessConfig(true));
     }
 
     @Test
@@ -126,6 +134,27 @@ class UserLoginServiceTest {
 
         assertThat(user.role()).isEqualTo(UserLoginService.ROLE_SUPPORT);
         assertThat(user.username()).isEqualTo("support@example.com");
+    }
+
+    @Test
+    void authenticate_WithSupportAccessDisabled_IgnoresSupportCredentials() {
+        UserLoginService disabledSupportLoginService = new UserLoginService(
+                adminRepository,
+                trainerRepository,
+                supportAccessRepository,
+                passwordEncoder,
+                loginRateLimiter,
+                new SupportAccessConfig(false));
+        when(adminRepository.findByUsername("support@example.com")).thenReturn(Optional.empty());
+        when(trainerRepository.findByEmailIgnoreCase("support@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> disabledSupportLoginService.authenticate(
+                new LoginRequest("support@example.com", "Support123"),
+                "127.0.0.1"))
+                .isInstanceOf(BadCredentialsException.class);
+
+        verify(supportAccessRepository, never()).findFirstByEmailIgnoreCaseOrderByCreatedAtDesc("support@example.com");
+        verify(loginRateLimiter).recordFailure("support@example.com", "127.0.0.1");
     }
 
     @Test

@@ -98,6 +98,8 @@ each item should become a focused implementation plan before coding starts.
 
 ### Support Access
 
+- Status for this version: implemented behind `SUPPORT_ACCESS_ENABLED`, but
+  disabled by default and removed from the normal public SPA navigation.
 - Implemented as a first temporary read-only access slice for the club support
   responsible to inspect data while investigating a reported bug.
 - Support users must not create, update, delete, activate, deactivate, cancel,

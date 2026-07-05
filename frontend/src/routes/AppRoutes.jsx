@@ -14,7 +14,6 @@ import LoginPage from '../pages/LoginPage.jsx'
 import PlayerDetailPage from '../pages/PlayerDetailPage.jsx'
 import PlayersPage from '../pages/PlayersPage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
-import SupportAccessPage from '../pages/SupportAccessPage.jsx'
 import TeamDetailPage from '../pages/TeamDetailPage.jsx'
 import TeamMatchDetailPage from '../pages/TeamMatchDetailPage.jsx'
 import TeamsPage from '../pages/TeamsPage.jsx'
@@ -26,9 +25,8 @@ import UnavailablePage from '../pages/UnavailablePage.jsx'
 
 const ADMIN = ['ADMIN']
 const TRAINER = ['TRAINER']
-const ADMIN_OR_SUPPORT = ['ADMIN', 'SUPPORT']
-const OPERATIONAL_READ = ['ADMIN', 'SUPPORT', 'TRAINER']
-const AUTHENTICATED = ['ADMIN', 'TRAINER', 'SUPPORT']
+const OPERATIONAL_READ = ['ADMIN', 'TRAINER']
+const AUTHENTICATED = ['ADMIN', 'TRAINER']
 
 function protectedElement(page, roles = AUTHENTICATED) {
   return <ProtectedRoute roles={roles}>{page}</ProtectedRoute>
@@ -44,17 +42,16 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={protectedElement(<DashboardPage />)} />
       <Route path="/settings/club" element={protectedElement(<ClubSettingsPage />, ADMIN)} />
       <Route path="/admins" element={protectedElement(<AdminsPage />, ADMIN)} />
-      <Route path="/support-access" element={protectedElement(<SupportAccessPage />, ADMIN)} />
       <Route path="/players" element={protectedElement(<PlayersPage />, OPERATIONAL_READ)} />
       <Route path="/players/:uuid" element={protectedElement(<PlayerDetailPage />, OPERATIONAL_READ)} />
-      <Route path="/trainers" element={protectedElement(<TrainersPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/trainers" element={protectedElement(<TrainersPage />, ADMIN)} />
       <Route path="/trainers/me" element={protectedElement(<TrainerProfilePage />, TRAINER)} />
-      <Route path="/trainers/:uuid" element={protectedElement(<TrainerDetailPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/trainers/:uuid" element={protectedElement(<TrainerDetailPage />, ADMIN)} />
       <Route path="/teams" element={protectedElement(<TeamsPage />, OPERATIONAL_READ)} />
       <Route path="/teams/:uuid" element={protectedElement(<TeamDetailPage />, OPERATIONAL_READ)} />
       <Route path="/teams/:teamUuid/matches/:matchUuid" element={protectedElement(<TeamMatchDetailPage />, OPERATIONAL_READ)} />
       <Route path="/schedules" element={protectedElement(<SchedulesPage />, OPERATIONAL_READ)} />
-      <Route path="/championships" element={protectedElement(<ChampionshipsPage />, ADMIN_OR_SUPPORT)} />
+      <Route path="/championships" element={protectedElement(<ChampionshipsPage />, ADMIN)} />
       <Route path="/championships/:uuid" element={protectedElement(<ChampionshipDetailPage />, OPERATIONAL_READ)} />
       <Route path="/club-analysis" element={protectedElement(<ClubAnalysisPage />, ADMIN)} />
       <Route path="/club-analysis/:uuid" element={protectedElement(<ClubAnalysisDetailPage />, ADMIN)} />

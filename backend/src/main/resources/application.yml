@@ -55,6 +55,8 @@ app:
       enabled: ${AUDIT_INTERNAL_API_ENABLED:false}
       allowed-cidrs: ${AUDIT_INTERNAL_API_ALLOWED_CIDRS:}
       trusted-proxy-header: ${AUDIT_INTERNAL_API_TRUSTED_PROXY_HEADER:}
+  support-access:
+    enabled: ${SUPPORT_ACCESS_ENABLED:false}
   mail:
     enabled: ${MAIL_ENABLED:false}
     from: ${MAIL_FROM:no-reply@club-manager.local}

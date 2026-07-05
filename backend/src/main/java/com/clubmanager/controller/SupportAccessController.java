@@ -10,6 +10,7 @@ import com.clubmanager.service.SupportAccessService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/support-access")
 @PreAuthorize("hasRole('ADMIN')")
+@ConditionalOnProperty(prefix = "app.support-access", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class SupportAccessController {
 

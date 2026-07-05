@@ -1,5 +1,6 @@
 package com.clubmanager.service;
 
+import com.clubmanager.config.SupportAccessConfig;
 import com.clubmanager.domain.Admin;
 import com.clubmanager.domain.Trainer;
 import com.clubmanager.dto.AuthenticatedUser;
@@ -30,6 +31,7 @@ public class UserLoginService {
     private final SupportAccessRepository supportAccessRepository;
     private final PasswordEncoder passwordEncoder;
     private final LoginRateLimiter loginRateLimiter;
+    private final SupportAccessConfig supportAccessConfig;
 
     @Transactional(readOnly = true)
     public AuthenticatedUser authenticate(LoginRequest request, String clientAddress) {
@@ -53,14 +55,16 @@ public class UserLoginService {
                         trainer.getName(),
                         ROLE_TRAINER)));
 
-        supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(request.username())
-                .filter(supportAccess -> supportAccess.isActive(LocalDateTime.now()))
-                .filter(supportAccess -> passwordEncoder.matches(request.password(), supportAccess.getPasswordHash()))
-                .ifPresent(supportAccess -> candidates.add(new LoginCandidate(
-                        supportAccess.getEmail(),
-                        supportAccess.getUuid(),
-                        "Support",
-                        ROLE_SUPPORT)));
+        if (supportAccessConfig.enabled()) {
+            supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(request.username())
+                    .filter(supportAccess -> supportAccess.isActive(LocalDateTime.now()))
+                    .filter(supportAccess -> passwordEncoder.matches(request.password(), supportAccess.getPasswordHash()))
+                    .ifPresent(supportAccess -> candidates.add(new LoginCandidate(
+                            supportAccess.getEmail(),
+                            supportAccess.getUuid(),
+                            "Support",
+                            ROLE_SUPPORT)));
+        }
 
         if (!candidates.isEmpty()) {
             loginRateLimiter.recordSuccess(request.username(), clientAddress);

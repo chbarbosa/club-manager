@@ -66,27 +66,7 @@ const FEATURES = [
     action: 'Manage admins',
     secondary: true,
   },
-  {
-    title: 'Support access',
-    description: 'Create temporary read-only support windows and review viewed data.',
-    icon: 'admins',
-    path: '/support-access',
-    action: 'Manage support',
-    secondary: true,
-  },
 ]
-
-const SUPPORT_FEATURES = FEATURES.filter((feature) => [
-  'Players',
-  'Trainers',
-  'Teams',
-  'Evaluations',
-  'Schedules',
-  'Championships',
-].includes(feature.title)).map((feature) => ({
-  ...feature,
-  action: `View ${feature.title.toLowerCase()}`,
-}))
 
 const TRAINER_FEATURES = [
   {
@@ -135,15 +115,14 @@ const TRAINER_FEATURES = [
 
 export default function DashboardPage() {
   const { isAuthenticated, role } = useAuth()
-  const visibleFeatures = role === 'ADMIN' ? FEATURES : role === 'TRAINER' ? TRAINER_FEATURES : SUPPORT_FEATURES
+  const visibleFeatures = role === 'ADMIN' ? FEATURES : role === 'TRAINER' ? TRAINER_FEATURES : []
 
   return (
     <main className="container py-5">
       <h1>Dashboard</h1>
       <p className="text-muted">Your club management workspace is ready.</p>
       {!isAuthenticated() && <Link className="btn btn-primary" to="/login">Admin login</Link>}
-      {isAuthenticated() && role === 'SUPPORT' && <p className="alert alert-info mt-4">Support access is read-only and all viewed data is recorded.</p>}
-      {isAuthenticated() && ['ADMIN', 'SUPPORT', 'TRAINER'].includes(role) && (
+      {isAuthenticated() && ['ADMIN', 'TRAINER'].includes(role) && (
         <div className="row g-4 mt-2">
           {visibleFeatures.map((feature) => (
             <div className="col-md-6 col-xl-4" key={feature.title}>

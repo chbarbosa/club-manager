@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class SupportAccessAuditFilter extends OncePerRequestFilter {
 
     private final SupportAccessViewAuditService supportAccessViewAuditService;
+    private final SupportAccessConfig supportAccessConfig;
 
     @Override
     protected void doFilterInternal(
@@ -25,6 +26,9 @@ public class SupportAccessAuditFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         filterChain.doFilter(request, response);
+        if (!supportAccessConfig.enabled()) {
+            return;
+        }
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !"GET".equals(request.getMethod()) || response.getStatus() >= 400) {
             return;

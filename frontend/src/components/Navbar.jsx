@@ -7,7 +7,6 @@ export default function Navbar() {
   const { isAuthenticated, logout, name, role } = useAuth()
   const isAdmin = role === 'ADMIN'
   const isTrainer = role === 'TRAINER'
-  const isSupport = role === 'SUPPORT'
 
   return (
     <nav className="navbar navbar-expand navbar-dark px-3">
@@ -26,17 +25,6 @@ export default function Navbar() {
               <Link className="nav-link" to="/evaluations">Evaluations</Link>
               <Link className="nav-link" to="/settings/club">Club settings</Link>
               <Link className="nav-link" to="/admins">Admins</Link>
-              <Link className="nav-link" to="/support-access">Support access</Link>
-            </>
-          )}
-          {isSupport && (
-            <>
-              <Link className="nav-link" to="/players">Players</Link>
-              <Link className="nav-link" to="/trainers">Trainers</Link>
-              <Link className="nav-link" to="/teams">Teams</Link>
-              <Link className="nav-link" to="/schedules">Schedules</Link>
-              <Link className="nav-link" to="/championships">Championships</Link>
-              <Link className="nav-link" to="/evaluations">Evaluations</Link>
             </>
           )}
           {isTrainer && (

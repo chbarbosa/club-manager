@@ -26,8 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AdminRepository adminRepository;
     private final TrainerRepository trainerRepository;
     private final SupportAccessRepository supportAccessRepository;
-
-
+    private final SupportAccessConfig supportAccessConfig;
 
     @Override
     protected void doFilterInternal(
@@ -54,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     trainerRepository.findByEmailIgnoreCase(username)
                             .filter(trainer -> trainer.isActive())
                             .ifPresent(trainer -> authenticate(trainer.getEmail(), role));
-                } else if (UserLoginService.ROLE_SUPPORT.equals(role)) {
+                } else if (UserLoginService.ROLE_SUPPORT.equals(role) && supportAccessConfig.enabled()) {
                     supportAccessRepository.findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(username)
                             .filter(access -> access.isActive(LocalDateTime.now()))
                             .ifPresent(access -> authenticate(access.getEmail(), role));
