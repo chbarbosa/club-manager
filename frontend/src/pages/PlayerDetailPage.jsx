@@ -156,7 +156,7 @@ export default function PlayerDetailPage() {
                     <tbody>
                       {teamHistory.teams.map((assignment) => (
                         <tr className={assignment.active ? undefined : 'text-muted'} key={assignment.assignmentUuid}>
-                          <td><Link to={`/teams/${assignment.teamUuid}`}>{assignment.teamIdentification}</Link></td>
+                          <td>{assignment.teamIdentification}</td>
                           <td>{formatAgeCategory(assignment.ageCategory)}</td>
                           <td>{formatTeamCategory(assignment.teamCategory)}</td>
                           <td>{assignment.jerseyNumber ?? '-'}</td>
