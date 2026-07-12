@@ -71,6 +71,21 @@ mvn spring-boot:run
 For production, explicitly run with `SPRING_PROFILES_ACTIVE=prod` or
 `--spring.profiles.active=prod`.
 
+## Development Seed Data
+
+With the backend running locally, you can load repeatable test players for team
+creation and age-filter checks:
+
+```powershell
+cd D:\workspace\club-manager
+.\scripts\seed-test-players.ps1
+```
+
+The script logs in as `admin` / `admin123`, creates 20 active 15-year-old
+players with balanced positions, and creates 5 active filter-test players aged
+16 through 20. It skips players that already exist by registration number or
+name, so it is safe to rerun.
+
 New admin passwords must be 10-128 characters and include uppercase,
 lowercase, and a digit, with no whitespace. Login rate limiting is enabled by
 default with 5 failed attempts per username and client IP over 15 minutes.
