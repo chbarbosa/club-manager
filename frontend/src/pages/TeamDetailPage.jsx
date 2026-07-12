@@ -363,7 +363,7 @@ export default function TeamDetailPage() {
                     {roster.map((assignment) => (
                       <tr key={assignment.uuid}>
                         <td>{assignment.jerseyNumber ?? '-'}</td>
-                        <td><Link to={`/players/${assignment.playerUuid}`}>{assignment.playerName}</Link></td>
+                        <td>{assignment.playerName}</td>
                         <td>{assignment.playerAge}</td>
                         <td>{formatTeamCategory(assignment.playerTeamCategory)}</td>
                         <td>{formatPositions(assignment.playerPositions)}</td>
