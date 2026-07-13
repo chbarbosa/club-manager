@@ -48,7 +48,7 @@ test('admin can create a match and save player analysis', async ({ page, request
   await page.getByLabel('Good passes').check()
   await page.getByLabel('Trainer notes').fill('Needs quicker passing decisions.')
   await page.getByRole('button', { name: 'Save analysis' }).click()
-  await expect(page.getByText(`Analysis saved for ${playerName}.`)).toBeVisible()
+  await expect(page.getByText('All players were analyzed.')).toBeVisible()
 
   await page.getByRole('link', { name: 'Back to team' }).click()
   await page.locator('tr').filter({ hasText: opponentName }).getByRole('link', { name: 'Analyze' }).click()

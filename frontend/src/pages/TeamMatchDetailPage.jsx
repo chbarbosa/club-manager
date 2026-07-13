@@ -17,6 +17,7 @@ export default function TeamMatchDetailPage() {
   const [setup, setSetup] = useState({ improvements: [], highlights: [] })
   const [form, setForm] = useState(null)
   const [analysisForms, setAnalysisForms] = useState({})
+  const [selectedPlayerUuid, setSelectedPlayerUuid] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -31,6 +32,7 @@ export default function TeamMatchDetailPage() {
       setMatch(matchResponse)
       setForm(toMatchForm(matchResponse))
       setAnalysisForms(toAnalysisForms(matchResponse.playerAnalyses ?? []))
+      setSelectedPlayerUuid((current) => selectInitialPlayer(matchResponse.playerAnalyses ?? [], current))
       if (canManage) {
         const setupResponse = await getAllSetup()
         setSetup({
@@ -92,14 +94,19 @@ export default function TeamMatchDetailPage() {
         highlightTags: data.highlightTags,
         notes: data.notes.trim() || null,
       })
-      setMatch((current) => ({
-        ...current,
-        playerAnalyses: current.playerAnalyses.map((analysis) => (
-          analysis.playerUuid === saved.playerUuid ? saved : analysis
-        )),
-      }))
+      const updatedAnalyses = match.playerAnalyses.map((analysis) => (
+        analysis.playerUuid === saved.playerUuid ? saved : analysis
+      ))
+      setMatch((current) => ({ ...current, playerAnalyses: updatedAnalyses }))
       setAnalysisForms((forms) => ({ ...forms, [saved.playerUuid]: toAnalysisForm(saved) }))
-      setMessage(`Analysis saved for ${saved.playerName}.`)
+      const nextPlayer = findNextPendingAnalysis(updatedAnalyses, saved.playerUuid)
+      if (nextPlayer) {
+        setSelectedPlayerUuid(nextPlayer.playerUuid)
+        setMessage(`Analysis saved for ${saved.playerName}.`)
+      } else {
+        setSelectedPlayerUuid(saved.playerUuid)
+        setMessage('All players were analyzed.')
+      }
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to save player analysis.')
     }
@@ -115,6 +122,16 @@ export default function TeamMatchDetailPage() {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to export match analysis.')
     }
   }
+
+  const analyses = match?.playerAnalyses ?? []
+  const selectedPlayer = analyses.find((player) => player.playerUuid === selectedPlayerUuid) ?? analyses[0]
+  const selectedForm = selectedPlayer ? analysisForms[selectedPlayer.playerUuid] ?? emptyAnalysisForm() : emptyAnalysisForm()
+  const analyzedPlayers = analyses.filter(isAnalysisComplete)
+  const pendingPlayers = analyses.filter((player) => !isAnalysisComplete(player))
+  const selectedIsPending = selectedPlayer ? !isAnalysisComplete(selectedPlayer) : false
+  const buttonLabel = selectedIsPending && pendingPlayers.length > 1
+    ? 'Save analysis and next'
+    : 'Save analysis'
 
   return (
     <main className="container py-5">
@@ -187,22 +204,49 @@ export default function TeamMatchDetailPage() {
             <h2 className="h3">Player analysis</h2>
             <p className="text-muted">Record improvement opportunities, highlights, and trainer notes for current team players.</p>
 
-            {match.playerAnalyses.map((player) => {
-              const playerForm = analysisForms[player.playerUuid] ?? emptyAnalysisForm()
-              return (
-                <div className="card mb-3" key={player.playerUuid}>
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-start gap-3">
-                      <div>
-                        <h3 className="h5">{player.playerName}</h3>
-                        <div className="d-flex flex-wrap gap-2">
-                          <span className="badge text-bg-light border">Age: {player.playerAge}</span>
-                          <span className="badge text-bg-light border">Skill: {formatSkillLevel(player.playerCurrentSkillLevel)}</span>
-                          <span className="badge text-bg-light border">Championships: {player.playerChampionshipCount}</span>
-                          <span className="badge text-bg-light border">Positions: {formatPositions(player.playerPositions)}</span>
-                        </div>
-                      </div>
+            {analyses.length > 0 && (
+              <div className="card mb-3">
+                <div className="card-body">
+                  <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                    <div>
+                      <p className="text-muted mb-1">Progress</p>
+                      <p className="h5 mb-0">{analyzedPlayers.length} of {analyses.length} players analyzed</p>
                     </div>
+                    {analyzedPlayers.length > 0 && (
+                      <div className="col-lg-4">
+                        <label className="form-label" htmlFor="analyzed-player-select">Review analyzed player</label>
+                        <select
+                          className="form-select"
+                          id="analyzed-player-select"
+                          onChange={(event) => setSelectedPlayerUuid(event.target.value)}
+                          value={analyzedPlayers.some((player) => player.playerUuid === selectedPlayer?.playerUuid) ? selectedPlayer.playerUuid : ''}
+                        >
+                          <option disabled value="">Select analyzed player</option>
+                          {analyzedPlayers.map((player) => (
+                            <option key={player.playerUuid} value={player.playerUuid}>{player.playerName}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedPlayer && (
+                    <>
+                      {analyzedPlayers.length === analyses.length && (
+                        <p className="alert alert-success">All players were analyzed.</p>
+                      )}
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start gap-3">
+                          <div>
+                            <h3 className="h5">{selectedPlayer.playerName}</h3>
+                            <div className="d-flex flex-wrap gap-2">
+                              <span className="badge text-bg-light border">Age: {selectedPlayer.playerAge}</span>
+                              <span className="badge text-bg-light border">Skill: {formatSkillLevel(selectedPlayer.playerCurrentSkillLevel)}</span>
+                              <span className="badge text-bg-light border">Championships: {selectedPlayer.playerChampionshipCount}</span>
+                              <span className="badge text-bg-light border">Positions: {formatPositions(selectedPlayer.playerPositions)}</span>
+                            </div>
+                          </div>
+                        </div>
 
                     <div className="row mt-3">
                       <div className="col-md-6">
@@ -210,13 +254,13 @@ export default function TeamMatchDetailPage() {
                         {canManage ? (
                           <TagCheckboxes
                             field="improvementTags"
-                            playerUuid={player.playerUuid}
-                            selected={playerForm.improvementTags}
+                            playerUuid={selectedPlayer.playerUuid}
+                            selected={selectedForm.improvementTags}
                             tags={setup.improvements}
                             toggleTag={toggleTag}
                           />
                         ) : (
-                          <TagBadges values={playerForm.improvementTags} />
+                          <TagBadges values={selectedForm.improvementTags} />
                         )}
                       </div>
                       <div className="col-md-6">
@@ -224,40 +268,42 @@ export default function TeamMatchDetailPage() {
                         {canManage ? (
                           <TagCheckboxes
                             field="highlightTags"
-                            playerUuid={player.playerUuid}
-                            selected={playerForm.highlightTags}
+                            playerUuid={selectedPlayer.playerUuid}
+                            selected={selectedForm.highlightTags}
                             tags={setup.highlights}
                             toggleTag={toggleTag}
                           />
                         ) : (
-                          <TagBadges values={playerForm.highlightTags} />
+                          <TagBadges values={selectedForm.highlightTags} />
                         )}
                       </div>
                     </div>
 
                     <div className="mt-3">
-                      <label className="form-label" htmlFor={`notes-${player.playerUuid}`}>Trainer notes</label>
+                      <label className="form-label" htmlFor={`notes-${selectedPlayer.playerUuid}`}>Trainer notes</label>
                       <textarea
                         className="form-control"
                         disabled={!canManage}
-                        id={`notes-${player.playerUuid}`}
-                        onChange={(event) => updateAnalysis(player.playerUuid, (current) => ({ ...current, notes: event.target.value }))}
+                        id={`notes-${selectedPlayer.playerUuid}`}
+                        onChange={(event) => updateAnalysis(selectedPlayer.playerUuid, (current) => ({ ...current, notes: event.target.value }))}
                         rows="2"
-                        value={playerForm.notes}
+                        value={selectedForm.notes}
                       />
                     </div>
 
                     {canManage && (
-                      <button className="btn btn-primary mt-3" onClick={() => saveAnalysis(player)} type="button">
-                        Save analysis
+                      <button className="btn btn-primary mt-3" onClick={() => saveAnalysis(selectedPlayer)} type="button">
+                        {buttonLabel}
                       </button>
                     )}
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-              )
-            })}
+              </div>
+            )}
 
-            {match.playerAnalyses.length === 0 && <p className="text-muted">No active players are assigned to this team.</p>}
+            {analyses.length === 0 && <p className="text-muted">No active players are assigned to this team.</p>}
           </section>
         </>
       )}
@@ -325,6 +371,25 @@ function toAnalysisForm(analysis) {
 
 function emptyAnalysisForm() {
   return { improvementTags: [], highlightTags: [], notes: '' }
+}
+
+function selectInitialPlayer(analyses, currentPlayerUuid) {
+  if (currentPlayerUuid && analyses.some((analysis) => analysis.playerUuid === currentPlayerUuid)) {
+    return currentPlayerUuid
+  }
+  return findNextPendingAnalysis(analyses)?.playerUuid ?? analyses[0]?.playerUuid ?? ''
+}
+
+function findNextPendingAnalysis(analyses, currentPlayerUuid = '') {
+  return analyses.find((analysis) => analysis.playerUuid !== currentPlayerUuid && !isAnalysisComplete(analysis))
+}
+
+function isAnalysisComplete(analysis) {
+  return Boolean(
+    analysis?.notes?.trim()
+      || analysis?.improvementTags?.length
+      || analysis?.highlightTags?.length,
+  )
 }
 
 function setupValues(setupEntries, type) {
