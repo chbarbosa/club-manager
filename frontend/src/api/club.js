@@ -12,6 +12,10 @@ export function getAllSetup() {
   return api.get('/club/setup').then((response) => response.data)
 }
 
+export function getSetupByType(type) {
+  return api.get(`/club/setup/${type}`).then((response) => response.data)
+}
+
 export function updateSetup(uuid, data) {
   return api.put(`/club/setup/${uuid}`, data).then((response) => response.data)
 }

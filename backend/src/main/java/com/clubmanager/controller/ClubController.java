@@ -50,7 +50,7 @@ public class ClubController {
     }
 
     @GetMapping("/setup/{type}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('TRAINER') and (#type == 'MATCH_IMPROVEMENT_OPPORTUNITY' or #type == 'MATCH_HIGHLIGHT'))")
     public ClubSetupResponse getSetupByType(@PathVariable String type) {
         return clubSetupMapper.toResponse(clubService.getSetupByType(type));
     }

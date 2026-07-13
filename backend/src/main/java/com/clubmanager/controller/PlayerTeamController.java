@@ -42,7 +42,7 @@ public class PlayerTeamController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public PlayerTeamResponse assignPlayer(
             @PathVariable UUID teamUuid,
             @Valid @RequestBody PlayerTeamAssignRequest request) {
@@ -57,7 +57,7 @@ public class PlayerTeamController {
     }
 
     @DeleteMapping("/{assignmentUuid}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public PlayerTeamResponse removePlayer(@PathVariable UUID teamUuid, @PathVariable UUID assignmentUuid) {
         var assignment = playerTeamService.removePlayer(teamUuid, assignmentUuid);
         auditEventService.record(

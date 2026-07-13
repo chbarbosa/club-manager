@@ -62,11 +62,12 @@ public class AuditEventService {
 
     @Transactional
     public AuditEvent record(String action, String entityType, UUID entityUuid, String entityLabel, String message) {
-        Admin actor = getCurrentAdmin();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Admin actor = getCurrentAdmin(authentication);
         AuditEvent auditEvent = auditEventRepository.save(AuditEvent.builder()
                 .occurredAt(LocalDateTime.now())
                 .actorAdmin(actor)
-                .actorName(actor.getName())
+                .actorName(actorName(authentication, actor))
                 .action(action)
                 .entityType(entityType)
                 .entityUuid(entityUuid)
@@ -118,14 +119,18 @@ public class AuditEventService {
         };
     }
 
-    private Admin getCurrentAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    private Admin getCurrentAdmin(Authentication authentication) {
         if (authentication == null || !StringUtils.hasText(authentication.getName())) {
-            throw new IllegalStateException("Authenticated admin is required to record audit events");
+            throw new IllegalStateException("Authenticated user is required to record audit events");
         }
-        return adminRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new IllegalStateException("Authenticated admin not found: "
-                        + authentication.getName()));
+        return adminRepository.findByUsername(authentication.getName()).orElse(null);
+    }
+
+    private String actorName(Authentication authentication, Admin actor) {
+        if (actor != null) {
+            return actor.getName();
+        }
+        return authentication == null ? null : clean(authentication.getName());
     }
 
     private String clean(String value) {

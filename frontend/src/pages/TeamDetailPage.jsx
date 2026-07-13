@@ -49,6 +49,7 @@ export default function TeamDetailPage() {
   const location = useLocation()
   const { role } = useAuth()
   const canManage = role === 'ADMIN'
+  const canOperateTeam = ['ADMIN', 'TRAINER'].includes(role)
   const canExport = role !== 'TRAINER'
   const [team, setTeam] = useState(null)
   const [trainers, setTrainers] = useState([])
@@ -69,11 +70,13 @@ export default function TeamDetailPage() {
     if (canManage) {
       loadTrainers()
       loadAdmins()
+    }
+    if (canOperateTeam) {
       loadPlayers()
     }
     loadRoster()
     loadMatches()
-  }, [uuid, canManage])
+  }, [uuid, canManage, canOperateTeam])
 
   async function loadTeam() {
     setError('')
@@ -266,7 +269,10 @@ export default function TeamDetailPage() {
             )}
           </div>
 
-          {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
+          {!canManage && !canOperateTeam && <p className="alert alert-info">This workspace is read-only for your role.</p>}
+          {!canManage && canOperateTeam && (
+            <p className="alert alert-info">You can manage this team's roster and matches. Team settings remain admin-only.</p>
+          )}
 
           <CurrentChampionshipSummary canManage={canManage} championships={championships} teamUuid={team.uuid} />
 
@@ -310,7 +316,7 @@ export default function TeamDetailPage() {
                   )}
                 </div>
 
-                {canManage && (
+                {canOperateTeam && (
                 <form className="row g-2 align-items-end mb-4" onSubmit={assignPlayer}>
                   <div className="col-md-7">
                     <label className="form-label" htmlFor="roster-player">Player</label>
@@ -369,7 +375,7 @@ export default function TeamDetailPage() {
                         <td>{formatPositions(assignment.playerPositions)}</td>
                         <td>{formatDate(assignment.assignedDate)}</td>
                         <td>
-                          {canManage ? (
+                          {canOperateTeam ? (
                             <button className="btn btn-sm btn-outline-danger" onClick={() => removePlayer(assignment)} type="button">
                               Remove
                             </button>
@@ -387,7 +393,7 @@ export default function TeamDetailPage() {
                 <h2 className="h3">Matches</h2>
                 <p className="text-muted">Create standalone matches and register trainer analysis for players.</p>
 
-                {canManage && (
+                {canOperateTeam && (
                 <form className="card mb-4" onSubmit={submitMatch}>
                   <div className="card-body">
                     <div className="row g-3">
@@ -455,7 +461,7 @@ export default function TeamDetailPage() {
                         <td>{match.championshipName ?? '-'}</td>
                         <td>
                           <Link className="btn btn-sm btn-outline-primary" to={`/teams/${uuid}/matches/${match.uuid}`}>
-                            {canManage ? 'Analyze' : 'View analysis'}
+                            {canOperateTeam ? 'Analyze' : 'View analysis'}
                           </Link>
                         </td>
                       </tr>

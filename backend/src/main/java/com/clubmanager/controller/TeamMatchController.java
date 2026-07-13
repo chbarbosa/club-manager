@@ -44,7 +44,7 @@ public class TeamMatchController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public TeamMatchResponse createMatch(
             @PathVariable UUID teamUuid,
             @Valid @RequestBody TeamMatchCreateRequest request) {
@@ -77,7 +77,7 @@ public class TeamMatchController {
     }
 
     @PutMapping("/{matchUuid}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public TeamMatchResponse updateMatch(
             @PathVariable UUID teamUuid,
             @PathVariable UUID matchUuid,
@@ -93,7 +93,7 @@ public class TeamMatchController {
     }
 
     @PutMapping("/{matchUuid}/players/{playerUuid}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
     public MatchPlayerAnalysisResponse savePlayerAnalysis(
             @PathVariable UUID teamUuid,
             @PathVariable UUID matchUuid,

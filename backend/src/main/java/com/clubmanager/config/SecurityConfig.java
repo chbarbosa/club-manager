@@ -65,6 +65,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admins/**", "/api/v1/support-access/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/club").permitAll()
                         .requestMatchers(HttpMethod.GET,
+                                "/api/v1/club/setup/MATCH_IMPROVEMENT_OPPORTUNITY",
+                                "/api/v1/club/setup/MATCH_HIGHLIGHT").hasAnyRole("ADMIN", "TRAINER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/teams/*/players").hasAnyRole("ADMIN", "TRAINER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/teams/*/players/*").hasAnyRole("ADMIN", "TRAINER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/teams/*/matches").hasAnyRole("ADMIN", "TRAINER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/teams/*/matches/*").hasAnyRole("ADMIN", "TRAINER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/teams/*/matches/*/players/*").hasAnyRole("ADMIN", "TRAINER")
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/v1/players/**",
                                 "/api/v1/evaluations/**",
                                 "/api/v1/evaluation-events/**",

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getAllSetup } from '../api/club.js'
+import { getSetupByType } from '../api/club.js'
 import { getTeamMatch, saveMatchPlayerAnalysis, updateTeamMatch } from '../api/matches.js'
 import { exportMatchAnalysisCsv } from '../api/reports.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -12,6 +12,7 @@ export default function TeamMatchDetailPage() {
   const { teamUuid, matchUuid } = useParams()
   const { role } = useAuth()
   const canManage = role === 'ADMIN'
+  const canAnalyze = ['ADMIN', 'TRAINER'].includes(role)
   const canExport = role !== 'TRAINER'
   const [match, setMatch] = useState(null)
   const [setup, setSetup] = useState({ improvements: [], highlights: [] })
@@ -33,12 +34,8 @@ export default function TeamMatchDetailPage() {
       setForm(toMatchForm(matchResponse))
       setAnalysisForms(toAnalysisForms(matchResponse.playerAnalyses ?? []))
       setSelectedPlayerUuid((current) => selectInitialPlayer(matchResponse.playerAnalyses ?? [], current))
-      if (canManage) {
-        const setupResponse = await getAllSetup()
-        setSetup({
-          improvements: setupValues(setupResponse, IMPROVEMENT_TYPE),
-          highlights: setupValues(setupResponse, HIGHLIGHT_TYPE),
-        })
+      if (canAnalyze) {
+        setSetup(await loadMatchSetup())
       }
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load match analysis.')
@@ -157,9 +154,12 @@ export default function TeamMatchDetailPage() {
             )}
           </div>
 
-          {!canManage && <p className="alert alert-info">This workspace is read-only for your role.</p>}
+          {!canManage && !canAnalyze && <p className="alert alert-info">This workspace is read-only for your role.</p>}
+          {!canManage && canAnalyze && (
+            <p className="alert alert-info">You can update match details and record player analysis for this team.</p>
+          )}
 
-          {canManage && (
+          {canAnalyze && (
           <form className="card mb-4" onSubmit={submitMatch}>
             <div className="card-body">
               <h2 className="h4">Match details</h2>
@@ -251,7 +251,7 @@ export default function TeamMatchDetailPage() {
                     <div className="row mt-3">
                       <div className="col-md-6">
                         <h4 className="h6">Improvement opportunities</h4>
-                        {canManage ? (
+                        {canAnalyze ? (
                           <TagCheckboxes
                             field="improvementTags"
                             playerUuid={selectedPlayer.playerUuid}
@@ -265,7 +265,7 @@ export default function TeamMatchDetailPage() {
                       </div>
                       <div className="col-md-6">
                         <h4 className="h6">Highlights</h4>
-                        {canManage ? (
+                        {canAnalyze ? (
                           <TagCheckboxes
                             field="highlightTags"
                             playerUuid={selectedPlayer.playerUuid}
@@ -283,7 +283,7 @@ export default function TeamMatchDetailPage() {
                       <label className="form-label" htmlFor={`notes-${selectedPlayer.playerUuid}`}>Trainer notes</label>
                       <textarea
                         className="form-control"
-                        disabled={!canManage}
+                        disabled={!canAnalyze}
                         id={`notes-${selectedPlayer.playerUuid}`}
                         onChange={(event) => updateAnalysis(selectedPlayer.playerUuid, (current) => ({ ...current, notes: event.target.value }))}
                         rows="2"
@@ -291,7 +291,7 @@ export default function TeamMatchDetailPage() {
                       />
                     </div>
 
-                    {canManage && (
+                    {canAnalyze && (
                       <button className="btn btn-primary mt-3" onClick={() => saveAnalysis(selectedPlayer)} type="button">
                         {buttonLabel}
                       </button>
@@ -373,6 +373,17 @@ function emptyAnalysisForm() {
   return { improvementTags: [], highlightTags: [], notes: '' }
 }
 
+async function loadMatchSetup() {
+  const [improvementSetup, highlightSetup] = await Promise.all([
+    getSetupByType(IMPROVEMENT_TYPE),
+    getSetupByType(HIGHLIGHT_TYPE),
+  ])
+  return {
+    improvements: JSON.parse(improvementSetup.jsonData),
+    highlights: JSON.parse(highlightSetup.jsonData),
+  }
+}
+
 function selectInitialPlayer(analyses, currentPlayerUuid) {
   if (currentPlayerUuid && analyses.some((analysis) => analysis.playerUuid === currentPlayerUuid)) {
     return currentPlayerUuid
@@ -390,11 +401,6 @@ function isAnalysisComplete(analysis) {
       || analysis?.improvementTags?.length
       || analysis?.highlightTags?.length,
   )
-}
-
-function setupValues(setupEntries, type) {
-  const setup = setupEntries.find((entry) => entry.type === type)
-  return setup ? JSON.parse(setup.jsonData) : []
 }
 
 function formatPositions(values = []) {
