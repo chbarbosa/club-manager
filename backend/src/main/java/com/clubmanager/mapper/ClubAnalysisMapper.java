@@ -68,10 +68,12 @@ public class ClubAnalysisMapper {
     }
 
     private int severityOrder(ClubAnalysisSeverity severity) {
-        return switch (severity) {
-            case CRITICAL -> 0;
-            case WARNING -> 1;
-            case INFO -> 2;
-        };
+        if (severity == ClubAnalysisSeverity.CRITICAL) {
+            return 0;
+        }
+        if (severity == ClubAnalysisSeverity.WARNING) {
+            return 1;
+        }
+        return 2;
     }
 }
