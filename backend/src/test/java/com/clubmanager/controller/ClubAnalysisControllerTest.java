@@ -78,9 +78,9 @@ class ClubAnalysisControllerTest {
     }
 
     @Test
-    void currentAnalysis_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void currentAnalysis_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(get("/api/v1/club-analysis/current"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     private String createTrainer() throws Exception {

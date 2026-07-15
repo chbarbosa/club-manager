@@ -54,7 +54,7 @@ class ClubControllerTest {
     }
 
     @Test
-    void updateClub_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void updateClub_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(put("/api/v1/club")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -65,7 +65,7 @@ class ClubControllerTest {
                                   "colour2": "#AABBCC"
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

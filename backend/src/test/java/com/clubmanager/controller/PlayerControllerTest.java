@@ -73,11 +73,11 @@ class PlayerControllerTest {
     }
 
     @Test
-    void createPlayer_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void createPlayer_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/players")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validPlayerJson("REG-104")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

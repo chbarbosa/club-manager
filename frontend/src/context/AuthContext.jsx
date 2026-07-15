@@ -4,6 +4,17 @@ import { configureAuthHandlers } from '../api/axios.js'
 
 const AuthContext = createContext(null)
 const AUTH_STORAGE_KEY = 'club-manager.auth'
+const SESSION_EXPIRED_MESSAGE = 'Your session expired. Please log in again.'
+
+const emptyAuth = {
+  token: null,
+  adminUuid: null,
+  userUuid: null,
+  name: null,
+  role: null,
+  availableRoles: [],
+  multipleRoles: false,
+}
 
 function readStoredAuth() {
   try {
@@ -23,15 +34,8 @@ function clearStoredAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [auth, setAuth] = useState(() => readStoredAuth() ?? {
-    token: null,
-    adminUuid: null,
-    userUuid: null,
-    name: null,
-    role: null,
-    availableRoles: [],
-    multipleRoles: false,
-  })
+  const [auth, setAuth] = useState(() => readStoredAuth() ?? emptyAuth)
+  const [sessionMessage, setSessionMessage] = useState('')
 
   const login = useCallback(async (username, password) => {
     const response = await loginRequest(username, password)
@@ -45,34 +49,38 @@ export function AuthProvider({ children }) {
       multipleRoles: Boolean(response.multipleRoles),
     }
     setAuth(nextAuth)
+    setSessionMessage('')
     storeAuth(nextAuth)
     return response
   }, [])
 
   const logout = useCallback(() => {
-    setAuth({
-      token: null,
-      adminUuid: null,
-      userUuid: null,
-      name: null,
-      role: null,
-      availableRoles: [],
-      multipleRoles: false,
-    })
+    setAuth(emptyAuth)
     clearStoredAuth()
+  }, [])
+
+  const handleUnauthorized = useCallback(() => {
+    setSessionMessage(SESSION_EXPIRED_MESSAGE)
+    logout()
+  }, [logout])
+
+  const clearSessionMessage = useCallback(() => {
+    setSessionMessage('')
   }, [])
 
   const getToken = useCallback(() => auth.token, [auth.token])
   const isAuthenticated = useCallback(() => Boolean(auth.token), [auth.token])
 
   useEffect(() => {
-    configureAuthHandlers({ getToken, onUnauthorized: logout })
-  }, [getToken, logout])
+    configureAuthHandlers({ getToken, onUnauthorized: handleUnauthorized })
+  }, [getToken, handleUnauthorized])
 
   const value = useMemo(
     () => ({
       login,
       logout,
+      sessionMessage,
+      clearSessionMessage,
       getToken,
       isAuthenticated,
       adminUuid: auth.adminUuid,
@@ -82,7 +90,7 @@ export function AuthProvider({ children }) {
       availableRoles: auth.availableRoles ?? [],
       multipleRoles: Boolean(auth.multipleRoles),
     }),
-    [login, logout, getToken, isAuthenticated, auth],
+    [login, logout, sessionMessage, clearSessionMessage, getToken, isAuthenticated, auth],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

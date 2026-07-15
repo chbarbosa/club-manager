@@ -149,7 +149,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void register_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -160,7 +160,7 @@ class AuthControllerTest {
                                   "password": "StrongPass1"
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

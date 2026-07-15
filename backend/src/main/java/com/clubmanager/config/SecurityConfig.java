@@ -51,7 +51,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, exception) -> {
                             appMetricsService.recordAccessDenied();
                             LOGGER.warn("Authentication required path={}", request.getRequestURI());
-                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
                         })
                         .accessDeniedHandler((request, response, exception) -> {
                             appMetricsService.recordAccessDenied();

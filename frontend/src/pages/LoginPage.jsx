@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function LoginPage() {
-  const { isAuthenticated, login } = useAuth()
+  const { clearSessionMessage, isAuthenticated, login, sessionMessage } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -16,6 +16,7 @@ export default function LoginPage() {
   async function submit(event) {
     event.preventDefault()
     setError('')
+    clearSessionMessage()
     try {
       await login(username, password)
       navigate('/dashboard')
@@ -53,6 +54,7 @@ export default function LoginPage() {
                 value={password}
               />
             </div>
+            {sessionMessage && <div className="alert alert-warning">{sessionMessage}</div>}
             {error && <p className="text-danger">{error}</p>}
             <button className="btn btn-primary" type="submit">Login</button>
             <p className="mt-3 mb-0">

@@ -81,11 +81,11 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void createEvaluation_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void createEvaluation_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/evaluations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validEvaluationJson()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

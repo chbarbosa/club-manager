@@ -72,11 +72,11 @@ class TrainerControllerTest {
     }
 
     @Test
-    void createTrainer_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void createTrainer_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/trainers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTrainerJson()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

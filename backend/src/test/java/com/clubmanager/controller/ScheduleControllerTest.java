@@ -119,13 +119,13 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void createSchedule_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void createSchedule_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/schedules")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {}
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     private String createSchedule(String teamUuid, String fieldUuid) throws Exception {

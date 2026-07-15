@@ -94,7 +94,7 @@ class ObservabilityControllerTest {
                                   "password": "secret1"
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         assertThat(countAll(AppMetricsService.VALIDATION_FAILURE)).isEqualTo(validationBefore + 1.0);
         assertThat(count(AppMetricsService.ACCESS_DENIED)).isEqualTo(accessDeniedBefore + 1.0);

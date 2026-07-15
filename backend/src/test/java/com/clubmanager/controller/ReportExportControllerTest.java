@@ -73,9 +73,9 @@ class ReportExportControllerTest {
     }
 
     @Test
-    void exportPlayers_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void exportPlayers_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(get("/api/v1/reports/players.csv"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

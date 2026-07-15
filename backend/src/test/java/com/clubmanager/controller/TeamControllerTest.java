@@ -66,11 +66,11 @@ class TeamControllerTest {
     }
 
     @Test
-    void createTeam_WithoutAuthentication_ReturnsForbidden() throws Exception {
+    void createTeam_WithoutAuthentication_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/teams")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validTeamJson("00000000-0000-0000-0000-000000000000")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

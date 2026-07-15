@@ -63,9 +63,9 @@ class AdminControllerTest {
     }
 
     @Test
-    void getAllAdmins_WithoutToken_ReturnsForbidden() throws Exception {
+    void getAllAdmins_WithoutToken_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(get("/api/v1/admins"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
