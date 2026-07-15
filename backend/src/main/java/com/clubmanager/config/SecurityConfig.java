@@ -73,7 +73,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/teams/*/matches/*").hasAnyRole("ADMIN", "TRAINER")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/teams/*/matches/*/players/*").hasAnyRole("ADMIN", "TRAINER")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/players/**",
                                 "/api/v1/evaluations/**",
                                 "/api/v1/evaluation-events/**",
                                 "/api/v1/teams/**",

@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/players")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT', 'TRAINER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 @RequiredArgsConstructor
 public class PlayerController {
 

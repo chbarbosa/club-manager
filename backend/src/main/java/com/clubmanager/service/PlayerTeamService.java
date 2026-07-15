@@ -33,6 +33,17 @@ public class PlayerTeamService {
         return playerTeamRepository.findByTeamAndActiveTrueOrderByPlayer_NameAsc(team);
     }
 
+    @Transactional(readOnly = true)
+    public List<Player> getAvailablePlayers(UUID teamUuid) {
+        Team team = getTeam(teamUuid);
+        return playerRepository.findAllByOrderByNameAsc().stream()
+                .filter(Player::isActive)
+                .filter(player -> player.getTeamCategory() == team.getTeamCategory())
+                .filter(player -> isWithinAgeLimit(team, player))
+                .filter(player -> playerTeamRepository.findByPlayerAndActiveTrue(player).isEmpty())
+                .toList();
+    }
+
     @Transactional
     public PlayerTeam assignPlayer(UUID teamUuid, PlayerTeamAssignRequest request) {
         Team team = getTeam(teamUuid);
@@ -91,13 +102,18 @@ public class PlayerTeamService {
 
     private void validateAgeLimit(Team team, Player player) {
         Integer maxAge = maxAge(team.getAgeCategory());
-        if (maxAge == null) {
-            return;
-        }
-        int playerAge = Period.between(player.getBirthdate(), LocalDate.now()).getYears();
-        if (playerAge > maxAge) {
+        if (maxAge != null && playerAge(player) > maxAge) {
             throw new IllegalArgumentException("Player age must be " + maxAge + " or younger for this team");
         }
+    }
+
+    private boolean isWithinAgeLimit(Team team, Player player) {
+        Integer maxAge = maxAge(team.getAgeCategory());
+        return maxAge == null || playerAge(player) <= maxAge;
+    }
+
+    private int playerAge(Player player) {
+        return Period.between(player.getBirthdate(), LocalDate.now()).getYears();
     }
 
     private Integer maxAge(TeamAgeCategory ageCategory) {

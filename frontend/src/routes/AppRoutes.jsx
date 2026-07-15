@@ -42,8 +42,8 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={protectedElement(<DashboardPage />)} />
       <Route path="/settings/club" element={protectedElement(<ClubSettingsPage />, ADMIN)} />
       <Route path="/admins" element={protectedElement(<AdminsPage />, ADMIN)} />
-      <Route path="/players" element={protectedElement(<PlayersPage />, OPERATIONAL_READ)} />
-      <Route path="/players/:uuid" element={protectedElement(<PlayerDetailPage />, OPERATIONAL_READ)} />
+      <Route path="/players" element={protectedElement(<PlayersPage />, ADMIN)} />
+      <Route path="/players/:uuid" element={protectedElement(<PlayerDetailPage />, ADMIN)} />
       <Route path="/trainers" element={protectedElement(<TrainersPage />, ADMIN)} />
       <Route path="/trainers/me" element={protectedElement(<TrainerProfilePage />, TRAINER)} />
       <Route path="/trainers/:uuid" element={protectedElement(<TrainerDetailPage />, ADMIN)} />

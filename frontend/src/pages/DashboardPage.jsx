@@ -70,13 +70,6 @@ const FEATURES = [
 
 const TRAINER_FEATURES = [
   {
-    title: 'Players',
-    description: 'View club players and player detail information for training context.',
-    icon: 'players',
-    path: '/players',
-    action: 'View players',
-  },
-  {
     title: 'My teams',
     description: 'Open the teams where you are the trainer or assistant trainer.',
     icon: 'teams',

@@ -29,7 +29,6 @@ export default function Navbar() {
           )}
           {isTrainer && (
             <>
-              <Link className="nav-link" to="/players">Players</Link>
               <Link className="nav-link" to="/teams">My teams</Link>
               <Link className="nav-link" to="/schedules">Training schedules</Link>
               <Link className="nav-link" to="/evaluations">Evaluations</Link>

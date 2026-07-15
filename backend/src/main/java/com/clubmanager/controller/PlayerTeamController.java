@@ -2,6 +2,8 @@ package com.clubmanager.controller;
 
 import com.clubmanager.dto.PlayerTeamAssignRequest;
 import com.clubmanager.dto.PlayerTeamResponse;
+import com.clubmanager.dto.PlayerSummaryResponse;
+import com.clubmanager.mapper.PlayerMapper;
 import com.clubmanager.mapper.PlayerTeamMapper;
 import com.clubmanager.service.AuditEventService;
 import com.clubmanager.service.PlayerTeamService;
@@ -28,6 +30,7 @@ public class PlayerTeamController {
 
     private final PlayerTeamService playerTeamService;
     private final PlayerTeamMapper playerTeamMapper;
+    private final PlayerMapper playerMapper;
     private final AuditEventService auditEventService;
 
 
@@ -37,6 +40,14 @@ public class PlayerTeamController {
     public List<PlayerTeamResponse> getActiveRoster(@PathVariable UUID teamUuid) {
         return playerTeamService.getActiveRoster(teamUuid).stream()
                 .map(playerTeamMapper::toResponse)
+                .toList();
+    }
+
+    @GetMapping("/available")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT') or @trainerAuthorizationService.canAccessTeam(#teamUuid)")
+    public List<PlayerSummaryResponse> getAvailablePlayers(@PathVariable UUID teamUuid) {
+        return playerTeamService.getAvailablePlayers(teamUuid).stream()
+                .map(playerMapper::toSummaryResponse)
                 .toList();
     }
 

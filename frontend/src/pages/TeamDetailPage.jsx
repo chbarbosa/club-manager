@@ -3,12 +3,12 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { getAllAdmins } from '../api/admins.js'
 import { getAllChampionships } from '../api/championships.js'
 import { createTeamMatch, getTeamMatches } from '../api/matches.js'
-import { getAllPlayers } from '../api/players.js'
 import { exportTeamRosterCsv } from '../api/reports.js'
 import { getAllTrainers } from '../api/trainers.js'
 import {
   assignPlayerToTeam,
   deactivateTeam,
+  getAvailableTeamPlayers,
   getTeam,
   getTeamRoster,
   reactivateTeam,
@@ -117,8 +117,7 @@ export default function TeamDetailPage() {
 
   async function loadPlayers() {
     try {
-      const response = await getAllPlayers({ page: 0, size: 200 })
-      setPlayers(response.content ?? [])
+      setPlayers(await getAvailableTeamPlayers(uuid))
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to load players for roster.')
     }
@@ -205,7 +204,7 @@ export default function TeamDetailPage() {
       await assignPlayerToTeam(uuid, selectedPlayerUuid, Number(jerseyNumber))
       setSelectedPlayerUuid('')
       setJerseyNumber('')
-      await Promise.all([loadTeam(), loadRoster()])
+      await Promise.all([loadTeam(), loadRoster(), loadPlayers()])
       setMessage('Player assigned to team.')
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to assign player to team.')
@@ -220,7 +219,7 @@ export default function TeamDetailPage() {
     setMessage('')
     try {
       await removePlayerFromTeam(uuid, assignment.uuid)
-      await Promise.all([loadTeam(), loadRoster()])
+      await Promise.all([loadTeam(), loadRoster(), loadPlayers()])
       setMessage('Player removed from team.')
     } catch (requestError) {
       setError(requestError.response?.data?.message ?? requestError.message ?? 'Unable to remove player from team.')
@@ -327,7 +326,7 @@ export default function TeamDetailPage() {
                       value={selectedPlayerUuid}
                     >
                       <option value="">Select a player</option>
-                      {availablePlayers(team, players, roster).map((player) => (
+                      {players.map((player) => (
                         <option key={player.uuid} value={player.uuid}>{player.name}</option>
                       ))}
                     </select>
@@ -605,27 +604,6 @@ function formatAgeCategory(value) {
     return '19+'
   }
   return value?.replace('U', '') ?? '-'
-}
-
-function availablePlayers(team, players, roster) {
-  const assignedPlayerUuids = new Set(roster.map((assignment) => assignment.playerUuid))
-  const maxAge = maxAgeForTeam(team.ageCategory)
-  return players.filter((player) => (
-    player.active
-    && player.teamCategory === team.teamCategory
-    && (maxAge === null || player.age <= maxAge)
-    && !assignedPlayerUuids.has(player.uuid)
-  ))
-}
-
-function maxAgeForTeam(ageCategory) {
-  if (ageCategory === 'U17_18') {
-    return 18
-  }
-  if (ageCategory === 'U19_PLUS') {
-    return null
-  }
-  return Number(ageCategory?.replace('U', '')) || null
 }
 
 function formatDate(value) {

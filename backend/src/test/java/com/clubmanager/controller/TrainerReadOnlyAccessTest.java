@@ -66,10 +66,10 @@ class TrainerReadOnlyAccessTest {
     }
 
     @Test
-    void trainerCanReadPlayersButCannotCreatePlayers() throws Exception {
+    void trainerCannotReadGlobalPlayersOrCreatePlayers() throws Exception {
         mockMvc.perform(get("/api/v1/players")
                         .with(user(TRAINER_EMAIL).roles("TRAINER")))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/v1/players")
                         .with(user(TRAINER_EMAIL).roles("TRAINER"))
@@ -101,7 +101,15 @@ class TrainerReadOnlyAccessTest {
                         .with(user(TRAINER_EMAIL).roles("TRAINER")))
                 .andExpect(status().isOk());
 
+        mockMvc.perform(get("/api/v1/teams/{teamUuid}/players/available", ownTeam.getUuid())
+                        .with(user(TRAINER_EMAIL).roles("TRAINER")))
+                .andExpect(status().isOk());
+
         mockMvc.perform(get("/api/v1/teams/{teamUuid}/players", otherTeam.getUuid())
+                        .with(user(TRAINER_EMAIL).roles("TRAINER")))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/teams/{teamUuid}/players/available", otherTeam.getUuid())
                         .with(user(TRAINER_EMAIL).roles("TRAINER")))
                 .andExpect(status().isForbidden());
 

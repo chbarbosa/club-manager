@@ -65,15 +65,19 @@ export default function EvaluationDetailPage() {
   async function loadAll() {
     setError('')
     try {
-      const [evaluationResponse, playersResponse, allPlayersResponse, eventResponse] = await Promise.all([
+      const [evaluationResponse, playersResponse, eventResponse] = await Promise.all([
         getEvaluation(uuid),
         getEvaluationPlayers(uuid),
-        getAllPlayers({ page: 0, size: 500 }),
         getEvaluationEvents(uuid),
       ])
       setEvaluation(evaluationResponse)
       setEvaluationPlayers(playersResponse)
-      setAllPlayers(allPlayersResponse.content ?? [])
+      if (canManage) {
+        const allPlayersResponse = await getAllPlayers({ page: 0, size: 500 })
+        setAllPlayers(allPlayersResponse.content ?? [])
+      } else {
+        setAllPlayers([])
+      }
       setEvents(eventResponse)
       setEvaluationResults(await getEvaluationResults(uuid))
       setSelectedPlayerUuid('')
