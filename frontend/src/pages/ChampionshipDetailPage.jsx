@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   deactivateChampionship,
   getChampionship,
@@ -26,6 +26,7 @@ const MONTHS = [
 
 export default function ChampionshipDetailPage() {
   const { uuid } = useParams()
+  const navigate = useNavigate()
   const { role } = useAuth()
   const canManage = role === 'ADMIN'
   const [championship, setChampionship] = useState(null)
@@ -103,7 +104,13 @@ export default function ChampionshipDetailPage() {
 
   return (
     <main className="container py-5">
-      <Link to="/championships">&larr; Back to championships</Link>
+      {canManage ? (
+        <Link to="/championships">&larr; Back to championships</Link>
+      ) : (
+        <button className="btn btn-link p-0" onClick={() => navigate(-1)} type="button">
+          &larr; Back
+        </button>
+      )}
       {error && <p className="alert alert-danger mt-3">{error}</p>}
       {message && <p className="alert alert-success mt-3">{message}</p>}
       {!championship && !error && <p className="mt-3">Loading championship...</p>}
